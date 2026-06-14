@@ -143,11 +143,13 @@ std::vector<int> SoliVoicerAudioProcessor::applyFastLeadSafety (const std::vecto
     std::sort (candidates.begin(), candidates.end());
     candidates.erase (std::unique (candidates.begin(), candidates.end()), candidates.end());
 
-    const auto minFastNote = juce::jmax (40, settings.minNote);
+    const auto minimumGeneratedNote = highComplexInitialHit
+                                    ? juce::jmax (48, inputNote - 24)
+                                    : juce::jmax (40, settings.minNote);
     std::vector<int> playable;
-    std::copy_if (candidates.begin(), candidates.end(), std::back_inserter (playable), [minFastNote] (int note)
+    std::copy_if (candidates.begin(), candidates.end(), std::back_inserter (playable), [minimumGeneratedNote] (int note)
     {
-        return note >= minFastNote;
+        return note >= minimumGeneratedNote;
     });
 
     if (playable.size() < 4)
@@ -179,24 +181,8 @@ std::vector<int> SoliVoicerAudioProcessor::applyFastLeadSafety (const std::vecto
 
 int SoliVoicerAudioProcessor::scaleVelocityForVoicing (int velocity, int noteCount, const Soli::Settings& settings, bool fastLead) const
 {
-    const auto denseWideVoicing = settings.playability == Soli::Playability::orchestra
-                               || settings.playability == Soli::Playability::unrestricted
-                               || settings.chordSize > 6;
-
-    if (! denseWideVoicing || noteCount <= 4)
-        return juce::jlimit (1, 127, velocity);
-
-    const auto voicePower = 3.0 / static_cast<double> (juce::jmax (4, noteCount));
-    const auto complexityTrim = juce::jmap (juce::jlimit (0.0f, 1.0f, settings.complexity),
-                                           1.0f,
-                                           0.38f);
-    const auto outsideTrim = juce::jmap (juce::jlimit (0.0f, 1.0f, settings.outside),
-                                        1.0f,
-                                        0.82f);
-    const auto fastTrim = fastLead ? 0.82 : 1.0;
-    const auto lowRegisterTrim = settings.minNote < 36 ? 0.82 : 1.0;
-    const auto scaled = static_cast<double> (velocity) * voicePower * complexityTrim * outsideTrim * fastTrim * lowRegisterTrim;
-    return juce::jlimit (1, 127, static_cast<int> (std::round (scaled)));
+    juce::ignoreUnused (noteCount, settings, fastLead);
+    return juce::jlimit (1, 127, velocity);
 }
 
 void SoliVoicerAudioProcessor::transitionLeadChordOnChannel (int channel,
