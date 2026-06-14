@@ -182,12 +182,19 @@ int SoliVoicerAudioProcessor::scaleVelocityForVoicing (int velocity, int noteCou
                                || settings.playability == Soli::Playability::unrestricted
                                || settings.chordSize > 6;
 
-    if (! denseWideVoicing || noteCount <= 6)
+    if (! denseWideVoicing || noteCount <= 4)
         return juce::jlimit (1, 127, velocity);
 
-    const auto divisor = std::sqrt (static_cast<double> (juce::jmax (1, noteCount))) / std::sqrt (4.0);
-    const auto fastTrim = fastLead ? 0.84 : 0.92;
-    return juce::jlimit (1, 127, static_cast<int> (std::round (static_cast<double> (velocity) * fastTrim / divisor)));
+    const auto voicePower = std::sqrt (4.0 / static_cast<double> (juce::jmax (4, noteCount)));
+    const auto complexityTrim = juce::jmap (juce::jlimit (0.0f, 1.0f, settings.complexity),
+                                           1.0f,
+                                           0.62f);
+    const auto outsideTrim = juce::jmap (juce::jlimit (0.0f, 1.0f, settings.outside),
+                                        1.0f,
+                                        0.88f);
+    const auto fastTrim = fastLead ? 0.88 : 1.0;
+    const auto scaled = static_cast<double> (velocity) * voicePower * complexityTrim * outsideTrim * fastTrim;
+    return juce::jlimit (1, 127, static_cast<int> (std::round (scaled)));
 }
 
 void SoliVoicerAudioProcessor::transitionLeadChordOnChannel (int channel,
@@ -263,8 +270,9 @@ void SoliVoicerAudioProcessor::transitionLeadChordOnChannel (int channel,
         std::reverse (orderedNotes.begin(), orderedNotes.end());
     }
 
+    const auto denseComplexChord = settings.complexity > 0.65f && sortedNewNotes.size() > 5;
     const auto maxOffsetSamples = strumMode == Soli::StrumMode::together
-                                ? 0
+                                ? (denseComplexChord ? juce::jmax (1, static_cast<int> (0.0025 * getSampleRate())) : 0)
                                 : juce::jmax (0, static_cast<int> (settings.strumSpeed * 0.45f * getSampleRate()));
     const auto step = orderedNotes.size() <= 1 ? 0 : maxOffsetSamples / static_cast<int> (orderedNotes.size() - 1);
     const auto startOffset = notesToStop.empty() ? 0 : juce::jmin (blockSamples > 0 ? blockSamples - 1 : 0,
@@ -321,8 +329,9 @@ void SoliVoicerAudioProcessor::replaceActiveChord (int channel,
         std::reverse (orderedNotes.begin(), orderedNotes.end());
     }
 
+    const auto denseComplexChord = settings.complexity > 0.65f && newNotes.size() > 5;
     const auto maxOffsetSamples = strumMode == Soli::StrumMode::together
-                                ? 0
+                                ? (denseComplexChord ? juce::jmax (1, static_cast<int> (0.0025 * getSampleRate())) : 0)
                                 : juce::jmax (0, static_cast<int> (settings.strumSpeed * 0.45f * getSampleRate()));
     const auto step = orderedNotes.size() <= 1 ? 0 : maxOffsetSamples / static_cast<int> (orderedNotes.size() - 1);
     const auto startOffset = notesToStop.empty() ? 0 : juce::jmin (blockSamples > 0 ? blockSamples - 1 : 0,
