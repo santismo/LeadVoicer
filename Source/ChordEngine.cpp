@@ -9,6 +9,9 @@ namespace Soli
 {
 namespace
 {
+constexpr auto keyCount = 12;
+constexpr auto scaleCount = 12;
+
 int mod12 (int value) noexcept
 {
     return (value % 12 + 12) % 12;
@@ -211,11 +214,11 @@ NoteRole ChordEngine::resolveRole (const Settings& settings)
 
 int ChordEngine::choosePrimaryKey (const Settings& settings, int inputNote)
 {
-    const auto keyMask = clampMask (settings.keyMask, keyNames().size());
+    const auto keyMask = clampMask (settings.keyMask, keyCount);
     auto bestKey = 0;
     auto bestScore = std::numeric_limits<float>::lowest();
 
-    for (int key = 0; key < keyNames().size(); ++key)
+    for (int key = 0; key < keyCount; ++key)
     {
         if (! maskContains (keyMask, key))
             continue;
@@ -243,11 +246,13 @@ int ChordEngine::choosePrimaryKey (const Settings& settings, int inputNote)
 
 ScaleType ChordEngine::choosePrimaryScale (const Settings& settings)
 {
-    const auto scaleMask = clampMask (settings.scaleMask, scaleNames().size());
+    const auto scaleMask = clampMask (settings.scaleMask, scaleCount);
     std::vector<double> weights;
     std::vector<int> indexes;
+    weights.reserve (scaleCount);
+    indexes.reserve (scaleCount);
 
-    for (int i = 0; i < scaleNames().size(); ++i)
+    for (int i = 0; i < scaleCount; ++i)
     {
         if (! maskContains (scaleMask, i))
             continue;
@@ -273,7 +278,8 @@ ScaleType ChordEngine::choosePrimaryScale (const Settings& settings)
 std::vector<ChordEngine::Candidate> ChordEngine::buildCandidates (int inputNote, const Settings& settings, NoteRole role) const
 {
     std::vector<Candidate> candidates;
-    const auto keyMask = clampMask (settings.keyMask, keyNames().size());
+    candidates.reserve (96);
+    const auto keyMask = clampMask (settings.keyMask, keyCount);
 
     for (int root = 0; root < 12; ++root)
     {
@@ -336,6 +342,7 @@ std::vector<int> ChordEngine::voiceCandidate (int inputNote, int root, const Cho
         requestedSize = juce::jlimit (3, 5, requestedSize);
 
     std::vector<int> intervals = type.intervals;
+    intervals.reserve (24);
     while (static_cast<int> (intervals.size()) > requestedSize)
     {
         const auto eraseIndex = static_cast<int> (intervals.size()) > 4 ? 2 : static_cast<int> (intervals.size()) - 1;
@@ -360,6 +367,7 @@ std::vector<int> ChordEngine::voiceCandidate (int inputNote, int root, const Cho
     }
 
     std::vector<int> notes;
+    notes.reserve (24);
     const auto rootNearInput = octaveNear (root, inputNote - intervals[static_cast<size_t> (anchorIndex)]);
     const auto anchorAbsolute = rootNearInput + intervals[static_cast<size_t> (anchorIndex)];
     const auto shift = inputNote - anchorAbsolute;
@@ -425,6 +433,7 @@ std::vector<int> ChordEngine::voiceCandidate (int inputNote, int root, const Cho
         const auto minNote = juce::jlimit (0, 127, settings.minNote);
         const auto maxNote = juce::jlimit (minNote + 1, 127, settings.maxNote);
         auto expanded = notes;
+        expanded.reserve (24);
 
         for (const auto baseNote : notes)
         {
@@ -471,7 +480,7 @@ std::vector<int> ChordEngine::voiceCandidate (int inputNote, int root, const Cho
 float ChordEngine::scoreCandidate (const Candidate& candidate, int inputNote, const Settings& settings) const
 {
     auto score = 100.0f;
-    const auto keyMask = clampMask (settings.keyMask, keyNames().size());
+    const auto keyMask = clampMask (settings.keyMask, keyCount);
 
     if (chordMostlyInScale (candidate.root, *candidate.type, settings))
         score += 40.0f;
@@ -559,8 +568,8 @@ int ChordEngine::nearestChordToneIndex (const std::vector<int>& intervals, int p
 
 bool ChordEngine::pitchInAnyScale (int pitchClass, int root, const Settings& settings) const
 {
-    const auto scaleMask = clampMask (settings.scaleMask, scaleNames().size());
-    for (int i = 0; i < scaleNames().size(); ++i)
+    const auto scaleMask = clampMask (settings.scaleMask, scaleCount);
+    for (int i = 0; i < scaleCount; ++i)
     {
         if (! maskContains (scaleMask, i))
             continue;
