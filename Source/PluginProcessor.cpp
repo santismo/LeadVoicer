@@ -135,7 +135,8 @@ std::vector<int> SoliVoicerAudioProcessor::applyFastLeadSafety (const std::vecto
                                || settings.playability == Soli::Playability::unrestricted
                                || settings.chordSize > 6;
 
-    if (! fastLead || ! denseWideVoicing || notes.size() <= 6)
+    const auto highComplexInitialHit = settings.complexity > 0.68f && denseWideVoicing;
+    if ((! fastLead && ! highComplexInitialHit) || ! denseWideVoicing || notes.size() <= 6)
         return notes;
 
     auto candidates = notes;
@@ -263,7 +264,7 @@ void SoliVoicerAudioProcessor::transitionLeadChordOnChannel (int channel,
     auto strumMode = settings.strumMode;
     if (strumMode == Soli::StrumMode::random)
     {
-        static thread_local std::mt19937 rng { std::random_device{}() };
+        static thread_local std::mt19937 rng { 0x5a17c0de };
         std::shuffle (orderedNotes.begin(), orderedNotes.end(), rng);
     }
     else if (strumMode == Soli::StrumMode::down)
@@ -322,7 +323,7 @@ void SoliVoicerAudioProcessor::replaceActiveChord (int channel,
     auto strumMode = settings.strumMode;
     if (strumMode == Soli::StrumMode::random)
     {
-        static thread_local std::mt19937 rng { std::random_device{}() };
+        static thread_local std::mt19937 rng { 0x5a17c0de };
         std::shuffle (orderedNotes.begin(), orderedNotes.end(), rng);
     }
     else if (strumMode == Soli::StrumMode::down)
