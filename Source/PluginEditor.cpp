@@ -258,6 +258,7 @@ void SoliVoicerAudioProcessorEditor::configureInfoButton (juce::TextButton& butt
 void SoliVoicerAudioProcessorEditor::timerCallback()
 {
     chordLabel.setText (processorRef.getLastChordName(), juce::dontSendNotification);
+    updateMaskToggles();
 }
 
 void SoliVoicerAudioProcessorEditor::paint (juce::Graphics& g)
