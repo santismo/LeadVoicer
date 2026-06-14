@@ -185,15 +185,16 @@ int SoliVoicerAudioProcessor::scaleVelocityForVoicing (int velocity, int noteCou
     if (! denseWideVoicing || noteCount <= 4)
         return juce::jlimit (1, 127, velocity);
 
-    const auto voicePower = std::sqrt (4.0 / static_cast<double> (juce::jmax (4, noteCount)));
+    const auto voicePower = 3.0 / static_cast<double> (juce::jmax (4, noteCount));
     const auto complexityTrim = juce::jmap (juce::jlimit (0.0f, 1.0f, settings.complexity),
                                            1.0f,
-                                           0.62f);
+                                           0.38f);
     const auto outsideTrim = juce::jmap (juce::jlimit (0.0f, 1.0f, settings.outside),
                                         1.0f,
-                                        0.88f);
-    const auto fastTrim = fastLead ? 0.88 : 1.0;
-    const auto scaled = static_cast<double> (velocity) * voicePower * complexityTrim * outsideTrim * fastTrim;
+                                        0.82f);
+    const auto fastTrim = fastLead ? 0.82 : 1.0;
+    const auto lowRegisterTrim = settings.minNote < 36 ? 0.82 : 1.0;
+    const auto scaled = static_cast<double> (velocity) * voicePower * complexityTrim * outsideTrim * fastTrim * lowRegisterTrim;
     return juce::jlimit (1, 127, static_cast<int> (std::round (scaled)));
 }
 
