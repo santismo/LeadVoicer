@@ -83,6 +83,7 @@ private:
     bool releaseOtherActiveChordsOnChannel (int channel, int keepInputNote, int samplePosition, int blockSamples, juce::MidiBuffer& output);
     std::vector<int> applyFastLeadSafety (const std::vector<int>& notes, int inputNote, const Soli::Settings& settings, bool fastLead) const;
     int scaleVelocityForVoicing (int velocity, int noteCount, const Soli::Settings& settings, bool fastLead) const;
+    void transitionLeadChordOnChannel (int channel, int inputNote, int velocity, const std::vector<int>& newNotes, int samplePosition, int blockSamples, juce::MidiBuffer& output, const Soli::Settings& settings);
     void replaceActiveChord (int channel, int inputNote, int velocity, const std::vector<int>& newNotes, int samplePosition, int blockSamples, juce::MidiBuffer& output, const Soli::Settings& settings);
     void sendGeneratedNoteOn (int channel, int note, int velocity, int samplePosition, int blockSamples, juce::MidiBuffer& output);
     void sendGeneratedNoteOff (int channel, int note, int samplePosition, int blockSamples, juce::MidiBuffer& output);

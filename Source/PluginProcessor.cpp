@@ -190,6 +190,90 @@ int SoliVoicerAudioProcessor::scaleVelocityForVoicing (int velocity, int noteCou
     return juce::jlimit (1, 127, static_cast<int> (std::round (static_cast<double> (velocity) * fastTrim / divisor)));
 }
 
+void SoliVoicerAudioProcessor::transitionLeadChordOnChannel (int channel,
+                                                             int inputNote,
+                                                             int velocity,
+                                                             const std::vector<int>& newNotes,
+                                                             int samplePosition,
+                                                             int blockSamples,
+                                                             juce::MidiBuffer& output,
+                                                             const Soli::Settings& settings)
+{
+    std::vector<int> soundingNotes;
+    for (int note = 0; note < 128; ++note)
+    {
+        const auto& active = activeChords[static_cast<size_t> (activeIndex (channel, note))];
+        if (active.notes.empty())
+            continue;
+
+        soundingNotes.insert (soundingNotes.end(), active.notes.begin(), active.notes.end());
+    }
+
+    std::sort (soundingNotes.begin(), soundingNotes.end());
+    soundingNotes.erase (std::unique (soundingNotes.begin(), soundingNotes.end()), soundingNotes.end());
+
+    auto sortedNewNotes = newNotes;
+    std::sort (sortedNewNotes.begin(), sortedNewNotes.end());
+    sortedNewNotes.erase (std::unique (sortedNewNotes.begin(), sortedNewNotes.end()), sortedNewNotes.end());
+
+    std::vector<int> notesToKeep;
+    std::set_intersection (soundingNotes.begin(), soundingNotes.end(),
+                           sortedNewNotes.begin(), sortedNewNotes.end(),
+                           std::back_inserter (notesToKeep));
+
+    std::vector<int> notesToStop;
+    std::set_difference (soundingNotes.begin(), soundingNotes.end(),
+                         sortedNewNotes.begin(), sortedNewNotes.end(),
+                         std::back_inserter (notesToStop));
+
+    std::vector<int> notesToStart;
+    std::set_difference (sortedNewNotes.begin(), sortedNewNotes.end(),
+                         soundingNotes.begin(), soundingNotes.end(),
+                         std::back_inserter (notesToStart));
+
+    for (auto& active : activeChords)
+    {
+        if (active.channel == channel)
+            active.notes.clear();
+    }
+
+    auto& active = activeChords[static_cast<size_t> (activeIndex (channel, inputNote))];
+    active.channel = channel;
+    active.notes = sortedNewNotes;
+
+    for (const auto note : notesToKeep)
+        generatedNoteRefs[static_cast<size_t> (refIndex (channel, note))] = 1;
+
+    for (const auto note : notesToStop)
+    {
+        auto& refs = generatedNoteRefs[static_cast<size_t> (refIndex (channel, note))];
+        while (refs > 0)
+            sendGeneratedNoteOff (channel, note, samplePosition, blockSamples, output);
+    }
+
+    auto orderedNotes = notesToStart;
+    auto strumMode = settings.strumMode;
+    if (strumMode == Soli::StrumMode::random)
+    {
+        static thread_local std::mt19937 rng { std::random_device{}() };
+        std::shuffle (orderedNotes.begin(), orderedNotes.end(), rng);
+    }
+    else if (strumMode == Soli::StrumMode::down)
+    {
+        std::reverse (orderedNotes.begin(), orderedNotes.end());
+    }
+
+    const auto maxOffsetSamples = strumMode == Soli::StrumMode::together
+                                ? 0
+                                : juce::jmax (0, static_cast<int> (settings.strumSpeed * 0.45f * getSampleRate()));
+    const auto step = orderedNotes.size() <= 1 ? 0 : maxOffsetSamples / static_cast<int> (orderedNotes.size() - 1);
+    const auto startOffset = notesToStop.empty() ? 0 : juce::jmin (blockSamples > 0 ? blockSamples - 1 : 0,
+                                                                   juce::jmax (8, static_cast<int> (0.0015 * getSampleRate())));
+
+    for (int i = 0; i < static_cast<int> (orderedNotes.size()); ++i)
+        sendGeneratedNoteOn (channel, orderedNotes[static_cast<size_t> (i)], velocity, samplePosition + startOffset + i * step, blockSamples, output);
+}
+
 void SoliVoicerAudioProcessor::replaceActiveChord (int channel,
                                                    int inputNote,
                                                    int velocity,
@@ -237,7 +321,9 @@ void SoliVoicerAudioProcessor::replaceActiveChord (int channel,
         std::reverse (orderedNotes.begin(), orderedNotes.end());
     }
 
-    const auto maxOffsetSamples = juce::jmax (0, static_cast<int> (settings.strumSpeed * 0.45f * getSampleRate()));
+    const auto maxOffsetSamples = strumMode == Soli::StrumMode::together
+                                ? 0
+                                : juce::jmax (0, static_cast<int> (settings.strumSpeed * 0.45f * getSampleRate()));
     const auto step = orderedNotes.size() <= 1 ? 0 : maxOffsetSamples / static_cast<int> (orderedNotes.size() - 1);
     const auto startOffset = notesToStop.empty() ? 0 : juce::jmin (blockSamples > 0 ? blockSamples - 1 : 0,
                                                                    juce::jmax (8, static_cast<int> (0.003 * getSampleRate())));
@@ -301,18 +387,17 @@ void SoliVoicerAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
                                && absoluteSample - previousLeadSample <= static_cast<juce::int64> (0.14 * getSampleRate());
             lastLeadNoteSample[channelIndex] = absoluteSample;
 
-            const auto releasedPreviousLeadChord = releaseOtherActiveChordsOnChannel (channel, inputNote, samplePosition, blockSamples, output);
             auto generated = engine.generate (inputNote, velocity, settings);
             const auto safeNotes = applyFastLeadSafety (generated.notes, inputNote, settings, fastLead);
             const auto safeVelocity = scaleVelocityForVoicing (velocity, static_cast<int> (generated.notes.size()), settings, fastLead);
-            replaceActiveChord (channel,
-                                inputNote,
-                                safeVelocity,
-                                safeNotes,
-                                releasedPreviousLeadChord ? samplePosition + juce::jmax (8, static_cast<int> (0.003 * getSampleRate())) : samplePosition,
-                                blockSamples,
-                                output,
-                                settings);
+            transitionLeadChordOnChannel (channel,
+                                          inputNote,
+                                          safeVelocity,
+                                          safeNotes,
+                                          samplePosition,
+                                          blockSamples,
+                                          output,
+                                          settings);
 
             {
                 const std::lock_guard<std::mutex> lock (nameMutex);
