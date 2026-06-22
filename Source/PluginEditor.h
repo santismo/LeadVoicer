@@ -97,6 +97,7 @@ private:
     juce::TextButton recordMidiButton { "Record MIDI" };
     SoliVoicerMidiDragButton dragMidiButton { "Drag MIDI" };
     juce::TextButton clearMidiButton { "Clear MIDI" };
+    juce::TextButton multiChannelButton { "Multi Ch" };
 
     juce::ComboBox sourceModeBox;
     juce::ComboBox outputModeBox;
@@ -176,6 +177,7 @@ private:
     std::unique_ptr<SliderAttachment> strumSpeedAttachment;
     std::unique_ptr<SliderAttachment> minNoteAttachment;
     std::unique_ptr<SliderAttachment> maxNoteAttachment;
+    std::unique_ptr<ButtonAttachment> multiChannelAttachment;
     std::unique_ptr<SliderAttachment> substitutionAttachment;
     std::unique_ptr<SliderAttachment> performanceComplexityAttachment;
     std::unique_ptr<SliderAttachment> densityAttachment;
