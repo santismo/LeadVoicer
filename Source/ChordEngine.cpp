@@ -122,6 +122,209 @@ float averageMotion (const std::vector<int>& a, const std::vector<int>& b)
     total += static_cast<float> (std::abs (static_cast<int> (a.size()) - static_cast<int> (b.size())) * 8);
     return total / static_cast<float> (std::max<size_t> (1, count));
 }
+
+enum class ParsedQuality
+{
+    major,
+    minor,
+    dominant,
+    diminished,
+    suspended,
+    unknown
+};
+
+struct ParsedContextChord
+{
+    bool valid = false;
+    int root = 0;
+    int bass = -1;
+    juce::String suffix;
+    juce::String displayName;
+    std::vector<int> intervals;
+    ParsedQuality quality = ParsedQuality::unknown;
+};
+
+int parsePitchClass (juce::String text)
+{
+    text = text.trim();
+    if (text.isEmpty())
+        return -1;
+
+    const auto letter = juce::CharacterFunctions::toUpperCase (text[0]);
+    auto pitch = letter == 'C' ? 0
+               : letter == 'D' ? 2
+               : letter == 'E' ? 4
+               : letter == 'F' ? 5
+               : letter == 'G' ? 7
+               : letter == 'A' ? 9
+               : letter == 'B' ? 11 : -100;
+    if (pitch < 0)
+        return -1;
+    if (text.length() > 1 && (text[1] == '#' || text[1] == 'b'))
+        pitch += text[1] == '#' ? 1 : -1;
+    return mod12 (pitch);
+}
+
+ParsedContextChord parseContextChord (juce::String name)
+{
+    ParsedContextChord result;
+    name = name.trim();
+    if (name.isEmpty() || name == "--" || name == "N.C.")
+        return result;
+
+    auto rootLength = 1;
+    if (name.length() > 1 && (name[1] == '#' || name[1] == 'b'))
+        rootLength = 2;
+    result.root = parsePitchClass (name.substring (0, rootLength));
+    if (result.root < 0)
+        return result;
+
+    const auto slash = name.indexOfChar ('/');
+    auto suffix = slash >= 0 ? name.substring (rootLength, slash) : name.substring (rootLength);
+    suffix = suffix.trim().replace ("min", "m").replace ("Major", "maj").replace ("major", "maj");
+    if (slash >= 0)
+        result.bass = parsePitchClass (name.substring (slash + 1));
+
+    struct Definition
+    {
+        const char* token;
+        std::initializer_list<int> intervals;
+        ParsedQuality quality;
+    };
+
+    static const std::array<Definition, 34> definitions
+    {{
+        { "maj13#11", { 0, 4, 7, 11, 14, 18, 21 }, ParsedQuality::major },
+        { "maj9#11",  { 0, 4, 7, 11, 14, 18 }, ParsedQuality::major },
+        { "mMaj9",    { 0, 3, 7, 11, 14 }, ParsedQuality::minor },
+        { "mMaj7",    { 0, 3, 7, 11 }, ParsedQuality::minor },
+        { "m13",      { 0, 3, 7, 10, 14, 17, 21 }, ParsedQuality::minor },
+        { "m11",      { 0, 3, 7, 10, 14, 17 }, ParsedQuality::minor },
+        { "maj13",    { 0, 4, 7, 11, 14, 21 }, ParsedQuality::major },
+        { "maj9",     { 0, 4, 7, 11, 14 }, ParsedQuality::major },
+        { "13sus4",   { 0, 5, 7, 10, 14, 21 }, ParsedQuality::suspended },
+        { "9sus4",    { 0, 5, 7, 10, 14 }, ParsedQuality::suspended },
+        { "7sus4",    { 0, 5, 7, 10 }, ParsedQuality::suspended },
+        { "m7b5",     { 0, 3, 6, 10 }, ParsedQuality::diminished },
+        { "dim7",     { 0, 3, 6, 9 }, ParsedQuality::diminished },
+        { "7b9#11",   { 0, 4, 7, 10, 13, 18 }, ParsedQuality::dominant },
+        { "7#9",      { 0, 4, 7, 10, 15 }, ParsedQuality::dominant },
+        { "7b9",      { 0, 4, 7, 10, 13 }, ParsedQuality::dominant },
+        { "7#11",     { 0, 4, 7, 10, 18 }, ParsedQuality::dominant },
+        { "7b13",     { 0, 4, 7, 10, 20 }, ParsedQuality::dominant },
+        { "6/9",      { 0, 4, 7, 9, 14 }, ParsedQuality::major },
+        { "m6/9",     { 0, 3, 7, 9, 14 }, ParsedQuality::minor },
+        { "add9",     { 0, 4, 7, 14 }, ParsedQuality::major },
+        { "m(add9)",  { 0, 3, 7, 14 }, ParsedQuality::minor },
+        { "maj7",     { 0, 4, 7, 11 }, ParsedQuality::major },
+        { "m9",       { 0, 3, 7, 10, 14 }, ParsedQuality::minor },
+        { "13",       { 0, 4, 7, 10, 14, 21 }, ParsedQuality::dominant },
+        { "9",        { 0, 4, 7, 10, 14 }, ParsedQuality::dominant },
+        { "m7",       { 0, 3, 7, 10 }, ParsedQuality::minor },
+        { "7",        { 0, 4, 7, 10 }, ParsedQuality::dominant },
+        { "dim",      { 0, 3, 6 }, ParsedQuality::diminished },
+        { "aug",      { 0, 4, 8 }, ParsedQuality::major },
+        { "sus4",     { 0, 5, 7 }, ParsedQuality::suspended },
+        { "sus2",     { 0, 2, 7 }, ParsedQuality::suspended },
+        { "m",        { 0, 3, 7 }, ParsedQuality::minor },
+        { "",         { 0, 4, 7 }, ParsedQuality::major }
+    }};
+
+    const Definition* matched = &definitions.back();
+    for (const auto& definition : definitions)
+    {
+        if (suffix == definition.token)
+        {
+            matched = &definition;
+            break;
+        }
+    }
+
+    result.valid = true;
+    result.suffix = suffix;
+    result.displayName = name;
+    result.intervals.assign (matched->intervals.begin(), matched->intervals.end());
+    result.quality = matched->quality;
+    if (result.bass >= 0)
+    {
+        const auto bassInterval = mod12 (result.bass - result.root);
+        if (std::none_of (result.intervals.begin(), result.intervals.end(),
+                          [bassInterval] (int interval) { return mod12 (interval) == bassInterval; }))
+            result.intervals.insert (result.intervals.begin(), bassInterval);
+    }
+    return result;
+}
+
+int inferMajorTonic (const ParsedContextChord& previous,
+                     const ParsedContextChord& current,
+                     const ParsedContextChord& next)
+{
+    static const std::array<int, 7> degreeRoots { 0, 2, 4, 5, 7, 9, 11 };
+    static const std::array<ParsedQuality, 7> degreeQualities
+    {
+        ParsedQuality::major, ParsedQuality::minor, ParsedQuality::minor,
+        ParsedQuality::major, ParsedQuality::dominant, ParsedQuality::minor,
+        ParsedQuality::diminished
+    };
+
+    auto bestTonic = current.valid ? current.root : 0;
+    auto bestScore = std::numeric_limits<float>::lowest();
+    for (int tonic = 0; tonic < 12; ++tonic)
+    {
+        auto score = 0.0f;
+        const auto scoreChord = [&] (const ParsedContextChord& chord, float weight)
+        {
+            if (! chord.valid)
+                return;
+            for (std::size_t degree = 0; degree < degreeRoots.size(); ++degree)
+            {
+                if (mod12 (chord.root - tonic) != degreeRoots[degree])
+                    continue;
+                score += weight * 4.0f;
+                if (chord.quality == degreeQualities[degree]
+                    || (degree == 4 && chord.quality == ParsedQuality::major))
+                    score += weight * 3.0f;
+                return;
+            }
+            score -= weight * 1.5f;
+        };
+
+        scoreChord (previous, 0.75f);
+        scoreChord (current, 1.5f);
+        scoreChord (next, 1.0f);
+        if (current.valid && tonic == current.root)
+            score += 0.5f;
+        if (score > bestScore)
+        {
+            bestScore = score;
+            bestTonic = tonic;
+        }
+    }
+    return bestTonic;
+}
+
+bool containsPitchClass (const ParsedContextChord& chord, int pitch)
+{
+    return std::any_of (chord.intervals.begin(), chord.intervals.end(), [&] (int interval)
+    {
+        return mod12 (chord.root + interval) == mod12 (pitch);
+    });
+}
+
+ParsedContextChord makeContextChord (int root,
+                                     juce::String suffix,
+                                     std::initializer_list<int> intervals,
+                                     ParsedQuality quality)
+{
+    ParsedContextChord result;
+    result.valid = true;
+    result.root = mod12 (root);
+    result.suffix = suffix;
+    result.displayName = pcName (result.root) + suffix;
+    result.intervals.assign (intervals.begin(), intervals.end());
+    result.quality = quality;
+    return result;
+}
 }
 
 juce::StringArray ChordEngine::keyNames()
@@ -152,6 +355,11 @@ juce::StringArray ChordEngine::playabilityNames()
 juce::StringArray ChordEngine::strumModeNames()
 {
     return { "Together", "Up", "Down", "Random" };
+}
+
+juce::StringArray ChordEngine::contextModeNames()
+{
+    return { "Match Chord", "Diatonic", "Substitutions", "Adaptive" };
 }
 
 void ChordEngine::reset()
@@ -192,6 +400,135 @@ GeneratedChord ChordEngine::generate (int inputNote, int, const Settings& settin
     GeneratedChord result;
     result.notes = chosen.voiced;
     result.name = chordName (chosen.root, *chosen.type);
+    previousVoicing = result.notes;
+    previousChord = result;
+    return result;
+}
+
+GeneratedChord ChordEngine::generateForContext (int inputNote,
+                                                const juce::String& currentChord,
+                                                const juce::String& previousContext,
+                                                const juce::String& nextChord,
+                                                const Settings& settings)
+{
+    const auto current = parseContextChord (currentChord);
+    if (! current.valid)
+        return generate (inputNote, 100, settings);
+
+    const auto previous = parseContextChord (previousContext);
+    const auto next = parseContextChord (nextChord);
+    const auto tonic = inferMajorTonic (previous, current, next);
+
+    struct ContextCandidate
+    {
+        ParsedContextChord chord;
+        float relationScore = 0.0f;
+    };
+
+    std::vector<ContextCandidate> candidates;
+    const auto addCandidate = [&] (ParsedContextChord chord, float relation)
+    {
+        const auto duplicate = std::any_of (candidates.begin(), candidates.end(), [&] (const auto& item)
+        {
+            return item.chord.root == chord.root && item.chord.suffix == chord.suffix;
+        });
+        if (! duplicate)
+            candidates.push_back ({ std::move (chord), relation });
+    };
+
+    const auto directScore = settings.contextMode == ContextMode::exact ? 100.0f
+                           : settings.contextMode == ContextMode::adaptive ? 88.0f : 80.0f;
+    addCandidate (current, directScore);
+    const auto includeDiatonic = settings.contextMode == ContextMode::diatonic
+                              || settings.contextMode == ContextMode::adaptive;
+    const auto includeSubstitutions = settings.contextMode == ContextMode::substitutions
+                                   || settings.contextMode == ContextMode::adaptive;
+
+    if (includeDiatonic)
+    {
+        addCandidate (makeContextChord (tonic, "maj7", { 0, 4, 7, 11 }, ParsedQuality::major), 72.0f);
+        addCandidate (makeContextChord (tonic + 2, "m7", { 0, 3, 7, 10 }, ParsedQuality::minor), 68.0f);
+        addCandidate (makeContextChord (tonic + 4, "m7", { 0, 3, 7, 10 }, ParsedQuality::minor), 65.0f);
+        addCandidate (makeContextChord (tonic + 5, "maj7", { 0, 4, 7, 11 }, ParsedQuality::major), 69.0f);
+        addCandidate (makeContextChord (tonic + 7, "7", { 0, 4, 7, 10 }, ParsedQuality::dominant), 71.0f);
+        addCandidate (makeContextChord (tonic + 9, "m7", { 0, 3, 7, 10 }, ParsedQuality::minor), 67.0f);
+        addCandidate (makeContextChord (tonic + 11, "m7b5", { 0, 3, 6, 10 }, ParsedQuality::diminished), 58.0f);
+    }
+
+    if (includeSubstitutions)
+    {
+        const auto depth = settings.substitutionDepth;
+        if (current.quality == ParsedQuality::major || current.quality == ParsedQuality::dominant)
+            addCandidate (makeContextChord (current.root + 9, "m7", { 0, 3, 7, 10 }, ParsedQuality::minor), 57.0f + depth * 12.0f);
+        if (current.quality == ParsedQuality::minor)
+            addCandidate (makeContextChord (current.root + 3, "maj7", { 0, 4, 7, 11 }, ParsedQuality::major), 59.0f + depth * 12.0f);
+        if (current.quality == ParsedQuality::dominant)
+            addCandidate (makeContextChord (current.root + 6, "7", { 0, 4, 7, 10 }, ParsedQuality::dominant), 60.0f + depth * 18.0f);
+
+        addCandidate (makeContextChord (current.root + 7, "7", { 0, 4, 7, 10 }, ParsedQuality::dominant), 50.0f + depth * 17.0f);
+        addCandidate (makeContextChord (current.root + 2, "m7", { 0, 3, 7, 10 }, ParsedQuality::minor), 52.0f + depth * 14.0f);
+        addCandidate (makeContextChord (current.root + 10, "7", { 0, 4, 7, 10 }, ParsedQuality::dominant), 48.0f + depth * 18.0f);
+        addCandidate (makeContextChord (current.root + 1, "dim7", { 0, 3, 6, 9 }, ParsedQuality::diminished), 45.0f + depth * 20.0f);
+    }
+
+    struct ScoredVoicing
+    {
+        GeneratedChord generated;
+        float score = 0.0f;
+    };
+
+    std::vector<ScoredVoicing> scored;
+    scored.reserve (candidates.size());
+    const auto inputPitch = mod12 (inputNote);
+    static const std::array<int, 7> majorScale { 0, 2, 4, 5, 7, 9, 11 };
+    const auto inputInContextScale = std::find (majorScale.begin(), majorScale.end(),
+                                                mod12 (inputPitch - tonic)) != majorScale.end();
+
+    for (const auto& candidate : candidates)
+    {
+        ChordType type;
+        const auto suffixUtf8 = candidate.chord.suffix.toRawUTF8();
+        juce::ignoreUnused (suffixUtf8);
+        type.suffix = "";
+        type.intervals = candidate.chord.intervals;
+        type.complexity = juce::jlimit (0, 5, static_cast<int> (type.intervals.size()) - 3);
+
+        auto notes = voiceCandidate (inputNote, candidate.chord.root, type, settings, resolveRole (settings));
+        if (std::find (notes.begin(), notes.end(), inputNote) == notes.end())
+            notes.push_back (inputNote);
+        std::sort (notes.begin(), notes.end());
+        notes.erase (std::unique (notes.begin(), notes.end()), notes.end());
+
+        auto score = candidate.relationScore;
+        if (containsPitchClass (candidate.chord, inputPitch))
+            score += 38.0f;
+        else if (inputInContextScale)
+            score += 15.0f + settings.complexity * 8.0f;
+        else
+            score += settings.outside * 20.0f - 16.0f;
+        score -= averageMotion (notes, previousVoicing) * settings.voiceLeading * 0.85f;
+        score -= std::abs (static_cast<int> (notes.size()) - settings.chordSize) * 2.5f;
+        if (candidate.chord.root == current.root && candidate.chord.suffix == current.suffix)
+            score += (1.0f - settings.substitutionDepth) * 24.0f;
+
+        scored.push_back ({ { std::move (notes), candidate.chord.displayName }, score });
+    }
+
+    std::sort (scored.begin(), scored.end(), [] (const auto& a, const auto& b) { return a.score > b.score; });
+    const auto pool = juce::jlimit (1, static_cast<int> (scored.size()),
+                                    1 + static_cast<int> (std::round (settings.variation * 4.0f
+                                                                    + settings.substitutionDepth * 3.0f)));
+    auto chosen = 0;
+    if (pool > 1)
+    {
+        std::vector<double> weights;
+        for (int i = 0; i < pool; ++i)
+            weights.push_back (std::exp ((scored[static_cast<std::size_t> (i)].score - scored.front().score) / 12.0f));
+        std::discrete_distribution<int> pick (weights.begin(), weights.end());
+        chosen = pick (rng);
+    }
+
+    auto result = scored[static_cast<std::size_t> (chosen)].generated;
     previousVoicing = result.notes;
     previousChord = result;
     return result;

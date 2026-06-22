@@ -1,185 +1,249 @@
 #include "PluginEditor.h"
 
+#include <algorithm>
+#include <cmath>
+
 namespace
 {
-juce::Colour bgTop()      { return juce::Colour (0xff111318); }
-juce::Colour bgBottom()   { return juce::Colour (0xff07080b); }
-juce::Colour panel()      { return juce::Colour (0xff1a1e25); }
-juce::Colour panelLine()  { return juce::Colour (0xff313844); }
-juce::Colour textMain()   { return juce::Colour (0xfff2f5f7); }
-juce::Colour textMuted()  { return juce::Colour (0xff9da7b3); }
-juce::Colour accent()     { return juce::Colour (0xff34d399); }
-juce::Colour accentTwo()  { return juce::Colour (0xff60a5fa); }
+juce::Colour background() { return juce::Colour (0xff0b0e12); }
+juce::Colour panel() { return juce::Colour (0xff171c22); }
+juce::Colour panelRaised() { return juce::Colour (0xff20262e); }
+juce::Colour line() { return juce::Colour (0xff343d48); }
+juce::Colour text() { return juce::Colour (0xfff3f5f7); }
+juce::Colour muted() { return juce::Colour (0xff9ca8b5); }
+juce::Colour green() { return juce::Colour (0xff42d392); }
+juce::Colour amber() { return juce::Colour (0xffffbd5a); }
 
-void applyLabelStyle (juce::Label& label, float size, juce::Colour colour, bool bold = false)
+void setLabelStyle (juce::Label& label, float size, juce::Colour colour, bool bold = false)
 {
     label.setFont (juce::FontOptions (size, bold ? juce::Font::bold : juce::Font::plain));
     label.setColour (juce::Label::textColourId, colour);
     label.setJustificationType (juce::Justification::centredLeft);
 }
-
 }
 
 SoliVoicerLookAndFeel::SoliVoicerLookAndFeel()
 {
-    setColour (juce::Slider::thumbColourId, accent());
-    setColour (juce::Slider::rotarySliderFillColourId, accent());
-    setColour (juce::Slider::rotarySliderOutlineColourId, juce::Colour (0xff2b313a));
-    setColour (juce::ComboBox::backgroundColourId, juce::Colour (0xff202631));
-    setColour (juce::ComboBox::outlineColourId, panelLine());
-    setColour (juce::ComboBox::textColourId, textMain());
-    setColour (juce::PopupMenu::backgroundColourId, juce::Colour (0xff171b22));
-    setColour (juce::PopupMenu::textColourId, textMain());
-    setColour (juce::PopupMenu::highlightedBackgroundColourId, juce::Colour (0xff28445a));
-    setColour (juce::TextButton::buttonColourId, juce::Colour (0xff242a33));
-    setColour (juce::TextButton::buttonOnColourId, accent().darker (0.35f));
-    setColour (juce::TextButton::textColourOffId, textMain());
+    setColour (juce::Slider::thumbColourId, green());
+    setColour (juce::Slider::rotarySliderFillColourId, green());
+    setColour (juce::Slider::rotarySliderOutlineColourId, line());
+    setColour (juce::ComboBox::backgroundColourId, panelRaised());
+    setColour (juce::ComboBox::outlineColourId, line());
+    setColour (juce::ComboBox::textColourId, text());
+    setColour (juce::PopupMenu::backgroundColourId, panel());
+    setColour (juce::PopupMenu::textColourId, text());
+    setColour (juce::PopupMenu::highlightedBackgroundColourId, juce::Colour (0xff285846));
+    setColour (juce::TextButton::buttonColourId, panelRaised());
+    setColour (juce::TextButton::textColourOffId, text());
 }
 
-void SoliVoicerLookAndFeel::drawRotarySlider (juce::Graphics& g,
-                                              int x,
-                                              int y,
-                                              int width,
-                                              int height,
-                                              float sliderPos,
-                                              float rotaryStartAngle,
-                                              float rotaryEndAngle,
-                                              juce::Slider&)
+void SoliVoicerLookAndFeel::drawLinearSlider (juce::Graphics& g, int x, int y, int width, int height,
+                                              float sliderPos, float minSliderPos, float maxSliderPos,
+                                              const juce::Slider::SliderStyle style, juce::Slider& slider)
 {
-    const auto bounds = juce::Rectangle<float> (static_cast<float> (x), static_cast<float> (y), static_cast<float> (width), static_cast<float> (height)).reduced (6.0f);
-    const auto radius = juce::jmin (bounds.getWidth(), bounds.getHeight()) * 0.5f;
-    const auto centre = bounds.getCentre();
-    const auto angle = rotaryStartAngle + sliderPos * (rotaryEndAngle - rotaryStartAngle);
+    if (style != juce::Slider::LinearVertical && style != juce::Slider::LinearBarVertical)
+    {
+        juce::LookAndFeel_V4::drawLinearSlider (g, x, y, width, height, sliderPos, minSliderPos, maxSliderPos, style, slider);
+        return;
+    }
 
-    g.setColour (juce::Colour (0xff242b35));
-    g.fillEllipse (bounds.withSizeKeepingCentre (radius * 2.0f, radius * 2.0f));
-
-    juce::Path backgroundArc;
-    backgroundArc.addCentredArc (centre.x, centre.y, radius - 3.0f, radius - 3.0f, 0.0f, rotaryStartAngle, rotaryEndAngle, true);
-    g.setColour (juce::Colour (0xff39414c));
-    g.strokePath (backgroundArc, juce::PathStrokeType (4.0f, juce::PathStrokeType::curved, juce::PathStrokeType::rounded));
-
-    juce::Path valueArc;
-    valueArc.addCentredArc (centre.x, centre.y, radius - 3.0f, radius - 3.0f, 0.0f, rotaryStartAngle, angle, true);
-    g.setColour (accent());
-    g.strokePath (valueArc, juce::PathStrokeType (4.5f, juce::PathStrokeType::curved, juce::PathStrokeType::rounded));
-
-    const auto pointer = juce::Point<float> (centre.x + std::cos (angle - juce::MathConstants<float>::halfPi) * (radius - 10.0f),
-                                            centre.y + std::sin (angle - juce::MathConstants<float>::halfPi) * (radius - 10.0f));
-    g.setColour (textMain());
-    g.fillEllipse (juce::Rectangle<float> (pointer.x - 2.5f, pointer.y - 2.5f, 5.0f, 5.0f));
+    auto bounds = juce::Rectangle<float> (static_cast<float> (x), static_cast<float> (y),
+                                          static_cast<float> (width), static_cast<float> (height)).reduced (8.0f, 6.0f);
+    const auto track = juce::Rectangle<float> (bounds.getCentreX() - 3.0f, bounds.getY() + 4.0f,
+                                               6.0f, juce::jmax (8.0f, bounds.getHeight() - 14.0f));
+    const auto handleY = juce::jlimit (track.getY(), track.getBottom(), sliderPos);
+    g.setColour (line());
+    g.fillRoundedRectangle (track, 3.0f);
+    g.setColour (green());
+    g.fillRoundedRectangle (track.withTop (handleY), 3.0f);
+    auto handle = juce::Rectangle<float> (bounds.getCentreX() - 15.0f, handleY - 5.0f, 30.0f, 10.0f);
+    g.setColour (panelRaised());
+    g.fillRoundedRectangle (handle, 3.0f);
+    g.setColour (green());
+    g.drawRoundedRectangle (handle, 3.0f, 1.4f);
 }
 
-void SoliVoicerLookAndFeel::drawComboBox (juce::Graphics& g,
-                                          int width,
-                                          int height,
-                                          bool,
-                                          int,
-                                          int,
-                                          int,
-                                          int,
-                                          juce::ComboBox&)
+void SoliVoicerLookAndFeel::drawComboBox (juce::Graphics& g, int width, int height, bool,
+                                          int, int, int, int, juce::ComboBox&)
 {
-    auto bounds = juce::Rectangle<float> (0.5f, 0.5f, static_cast<float> (width) - 1.0f, static_cast<float> (height) - 1.0f);
-    g.setColour (juce::Colour (0xff202631));
-    g.fillRoundedRectangle (bounds, 6.0f);
-    g.setColour (panelLine());
-    g.drawRoundedRectangle (bounds, 6.0f, 1.0f);
-
+    const auto bounds = juce::Rectangle<float> (0.5f, 0.5f, static_cast<float> (width) - 1.0f,
+                                                 static_cast<float> (height) - 1.0f);
+    g.setColour (panelRaised());
+    g.fillRoundedRectangle (bounds, 5.0f);
+    g.setColour (line());
+    g.drawRoundedRectangle (bounds, 5.0f, 1.0f);
     juce::Path arrow;
-    arrow.startNewSubPath (bounds.getRight() - 18.0f, bounds.getCentreY() - 3.0f);
-    arrow.lineTo (bounds.getRight() - 11.0f, bounds.getCentreY() + 4.0f);
-    arrow.lineTo (bounds.getRight() - 4.0f, bounds.getCentreY() - 3.0f);
-    g.setColour (accent());
-    g.strokePath (arrow, juce::PathStrokeType (1.8f, juce::PathStrokeType::curved, juce::PathStrokeType::rounded));
+    arrow.startNewSubPath (bounds.getRight() - 17.0f, bounds.getCentreY() - 3.0f);
+    arrow.lineTo (bounds.getRight() - 11.0f, bounds.getCentreY() + 3.0f);
+    arrow.lineTo (bounds.getRight() - 5.0f, bounds.getCentreY() - 3.0f);
+    g.setColour (green());
+    g.strokePath (arrow, juce::PathStrokeType (1.8f));
 }
 
-SoliVoicerAudioProcessorEditor::SoliVoicerAudioProcessorEditor (SoliVoicerAudioProcessor& processor)
-    : AudioProcessorEditor (&processor),
-      processorRef (processor)
+void SoliVoicerMidiDragButton::mouseDown (const juce::MouseEvent& event)
+{
+    dragStarted = false;
+    juce::TextButton::mouseDown (event);
+}
+
+void SoliVoicerMidiDragButton::mouseDrag (const juce::MouseEvent& event)
+{
+    if (! dragStarted && event.getDistanceFromDragStart() > 4)
+    {
+        dragStarted = true;
+        if (onDragStart)
+            onDragStart();
+        return;
+    }
+
+    juce::TextButton::mouseDrag (event);
+}
+
+void SoliVoicerMidiDragButton::mouseUp (const juce::MouseEvent& event)
+{
+    const auto wasDragStarted = dragStarted;
+    dragStarted = false;
+    if (! wasDragStarted)
+        juce::TextButton::mouseUp (event);
+    else
+        repaint();
+}
+
+SoliVoicerAudioProcessorEditor::SoliVoicerAudioProcessorEditor (SoliVoicerAudioProcessor& owner)
+    : AudioProcessorEditor (&owner), processorRef (owner)
 {
     setLookAndFeel (&lookAndFeel);
-    setSize (980, 740);
+    setResizable (true, true);
+    setResizeLimits (860, 720, 1500, 1120);
+    setSize (1120, 880);
+    tooltipWindow = std::make_unique<juce::TooltipWindow> (this, 700);
 
     addAndMakeVisible (titleLabel);
-    titleLabel.setText ("Lead Voicer", juce::dontSendNotification);
-    applyLabelStyle (titleLabel, 28.0f, textMain(), true);
-
-    subtitleLabel.setText ({}, juce::dontSendNotification);
+    titleLabel.setText ("VOICIZER", juce::dontSendNotification);
+    setLabelStyle (titleLabel, 22.0f, text(), true);
 
     addAndMakeVisible (chordLabel);
-    chordLabel.setText ("Chord: --", juce::dontSendNotification);
-    chordLabel.setFont (juce::FontOptions (22.0f, juce::Font::bold));
-    chordLabel.setColour (juce::Label::textColourId, accent());
+    chordLabel.setText ("--", juce::dontSendNotification);
+    setLabelStyle (chordLabel, 20.0f, green(), true);
     chordLabel.setJustificationType (juce::Justification::centredRight);
 
     addAndMakeVisible (randomButton);
-    randomButton.onClick = [this] { randomizeSettings(); };
-
+    addAndMakeVisible (randomVoicingButton);
     addAndMakeVisible (resetButton);
+    randomButton.onClick = [this] { randomizeAllSettings(); };
+    randomVoicingButton.onClick = [this] { randomizeVoicingSettings(); };
     resetButton.onClick = [this] { resetDefaults(); };
+    randomButton.setTooltip ("Randomize all settings except Harmony Source and Output.");
+    randomVoicingButton.setTooltip ("Randomize voicing settings, including the input note role.");
+    resetButton.setTooltip ("Restore Voicizer defaults.");
 
-    addAndMakeVisible (helpButton);
-    helpButton.onClick = [this] { updateHelpState(); };
-    for (auto& button : infoButtons)
+    addAndMakeVisible (midiRecordLabel);
+    midiRecordLabel.setText ("MIDI Capture", juce::dontSendNotification);
+    setLabelStyle (midiRecordLabel, 12.0f, muted(), true);
+    addAndMakeVisible (midiRecordStatusLabel);
+    midiRecordStatusLabel.setText ("No take", juce::dontSendNotification);
+    setLabelStyle (midiRecordStatusLabel, 12.0f, muted(), true);
+    addAndMakeVisible (recordMidiButton);
+    addAndMakeVisible (dragMidiButton);
+    addAndMakeVisible (clearMidiButton);
+    recordMidiButton.setClickingTogglesState (true);
+    recordMidiButton.setTooltip ("Record the generated MIDI output into a draggable MIDI take.");
+    dragMidiButton.setTooltip ("Drag the recorded MIDI take into Logic.");
+    clearMidiButton.setTooltip ("Clear the captured MIDI take.");
+    recordMidiButton.onClick = [this]
     {
-        configureInfoButton (button, {});
-        button.setVisible (false);
-    }
+        processorRef.setMidiRecordingEnabled (recordMidiButton.getToggleState());
+        updateRecorderControls();
+    };
+    dragMidiButton.onClick = [this] { beginRecordedMidiDrag(); };
+    dragMidiButton.onDragStart = [this] { beginRecordedMidiDrag(); };
+    clearMidiButton.onClick = [this]
+    {
+        processorRef.clearRecordedMidi();
+        updateRecorderControls();
+        repaint (midiRecordBounds);
+    };
 
-    addAndMakeVisible (keyLabel);
-    keyLabel.setText ("Keys", juce::dontSendNotification);
-    applyLabelStyle (keyLabel, 13.0f, textMuted(), true);
+    addCombo (sourceModeBox, sourceModeLabel, "Harmony Source", SoliVoicerAudioProcessor::sourceModeNames(),
+              "Manual uses key and scale selection. Follow Chordizer reads the shared chord timeline.");
+    addCombo (outputModeBox, outputModeLabel, "Output", SoliVoicerAudioProcessor::outputModeNames(),
+              "Held Voicing sustains the chord. Performance plays a host-tempo rhythmic interpretation.");
+    addCombo (contextModeBox, contextModeLabel, "Relationship", Soli::ChordEngine::contextModeNames(),
+              "Match follows the region literally. Diatonic and substitution modes choose compatible alternatives.");
+    addCombo (roleBox, roleLabel, "Input Note Role", Soli::ChordEngine::roleNames(),
+              "Controls the placement of the incoming note in the generated voicing.");
+    addCombo (styleBox, styleLabel, "Voicing Style", Soli::ChordEngine::styleNames(),
+              "Sets harmonic and spacing preferences for generated voicings.");
+    addCombo (playabilityBox, playabilityLabel, "Playable As", Soli::ChordEngine::playabilityNames(),
+              "Constrains spacing and voice count for the selected instrument family.");
+    addCombo (strumModeBox, strumModeLabel, "Rake", Soli::ChordEngine::strumModeNames(),
+              "Sets simultaneous, upward, downward, or randomized note onset order.");
+    addCombo (performanceStyleBox, performanceStyleLabel, "Performance Style",
+              SoliVoicerAudioProcessor::performanceStyleNames(),
+              "Selects the tempo-synchronized chord performance pattern.");
+    addCombo (performanceSubStyleBox, performanceSubStyleLabel, "Sub Style",
+              SoliVoicerAudioProcessor::performanceSubStyleNames (0),
+              "Named variation inside the selected performance style.");
+    addAndMakeVisible (doubleTimeButton);
+    doubleTimeButton.setButtonText ("Double Time");
+    doubleTimeButton.setTooltip ("Runs the performance pattern at twice the rhythmic rate.");
+    doubleTimeButton.setColour (juce::ToggleButton::textColourId, text());
+    doubleTimeButton.setColour (juce::ToggleButton::tickColourId, green());
+    addAndMakeVisible (randomPerformanceButton);
+    randomPerformanceButton.onClick = [this] { randomizePerformanceSettings(); };
+    randomPerformanceButton.setTooltip ("Randomize only the performance style, sub-style, and performance controls.");
 
-    addAndMakeVisible (scaleLabel);
-    scaleLabel.setText ("Scales", juce::dontSendNotification);
-    applyLabelStyle (scaleLabel, 13.0f, textMuted(), true);
-
+    configureLabel (keyLabel, "Keys");
+    configureLabel (scaleLabel, "Scales");
+    addAndMakeVisible (randomKeyScaleButton);
+    randomKeyScaleButton.onClick = [this] { randomizeKeyScaleSettings(); };
+    randomKeyScaleButton.setTooltip ("Randomize the enabled keys and scales.");
     const auto keys = Soli::ChordEngine::keyNames();
     const auto scales = Soli::ChordEngine::scaleNames();
     for (int i = 0; i < 12; ++i)
     {
-        configureMaskToggle (keyToggles[static_cast<size_t> (i)], keys[i]);
-        keyToggles[static_cast<size_t> (i)].onClick = [this]
+        configureMaskToggle (keyToggles[static_cast<std::size_t> (i)], keys[i]);
+        keyToggles[static_cast<std::size_t> (i)].onClick = [this]
         {
-            commitMaskFromToggles (ParameterIDs::keyMask, keyToggles, Soli::ChordEngine::keyNames().size());
+            commitMask (ParameterIDs::keyMask, keyToggles, 12);
         };
-
-        configureMaskToggle (scaleToggles[static_cast<size_t> (i)], scales[i]);
-        scaleToggles[static_cast<size_t> (i)].onClick = [this]
+        configureMaskToggle (scaleToggles[static_cast<std::size_t> (i)], scales[i]);
+        scaleToggles[static_cast<std::size_t> (i)].onClick = [this]
         {
-            commitMaskFromToggles (ParameterIDs::scaleMask, scaleToggles, Soli::ChordEngine::scaleNames().size());
+            commitMask (ParameterIDs::scaleMask, scaleToggles, 12);
         };
     }
 
-    for (auto* button : { &keyAllButton, &keyDefaultButton, &scaleAllButton, &scaleDefaultButton })
-        addAndMakeVisible (*button);
+    addAndMakeVisible (linkStatusLabel);
+    setLabelStyle (linkStatusLabel, 12.0f, muted(), true);
 
-    keyAllButton.onClick = [this] { setParameterValue (ParameterIDs::keyMask, static_cast<float> ((1 << Soli::ChordEngine::keyNames().size()) - 1)); updateMaskToggles(); };
-    keyDefaultButton.onClick = [this] { setParameterValue (ParameterIDs::keyMask, 1.0f); updateMaskToggles(); };
-    scaleAllButton.onClick = [this] { setParameterValue (ParameterIDs::scaleMask, static_cast<float> ((1 << Soli::ChordEngine::scaleNames().size()) - 1)); updateMaskToggles(); };
-    scaleDefaultButton.onClick = [this] { setParameterValue (ParameterIDs::scaleMask, 1.0f); updateMaskToggles(); };
-
-    addLabeledCombo (roleBox, roleLabel, "Input Note Role", Soli::ChordEngine::roleNames());
-    addLabeledCombo (styleBox, styleLabel, "Style", Soli::ChordEngine::styleNames());
-    addLabeledCombo (playabilityBox, playabilityLabel, "Playable As", Soli::ChordEngine::playabilityNames());
-    addLabeledCombo (strumModeBox, strumModeLabel, "Rake", Soli::ChordEngine::strumModeNames());
-
-    addLabeledSlider (chordSizeSlider, chordSizeLabel, "Chord Size");
-    addLabeledSlider (complexitySlider, complexityLabel, "Complexity");
-    addLabeledSlider (voiceLeadingSlider, voiceLeadingLabel, "Voice Leading");
-    addLabeledSlider (outsideSlider, outsideLabel, "Outside");
-    addLabeledSlider (variationSlider, variationLabel, "Variation");
-    addLabeledSlider (repeatSlider, repeatLabel, "Repeat");
-    addLabeledSlider (strumSpeedSlider, strumSpeedLabel, "Rake Speed");
-    addLabeledSlider (minNoteSlider, minNoteLabel, "Min Note");
-    addLabeledSlider (maxNoteSlider, maxNoteLabel, "Max Note");
+    addSlider (chordSizeSlider, chordSizeLabel, "Chord Size", "Number of generated voices.");
+    addSlider (complexitySlider, complexityLabel, "Voicing Complexity", "Controls extensions and richer chord colors.");
+    addSlider (voiceLeadingSlider, voiceLeadingLabel, "Voice Leading", "Prioritizes smooth movement from the previous voicing.");
+    addSlider (outsideSlider, outsideLabel, "Outside Harmony", "Allows notes and chord choices outside the immediate scale.");
+    addSlider (variationSlider, variationLabel, "Variation", "Widens the pool of valid generated alternatives.");
+    addSlider (repeatSlider, repeatLabel, "Repeat", "Chance to retain the prior voicing.");
+    addSlider (strumSpeedSlider, strumSpeedLabel, "Rake Speed", "Controls the onset spread for raked held chords.");
+    addSlider (minNoteSlider, minNoteLabel, "Lowest Note", "Lowest generated MIDI note.");
+    addSlider (maxNoteSlider, maxNoteLabel, "Highest Note", "Highest generated MIDI note.");
+    addSlider (substitutionSlider, substitutionLabel, "Substitution Depth", "Controls how far compatible replacements may move from the Chordizer chord.");
+    addSlider (performanceComplexitySlider, performanceComplexityLabel, "Sophistication", "Adds denser and more independent performance gestures.");
+    addSlider (densitySlider, densityLabel, "Rhythm Density", "Moves from quarter-note to eighth-note and sixteenth-note activity.");
+    addSlider (syncopationSlider, syncopationLabel, "Syncopation", "Moves offbeats later and emphasizes displaced attacks.");
+    addSlider (swingSlider, swingLabel, "Swing", "Delays alternating subdivisions.");
+    addSlider (humanizeSlider, humanizeLabel, "Humanize", "Adds bounded timing and velocity variation.");
+    addSlider (gateSlider, gateLabel, "Gate", "Controls the performed note duration.");
 
     auto& state = processorRef.getValueTreeState();
-    roleAttachment = std::make_unique<ComboBoxAttachment> (state, ParameterIDs::role, roleBox);
-    styleAttachment = std::make_unique<ComboBoxAttachment> (state, ParameterIDs::style, styleBox);
-    playabilityAttachment = std::make_unique<ComboBoxAttachment> (state, ParameterIDs::playability, playabilityBox);
-    strumModeAttachment = std::make_unique<ComboBoxAttachment> (state, ParameterIDs::strumMode, strumModeBox);
+    sourceModeAttachment = std::make_unique<ComboAttachment> (state, ParameterIDs::sourceMode, sourceModeBox);
+    outputModeAttachment = std::make_unique<ComboAttachment> (state, ParameterIDs::outputMode, outputModeBox);
+    contextModeAttachment = std::make_unique<ComboAttachment> (state, ParameterIDs::contextMode, contextModeBox);
+    roleAttachment = std::make_unique<ComboAttachment> (state, ParameterIDs::role, roleBox);
+    styleAttachment = std::make_unique<ComboAttachment> (state, ParameterIDs::style, styleBox);
+    playabilityAttachment = std::make_unique<ComboAttachment> (state, ParameterIDs::playability, playabilityBox);
+    strumModeAttachment = std::make_unique<ComboAttachment> (state, ParameterIDs::strumMode, strumModeBox);
+    performanceStyleAttachment = std::make_unique<ComboAttachment> (state, ParameterIDs::performanceStyle, performanceStyleBox);
+    performanceSubStyleAttachment = std::make_unique<ComboAttachment> (state, ParameterIDs::performanceSubStyle, performanceSubStyleBox);
     chordSizeAttachment = std::make_unique<SliderAttachment> (state, ParameterIDs::chordSize, chordSizeSlider);
     complexityAttachment = std::make_unique<SliderAttachment> (state, ParameterIDs::complexity, complexitySlider);
     voiceLeadingAttachment = std::make_unique<SliderAttachment> (state, ParameterIDs::voiceLeading, voiceLeadingSlider);
@@ -189,10 +253,20 @@ SoliVoicerAudioProcessorEditor::SoliVoicerAudioProcessorEditor (SoliVoicerAudioP
     strumSpeedAttachment = std::make_unique<SliderAttachment> (state, ParameterIDs::strumSpeed, strumSpeedSlider);
     minNoteAttachment = std::make_unique<SliderAttachment> (state, ParameterIDs::minNote, minNoteSlider);
     maxNoteAttachment = std::make_unique<SliderAttachment> (state, ParameterIDs::maxNote, maxNoteSlider);
+    substitutionAttachment = std::make_unique<SliderAttachment> (state, ParameterIDs::substitutionDepth, substitutionSlider);
+    performanceComplexityAttachment = std::make_unique<SliderAttachment> (state, ParameterIDs::performanceComplexity, performanceComplexitySlider);
+    densityAttachment = std::make_unique<SliderAttachment> (state, ParameterIDs::rhythmDensity, densitySlider);
+    syncopationAttachment = std::make_unique<SliderAttachment> (state, ParameterIDs::syncopation, syncopationSlider);
+    swingAttachment = std::make_unique<SliderAttachment> (state, ParameterIDs::swing, swingSlider);
+    humanizeAttachment = std::make_unique<SliderAttachment> (state, ParameterIDs::humanize, humanizeSlider);
+    gateAttachment = std::make_unique<SliderAttachment> (state, ParameterIDs::gate, gateSlider);
+    doubleTimeAttachment = std::make_unique<ButtonAttachment> (state, ParameterIDs::doubleTime, doubleTimeButton);
 
-    installTooltips();
+    updatePerformanceSubStyleChoices();
+    updateRecorderControls();
     updateMaskToggles();
-    startTimerHz (12);
+    updateModeVisibility();
+    startTimerHz (30);
 }
 
 SoliVoicerAudioProcessorEditor::~SoliVoicerAudioProcessorEditor()
@@ -200,249 +274,705 @@ SoliVoicerAudioProcessorEditor::~SoliVoicerAudioProcessorEditor()
     setLookAndFeel (nullptr);
 }
 
-void SoliVoicerAudioProcessorEditor::configureSlider (juce::Slider& slider)
+void SoliVoicerAudioProcessorEditor::mouseDown (const juce::MouseEvent& event)
 {
-    slider.setSliderStyle (juce::Slider::RotaryHorizontalVerticalDrag);
-    slider.setTextBoxStyle (juce::Slider::TextBoxBelow, false, 72, 22);
-    slider.setColour (juce::Slider::textBoxTextColourId, textMain());
-    slider.setColour (juce::Slider::textBoxBackgroundColourId, juce::Colour (0xff141820));
-    slider.setColour (juce::Slider::textBoxOutlineColourId, juce::Colour (0x00000000));
+    midiShapeDragArmed = midiShapeBounds.contains (event.getPosition())
+                      && recordedMidi.hasOrigin
+                      && ! recordedMidi.events.empty()
+                      && ! processorRef.isMidiRecording();
 }
 
-void SoliVoicerAudioProcessorEditor::configureCombo (juce::ComboBox& combo, const juce::StringArray& names)
+void SoliVoicerAudioProcessorEditor::mouseDrag (const juce::MouseEvent& event)
 {
-    combo.clear();
+    if (midiShapeDragArmed && event.getDistanceFromDragStart() > 4)
+    {
+        midiShapeDragArmed = false;
+        beginRecordedMidiDrag();
+    }
+}
+
+void SoliVoicerAudioProcessorEditor::mouseUp (const juce::MouseEvent&)
+{
+    midiShapeDragArmed = false;
+}
+
+void SoliVoicerAudioProcessorEditor::configureSlider (juce::Slider& slider, const juce::String& tooltip)
+{
+    slider.setSliderStyle (juce::Slider::LinearVertical);
+    slider.setTextBoxStyle (juce::Slider::TextBoxBelow, false, 72, 20);
+    slider.setColour (juce::Slider::textBoxTextColourId, text());
+    slider.setColour (juce::Slider::textBoxBackgroundColourId, background());
+    slider.setColour (juce::Slider::textBoxOutlineColourId, juce::Colours::transparentBlack);
+    slider.setTooltip (tooltip);
+}
+
+void SoliVoicerAudioProcessorEditor::configureCombo (juce::ComboBox& combo,
+                                                     const juce::StringArray& names,
+                                                     const juce::String& tooltip)
+{
     for (int i = 0; i < names.size(); ++i)
         combo.addItem (names[i], i + 1);
-    combo.setColour (juce::ComboBox::textColourId, textMain());
     combo.setJustificationType (juce::Justification::centredLeft);
+    combo.setTooltip (tooltip);
 }
 
-void SoliVoicerAudioProcessorEditor::addLabeledSlider (juce::Slider& slider, juce::Label& label, const juce::String& text)
+void SoliVoicerAudioProcessorEditor::configureLabel (juce::Label& label, const juce::String& name)
 {
     addAndMakeVisible (label);
-    label.setText (text, juce::dontSendNotification);
-    applyLabelStyle (label, 13.0f, textMuted(), true);
+    label.setText (name, juce::dontSendNotification);
+    setLabelStyle (label, 12.0f, muted(), true);
+}
+
+void SoliVoicerAudioProcessorEditor::addSlider (juce::Slider& slider, juce::Label& label,
+                                                const juce::String& name, const juce::String& tooltip)
+{
+    configureLabel (label, name);
     addAndMakeVisible (slider);
-    configureSlider (slider);
+    configureSlider (slider, tooltip);
+    label.setTooltip (tooltip);
 }
 
-void SoliVoicerAudioProcessorEditor::addLabeledCombo (juce::ComboBox& combo, juce::Label& label, const juce::String& text, const juce::StringArray& names)
+void SoliVoicerAudioProcessorEditor::addCombo (juce::ComboBox& combo, juce::Label& label,
+                                               const juce::String& name, const juce::StringArray& choices,
+                                               const juce::String& tooltip)
 {
-    addAndMakeVisible (label);
-    label.setText (text, juce::dontSendNotification);
-    applyLabelStyle (label, 13.0f, textMuted(), true);
+    configureLabel (label, name);
     addAndMakeVisible (combo);
-    configureCombo (combo, names);
+    configureCombo (combo, choices, tooltip);
+    label.setTooltip (tooltip);
 }
 
-void SoliVoicerAudioProcessorEditor::configureMaskToggle (juce::ToggleButton& button, const juce::String& text)
+void SoliVoicerAudioProcessorEditor::configureMaskToggle (juce::ToggleButton& button, const juce::String& name)
 {
     addAndMakeVisible (button);
-    button.setButtonText (text);
-    button.setColour (juce::ToggleButton::textColourId, textMain());
-    button.setColour (juce::ToggleButton::tickColourId, accent());
-    button.setColour (juce::ToggleButton::tickDisabledColourId, panelLine());
-}
-
-void SoliVoicerAudioProcessorEditor::configureInfoButton (juce::TextButton& button, const juce::String& tooltip)
-{
-    addAndMakeVisible (button);
-    button.setButtonText ("i");
-    button.setTooltip (tooltip);
-    button.setColour (juce::TextButton::buttonColourId, juce::Colour (0xff1f2933));
-    button.setColour (juce::TextButton::textColourOffId, accent());
-    button.setColour (juce::TextButton::buttonOnColourId, juce::Colour (0xff28445a));
+    button.setButtonText (name);
+    button.setColour (juce::ToggleButton::textColourId, text());
+    button.setColour (juce::ToggleButton::tickColourId, green());
 }
 
 void SoliVoicerAudioProcessorEditor::timerCallback()
 {
     chordLabel.setText (processorRef.getLastChordName(), juce::dontSendNotification);
+    const auto source = sourceModeBox.getSelectedItemIndex();
+    const auto output = outputModeBox.getSelectedItemIndex();
+    if (source != lastSourceMode || output != lastOutputMode)
+        updateModeVisibility();
+    if (performanceStyleBox.getSelectedItemIndex() != lastPerformanceStyle)
+        updatePerformanceSubStyleChoices();
+    if (source == 1)
+    {
+        const auto previousPlayhead = chordizerSnapshot.playheadPpq;
+        chordizerSnapshot = processorRef.getChordizerSnapshot();
+        linkStatusLabel.setText (chordizerSnapshot.connected
+                                 ? juce::String (chordizerSnapshot.regions.size()) + " linked regions"
+                                 : "Chordizer offline", juce::dontSendNotification);
+        if (chordizerSnapshot.connected)
+        {
+            const auto playheadMoved = std::abs (chordizerSnapshot.playheadPpq - previousPlayhead) > 0.0001
+                                    || std::abs (chordizerSnapshot.playheadPpq - lastTimelinePlayheadPpq) > 0.0001;
+            const auto visiblePpq = juce::jmax (1, chordizerSnapshot.numerator) * 6.0;
+            if (chordizerSnapshot.playing || playheadMoved)
+                timelineScrollPpq = juce::jmax (0.0, chordizerSnapshot.playheadPpq - visiblePpq * 0.36);
+            lastTimelinePlayheadPpq = chordizerSnapshot.playheadPpq;
+        }
+    }
+    recordedMidi = processorRef.recordedMidiSnapshot();
+    updateRecorderControls();
     updateMaskToggles();
+    repaint (timelineBounds.expanded (3).getUnion (midiRecordBounds.expanded (3)));
 }
 
 void SoliVoicerAudioProcessorEditor::paint (juce::Graphics& g)
 {
-    g.setGradientFill (juce::ColourGradient (bgTop(), 0.0f, 0.0f, bgBottom(), 0.0f, static_cast<float> (getHeight()), false));
-    g.fillAll();
+    g.fillAll (background());
+    auto surface = getLocalBounds().toFloat().reduced (14.0f);
+    g.setColour (panel());
+    g.fillRoundedRectangle (surface, 7.0f);
+    g.setColour (line());
+    g.drawRoundedRectangle (surface, 7.0f, 1.0f);
+    g.setColour (green().withAlpha (0.85f));
+    g.fillRect (surface.getX(), surface.getY(), surface.getWidth(), 3.0f);
+    paintGroupFrame (g, midiRecordBounds, {});
+    paintGroupFrame (g, voicingGroupBounds, "Voicing");
+    paintGroupFrame (g, performanceGroupBounds, "Performance");
+    if (sourceModeBox.getSelectedItemIndex() == 1)
+        paintChordizerTimeline (g);
+    paintRecordedMidi (g);
+}
 
-    auto bounds = getLocalBounds().toFloat().reduced (18.0f);
-    g.setColour (panel().withAlpha (0.86f));
-    g.fillRoundedRectangle (bounds, 10.0f);
-    g.setColour (panelLine());
-    g.drawRoundedRectangle (bounds, 10.0f, 1.0f);
+void SoliVoicerAudioProcessorEditor::paintChordizerTimeline (juce::Graphics& g)
+{
+    if (timelineBounds.isEmpty())
+        return;
+    auto bounds = timelineBounds.toFloat();
+    g.setColour (background());
+    g.fillRoundedRectangle (bounds, 5.0f);
+    g.setColour (line());
+    g.drawRoundedRectangle (bounds, 5.0f, 1.0f);
 
-    auto header = bounds.removeFromTop (82.0f).reduced (18.0f, 12.0f);
-    juce::ColourGradient glow (accent().withAlpha (0.28f), header.getX(), header.getY(),
-                               accentTwo().withAlpha (0.12f), header.getRight(), header.getBottom(), false);
-    g.setGradientFill (glow);
-    g.fillRoundedRectangle (header.expanded (3.0f, 4.0f), 8.0f);
+    if (! chordizerSnapshot.connected)
+    {
+        g.setColour (muted());
+        g.setFont (juce::FontOptions (13.0f));
+        g.drawText ("Open a Chordizer instance to link its shared chord track.", timelineBounds,
+                    juce::Justification::centred);
+        return;
+    }
+
+    const auto playhead = chordizerSnapshot.playheadPpq;
+    const auto beatsPerBar = juce::jmax (1, chordizerSnapshot.numerator);
+    const auto visibleWidth = beatsPerBar * 6.0;
+    if (timelineScrollPpq <= 0.0 && playhead > 0.0)
+        timelineScrollPpq = juce::jmax (0.0, playhead - visibleWidth * 0.36);
+    const auto visibleStart = juce::jmax (0.0, timelineScrollPpq);
+    const auto visibleEnd = visibleStart + visibleWidth;
+    const auto xForPpq = [&] (double ppq)
+    {
+        return bounds.getX() + static_cast<float> ((ppq - visibleStart) / (visibleEnd - visibleStart)) * bounds.getWidth();
+    };
+
+    g.saveState();
+    g.reduceClipRegion (timelineBounds);
+    for (double bar = std::floor (visibleStart / beatsPerBar) * beatsPerBar;
+         bar <= visibleEnd; bar += beatsPerBar)
+    {
+        const auto x = xForPpq (bar);
+        g.setColour (line().withAlpha (0.55f));
+        g.drawVerticalLine (static_cast<int> (x), bounds.getY(), bounds.getBottom());
+        g.setColour (muted());
+        g.setFont (juce::FontOptions (10.0f));
+        g.drawText (juce::String (static_cast<int> (bar / beatsPerBar) + 1),
+                    static_cast<int> (x + 3), timelineBounds.getY() + 2, 28, 14,
+                    juce::Justification::centredLeft);
+    }
+
+    for (const auto& region : chordizerSnapshot.regions)
+    {
+        if (region.endPpq <= visibleStart || region.startPpq >= visibleEnd)
+            continue;
+        const auto left = xForPpq (juce::jmax (region.startPpq, visibleStart));
+        const auto right = xForPpq (juce::jmin (region.endPpq, visibleEnd));
+        auto regionBounds = juce::Rectangle<float> (left + 1.0f, bounds.getY() + 19.0f,
+                                                     juce::jmax (4.0f, right - left - 2.0f),
+                                                     bounds.getHeight() - 24.0f);
+        const auto hue = static_cast<float> ((region.name.hashCode() & 1023) / 1023.0);
+        auto colour = juce::Colour::fromHSV (hue, 0.48f, 0.76f, 1.0f);
+        g.setColour (colour);
+        g.fillRoundedRectangle (regionBounds, 3.0f);
+        g.setColour (text());
+        g.setFont (juce::FontOptions (juce::jlimit (10.0f, 15.0f, regionBounds.getHeight() * 0.34f),
+                                      juce::Font::bold));
+        g.drawFittedText (region.name, regionBounds.toNearestInt().reduced (4, 1),
+                          juce::Justification::centred, 1);
+    }
+
+    const auto playheadX = xForPpq (playhead);
+    g.setColour (amber());
+    g.fillRect (playheadX - 1.0f, bounds.getY(), 2.0f, bounds.getHeight());
+    g.restoreState();
+}
+
+void SoliVoicerAudioProcessorEditor::paintGroupFrame (juce::Graphics& g,
+                                                      juce::Rectangle<int> bounds,
+                                                      const juce::String& title)
+{
+    if (bounds.isEmpty())
+        return;
+
+    auto frame = bounds.toFloat();
+    g.setColour (panelRaised().withAlpha (0.46f));
+    g.fillRoundedRectangle (frame, 6.0f);
+    g.setColour (line());
+    g.drawRoundedRectangle (frame, 6.0f, 1.0f);
+    if (title.isNotEmpty())
+    {
+        g.setColour (muted());
+        g.setFont (juce::FontOptions (11.0f, juce::Font::bold));
+        g.drawText (title, bounds.reduced (12, 4).removeFromTop (16), juce::Justification::centredLeft);
+    }
+}
+
+void SoliVoicerAudioProcessorEditor::paintRecordedMidi (juce::Graphics& g)
+{
+    if (midiShapeBounds.isEmpty())
+        return;
+
+    auto bounds = midiShapeBounds.toFloat();
+    g.setColour (background());
+    g.fillRoundedRectangle (bounds, 4.0f);
+    g.setColour (line().withAlpha (0.8f));
+    g.drawRoundedRectangle (bounds, 4.0f, 1.0f);
+
+    if (! recordedMidi.hasOrigin || recordedMidi.events.empty())
+    {
+        g.setColour (muted());
+        g.setFont (juce::FontOptions (12.0f));
+        g.drawText ("Empty take", midiShapeBounds, juce::Justification::centred);
+        return;
+    }
+
+    struct Span
+    {
+        double start = 0.0;
+        double end = 0.0;
+        int note = 60;
+        int velocity = 96;
+    };
+
+    auto events = recordedMidi.events;
+    std::sort (events.begin(), events.end(), [] (const auto& a, const auto& b)
+    {
+        if (std::abs (a.ppq - b.ppq) > 0.0000001)
+            return a.ppq < b.ppq;
+        return a.message.isNoteOff() && b.message.isNoteOn();
+    });
+
+    std::array<double, 16 * 128> starts;
+    std::array<int, 16 * 128> velocities;
+    starts.fill (-1.0);
+    velocities.fill (96);
+    std::vector<Span> spans;
+    auto minNote = 127;
+    auto maxNote = 0;
+
+    for (const auto& event : events)
+    {
+        const auto& message = event.message;
+        if (! message.isNoteOnOrOff())
+            continue;
+
+        const auto index = static_cast<std::size_t> ((juce::jlimit (1, 16, message.getChannel()) - 1) * 128
+                                                     + juce::jlimit (0, 127, message.getNoteNumber()));
+        if (message.isNoteOn())
+        {
+            starts[index] = event.ppq;
+            velocities[index] = juce::jlimit (1, 127, static_cast<int> (message.getVelocity()));
+            minNote = juce::jmin (minNote, message.getNoteNumber());
+            maxNote = juce::jmax (maxNote, message.getNoteNumber());
+        }
+        else if (starts[index] >= 0.0)
+        {
+            spans.push_back ({ starts[index], juce::jmax (starts[index] + 0.015, event.ppq),
+                               message.getNoteNumber(), velocities[index] });
+            starts[index] = -1.0;
+            minNote = juce::jmin (minNote, message.getNoteNumber());
+            maxNote = juce::jmax (maxNote, message.getNoteNumber());
+        }
+    }
+
+    for (std::size_t index = 0; index < starts.size(); ++index)
+    {
+        if (starts[index] < 0.0)
+            continue;
+        const auto note = static_cast<int> (index % 128);
+        spans.push_back ({ starts[index], juce::jmax (starts[index] + 0.015, recordedMidi.endPpq),
+                           note, velocities[index] });
+        minNote = juce::jmin (minNote, note);
+        maxNote = juce::jmax (maxNote, note);
+    }
+
+    if (spans.empty())
+        return;
+
+    const auto origin = recordedMidi.originPpq;
+    const auto end = juce::jmax (origin + 0.25, recordedMidi.endPpq);
+    const auto duration = end - origin;
+    const auto noteRange = juce::jmax (1, maxNote - minNote + 1);
+    auto lane = bounds.reduced (7.0f, 5.0f);
+
+    g.saveState();
+    g.reduceClipRegion (midiShapeBounds);
+    g.setColour (line().withAlpha (0.32f));
+    for (auto beat = std::floor (origin); beat <= end; beat += 1.0)
+    {
+        const auto x = lane.getX() + static_cast<float> ((beat - origin) / duration) * lane.getWidth();
+        g.drawVerticalLine (static_cast<int> (x), lane.getY(), lane.getBottom());
+    }
+
+    for (const auto& span : spans)
+    {
+        const auto x = lane.getX() + static_cast<float> ((span.start - origin) / duration) * lane.getWidth();
+        const auto x2 = lane.getX() + static_cast<float> ((span.end - origin) / duration) * lane.getWidth();
+        const auto y = lane.getBottom() - static_cast<float> (span.note - minNote + 1) / static_cast<float> (noteRange) * lane.getHeight();
+        const auto h = juce::jlimit (3.0f, 9.0f, lane.getHeight() / static_cast<float> (noteRange) * 0.84f);
+        const auto alpha = juce::jlimit (0.42f, 1.0f, span.velocity / 127.0f);
+        g.setColour ((recordedMidi.recording ? amber() : green()).withAlpha (alpha));
+        g.fillRoundedRectangle (juce::Rectangle<float> (x, y, juce::jmax (2.0f, x2 - x), h), 2.0f);
+    }
+    g.restoreState();
+}
+
+void SoliVoicerAudioProcessorEditor::beginRecordedMidiDrag()
+{
+    if (processorRef.isMidiRecording())
+        return;
+
+    auto directory = juce::File::getSpecialLocation (juce::File::tempDirectory)
+        .getChildFile ("Santismo")
+        .getChildFile ("Voicizer MIDI Captures");
+    const auto destination = directory.getNonexistentChildFile ("Voicizer MIDI Capture", ".mid", false);
+    if (! processorRef.writeRecordedMidiFile (destination))
+        return;
+
+    lastMidiExportFile = destination;
+    juce::StringArray files;
+    files.add (destination.getFullPathName());
+    juce::DragAndDropContainer::performExternalDragDropOfFiles (files, false, this);
 }
 
 void SoliVoicerAudioProcessorEditor::resized()
 {
-    auto bounds = getLocalBounds().reduced (36);
-    auto header = bounds.removeFromTop (74);
-    auto leftHeader = header.removeFromLeft (330);
-    titleLabel.setBounds (leftHeader.removeFromTop (36));
-    subtitleLabel.setBounds (leftHeader);
-    helpButton.setBounds (header.removeFromRight (72).reduced (0, 20));
-    resetButton.setBounds (header.removeFromRight (88).reduced (6, 20));
-    randomButton.setBounds (header.removeFromRight (88).reduced (6, 20));
-    chordLabel.setBounds (header.reduced (12, 12));
+    auto bounds = getLocalBounds().reduced (28);
+    auto header = bounds.removeFromTop (48);
+    titleLabel.setBounds (header.removeFromLeft (160));
+    randomButton.setBounds (header.removeFromRight (116).reduced (4, 8));
+    resetButton.setBounds (header.removeFromRight (72).reduced (4, 8));
+    chordLabel.setBounds (header.reduced (8, 2));
 
-    bounds.removeFromTop (14);
-    auto keyArea = bounds.removeFromTop (78).reduced (5, 0);
-    keyLabel.setBounds (keyArea.removeFromTop (20));
-    infoButtons[0].setBounds (keyLabel.getRight() - 22, keyLabel.getY(), 18, 18);
-    auto keyButtons = keyArea.removeFromRight (168);
-    keyAllButton.setBounds (keyButtons.removeFromTop (28));
-    keyButtons.removeFromTop (6);
-    keyDefaultButton.setBounds (keyButtons.removeFromTop (28));
-    const auto keyWidth = keyArea.getWidth() / 12;
-    for (int i = 0; i < 12; ++i)
-        keyToggles[static_cast<size_t> (i)].setBounds (keyArea.getX() + i * keyWidth, keyArea.getY(), keyWidth - 3, 28);
-
-    bounds.removeFromTop (6);
-    auto scaleArea = bounds.removeFromTop (104).reduced (5, 0);
-    scaleLabel.setBounds (scaleArea.removeFromTop (20));
-    infoButtons[1].setBounds (scaleLabel.getRight() - 22, scaleLabel.getY(), 18, 18);
-    auto scaleButtons = scaleArea.removeFromRight (168);
-    scaleAllButton.setBounds (scaleButtons.removeFromTop (28));
-    scaleButtons.removeFromTop (6);
-    scaleDefaultButton.setBounds (scaleButtons.removeFromTop (28));
-    const auto scaleGrid = scaleArea;
-    const auto scaleWidth = scaleGrid.getWidth() / 6;
-    for (int i = 0; i < 12; ++i)
+    bounds.removeFromTop (8);
+    auto modeRow = bounds.removeFromTop (58);
+    const auto modeWidth = juce::jmin (270, modeRow.getWidth() / 3);
+    auto placeCombo = [&] (juce::ComboBox& combo, juce::Label& label, int width)
     {
-        const auto col = i % 6;
-        const auto row = i / 6;
-        scaleToggles[static_cast<size_t> (i)].setBounds (scaleGrid.getX() + col * scaleWidth,
-                                                         scaleGrid.getY() + row * 32,
-                                                         scaleWidth - 4,
-                                                         28);
-    }
-
-    bounds.removeFromTop (12);
-    auto comboRow = bounds.removeFromTop (76);
-    const auto comboWidth = comboRow.getWidth() / 4;
-    auto placeCombo = [&] (juce::ComboBox& combo, juce::Label& label)
-    {
-        auto cell = comboRow.removeFromLeft (comboWidth).reduced (5, 0);
-        label.setBounds (cell.removeFromTop (22));
+        auto cell = modeRow.removeFromLeft (width).reduced (5, 0);
+        label.setBounds (cell.removeFromTop (19));
         combo.setBounds (cell.removeFromTop (34));
     };
+    placeCombo (sourceModeBox, sourceModeLabel, modeWidth);
+    placeCombo (outputModeBox, outputModeLabel, modeWidth);
+    if (sourceModeBox.getSelectedItemIndex() == 1)
+        placeCombo (contextModeBox, contextModeLabel, modeWidth);
 
-    placeCombo (roleBox, roleLabel);
-    infoButtons[2].setBounds (roleLabel.getRight() - 22, roleLabel.getY(), 18, 18);
-    placeCombo (styleBox, styleLabel);
-    infoButtons[3].setBounds (styleLabel.getRight() - 22, styleLabel.getY(), 18, 18);
-    placeCombo (playabilityBox, playabilityLabel);
-    infoButtons[4].setBounds (playabilityLabel.getRight() - 22, playabilityLabel.getY(), 18, 18);
-    placeCombo (strumModeBox, strumModeLabel);
-    infoButtons[5].setBounds (strumModeLabel.getRight() - 22, strumModeLabel.getY(), 18, 18);
-
-    bounds.removeFromTop (12);
-    auto sliderArea = bounds;
-    const auto columns = 3;
-    const auto rows = 3;
-    const auto cellWidth = sliderArea.getWidth() / columns;
-    const auto cellHeight = sliderArea.getHeight() / rows;
-
-    auto placeSlider = [&] (juce::Slider& slider, juce::Label& label, int index)
+    bounds.removeFromTop (8);
+    if (sourceModeBox.getSelectedItemIndex() == 1)
     {
-        const auto col = index % columns;
-        const auto row = index / columns;
-        auto cell = juce::Rectangle<int> (sliderArea.getX() + col * cellWidth,
-                                          sliderArea.getY() + row * cellHeight,
-                                          cellWidth,
-                                          cellHeight).reduced (10, 4);
-        label.setBounds (cell.removeFromTop (22));
-        infoButtons[static_cast<size_t> (6 + index)].setBounds (label.getRight() - 22, label.getY(), 18, 18);
-        slider.setBounds (cell);
-    };
+        auto linkedArea = bounds.removeFromTop (118);
+        auto status = linkedArea.removeFromTop (20);
+        linkStatusLabel.setBounds (status.removeFromLeft (180));
+        timelineBounds = linkedArea.reduced (2, 2);
+    }
+    else
+    {
+        timelineBounds = {};
+        auto manual = bounds.removeFromTop (122);
+        auto keys = manual.removeFromTop (52);
+        auto keyHeader = keys.removeFromTop (18);
+        randomKeyScaleButton.setBounds (keyHeader.removeFromRight (140).reduced (4, 0));
+        keyLabel.setBounds (keyHeader);
+        const auto keyWidth = keys.getWidth() / 12;
+        for (int i = 0; i < 12; ++i)
+            keyToggles[static_cast<std::size_t> (i)].setBounds (keys.getX() + i * keyWidth, keys.getY(), keyWidth, 28);
+        auto scales = manual.removeFromTop (70);
+        scaleLabel.setBounds (scales.removeFromTop (18));
+        const auto scaleWidth = scales.getWidth() / 6;
+        for (int i = 0; i < 12; ++i)
+            scaleToggles[static_cast<std::size_t> (i)].setBounds (scales.getX() + (i % 6) * scaleWidth,
+                                                                 scales.getY() + (i / 6) * 25,
+                                                                 scaleWidth, 24);
+    }
 
-    placeSlider (chordSizeSlider, chordSizeLabel, 0);
-    placeSlider (complexitySlider, complexityLabel, 1);
-    placeSlider (voiceLeadingSlider, voiceLeadingLabel, 2);
-    placeSlider (outsideSlider, outsideLabel, 3);
-    placeSlider (variationSlider, variationLabel, 4);
-    placeSlider (repeatSlider, repeatLabel, 5);
-    placeSlider (strumSpeedSlider, strumSpeedLabel, 6);
-    placeSlider (minNoteSlider, minNoteLabel, 7);
-    placeSlider (maxNoteSlider, maxNoteLabel, 8);
+    bounds.removeFromTop (8);
+    midiRecordBounds = bounds.removeFromTop (62).reduced (0, 1);
+    auto midiInner = midiRecordBounds.reduced (10, 6);
+    auto midiTop = midiInner.removeFromTop (24);
+    midiRecordLabel.setBounds (midiTop.removeFromLeft (96));
+    midiRecordStatusLabel.setBounds (midiTop.removeFromLeft (150));
+    clearMidiButton.setBounds (midiTop.removeFromRight (70).reduced (3, 1));
+    dragMidiButton.setBounds (midiTop.removeFromRight (78).reduced (3, 1));
+    recordMidiButton.setBounds (midiTop.removeFromRight (92).reduced (3, 1));
+    midiShapeBounds = midiInner.reduced (0, 1);
+
+    bounds.removeFromTop (8);
+    auto commonRow = bounds.removeFromTop (58);
+    randomVoicingButton.setBounds (commonRow.removeFromRight (150).reduced (5, 18));
+    const auto commonWidth = commonRow.getWidth() / 4;
+    auto placeCommon = [&] (juce::ComboBox& combo, juce::Label& label)
+    {
+        auto cell = commonRow.removeFromLeft (commonWidth).reduced (5, 0);
+        label.setBounds (cell.removeFromTop (19));
+        combo.setBounds (cell.removeFromTop (34));
+    };
+    placeCommon (roleBox, roleLabel);
+    placeCommon (styleBox, styleLabel);
+    placeCommon (playabilityBox, playabilityLabel);
+    placeCommon (strumModeBox, strumModeLabel);
+
+    bounds.removeFromTop (8);
+    std::vector<std::pair<juce::Slider*, juce::Label*>> voicingControls
+    {
+        { &chordSizeSlider, &chordSizeLabel },
+        { &complexitySlider, &complexityLabel },
+        { &voiceLeadingSlider, &voiceLeadingLabel },
+        { &outsideSlider, &outsideLabel },
+        { &variationSlider, &variationLabel },
+        { &minNoteSlider, &minNoteLabel },
+        { &maxNoteSlider, &maxNoteLabel }
+    };
+    if (sourceModeBox.getSelectedItemIndex() == 1)
+        voicingControls.push_back ({ &substitutionSlider, &substitutionLabel });
+    voicingControls.push_back ({ &repeatSlider, &repeatLabel });
+    voicingControls.push_back ({ &strumSpeedSlider, &strumSpeedLabel });
+    if (outputModeBox.getSelectedItemIndex() == 0)
+    {
+        voicingGroupBounds = bounds;
+        performanceGroupBounds = {};
+        layoutSliderGrid (voicingGroupBounds.reduced (12, 24), voicingControls);
+    }
+    else
+    {
+        auto split = bounds;
+        const auto voicingWidth = juce::jlimit (360, 560, static_cast<int> (split.getWidth() * 0.46f));
+        voicingGroupBounds = split.removeFromLeft (voicingWidth).reduced (0, 1);
+        split.removeFromLeft (8);
+        performanceGroupBounds = split.reduced (0, 1);
+        layoutSliderGrid (voicingGroupBounds.reduced (12, 24), voicingControls);
+
+        auto performanceInner = performanceGroupBounds.reduced (12, 24);
+        auto performanceRow = performanceInner.removeFromTop (58);
+        auto placePerformanceCombo = [&] (juce::ComboBox& combo, juce::Label& label, int width)
+        {
+            auto cell = performanceRow.removeFromLeft (width).reduced (5, 0);
+            label.setBounds (cell.removeFromTop (19));
+            combo.setBounds (cell.removeFromTop (34));
+        };
+        const auto selectorWidth = juce::jmin (250, performanceRow.getWidth() / 3);
+        placePerformanceCombo (performanceStyleBox, performanceStyleLabel, selectorWidth);
+        placePerformanceCombo (performanceSubStyleBox, performanceSubStyleLabel, selectorWidth);
+        randomPerformanceButton.setBounds (performanceRow.removeFromRight (168).reduced (5, 18));
+        doubleTimeButton.setBounds (performanceRow.removeFromRight (130).reduced (6, 16));
+
+        std::vector<std::pair<juce::Slider*, juce::Label*>> performanceControls
+        {
+            { &performanceComplexitySlider, &performanceComplexityLabel },
+            { &densitySlider, &densityLabel },
+            { &syncopationSlider, &syncopationLabel },
+            { &swingSlider, &swingLabel },
+            { &humanizeSlider, &humanizeLabel },
+            { &gateSlider, &gateLabel }
+        };
+        layoutSliderGrid (performanceInner.reduced (0, 2), performanceControls);
+    }
+}
+
+void SoliVoicerAudioProcessorEditor::layoutSliderGrid (
+    juce::Rectangle<int> bounds,
+    const std::vector<std::pair<juce::Slider*, juce::Label*>>& controls)
+{
+    const auto columns = bounds.getWidth() < 430 ? 3 : (bounds.getWidth() < 620 ? 4 : 5);
+    const auto rows = juce::jmax (1, (static_cast<int> (controls.size()) + columns - 1) / columns);
+    const auto cellWidth = bounds.getWidth() / columns;
+    const auto cellHeight = bounds.getHeight() / rows;
+    for (std::size_t i = 0; i < controls.size(); ++i)
+    {
+        const auto column = static_cast<int> (i) % columns;
+        const auto row = static_cast<int> (i) / columns;
+        auto cell = juce::Rectangle<int> (bounds.getX() + column * cellWidth,
+                                          bounds.getY() + row * cellHeight,
+                                          cellWidth, cellHeight).reduced (6, 2);
+        controls[i].second->setBounds (cell.removeFromTop (19));
+        controls[i].first->setBounds (cell);
+    }
+}
+
+void SoliVoicerAudioProcessorEditor::updateModeVisibility()
+{
+    const auto follow = sourceModeBox.getSelectedItemIndex() == 1;
+    const auto performance = outputModeBox.getSelectedItemIndex() == 1;
+    lastSourceMode = sourceModeBox.getSelectedItemIndex();
+    lastOutputMode = outputModeBox.getSelectedItemIndex();
+
+    keyLabel.setVisible (! follow);
+    scaleLabel.setVisible (! follow);
+    randomKeyScaleButton.setVisible (! follow);
+    for (auto& button : keyToggles) button.setVisible (! follow);
+    for (auto& button : scaleToggles) button.setVisible (! follow);
+    contextModeBox.setVisible (follow);
+    contextModeLabel.setVisible (follow);
+    substitutionSlider.setVisible (follow);
+    substitutionLabel.setVisible (follow);
+    linkStatusLabel.setVisible (follow);
+
+    strumModeBox.setVisible (true);
+    strumModeLabel.setVisible (true);
+    repeatSlider.setVisible (true);
+    repeatLabel.setVisible (true);
+    strumSpeedSlider.setVisible (true);
+    strumSpeedLabel.setVisible (true);
+    performanceStyleBox.setVisible (performance);
+    performanceStyleLabel.setVisible (performance);
+    performanceSubStyleBox.setVisible (performance);
+    performanceSubStyleLabel.setVisible (performance);
+    doubleTimeButton.setVisible (performance);
+    randomPerformanceButton.setVisible (performance);
+    const std::array<juce::Component*, 16> performanceComponents
+    {{
+        &performanceComplexitySlider, &performanceComplexityLabel,
+        &densitySlider, &densityLabel, &syncopationSlider, &syncopationLabel,
+        &swingSlider, &swingLabel, &humanizeSlider, &humanizeLabel,
+        &gateSlider, &gateLabel, &performanceSubStyleBox, &performanceSubStyleLabel,
+        &doubleTimeButton, &randomPerformanceButton
+    }};
+    for (auto* component : performanceComponents)
+        component->setVisible (performance);
+
+    resized();
+    repaint();
 }
 
 void SoliVoicerAudioProcessorEditor::updateMaskToggles()
 {
-    auto sync = [this] (const juce::String& parameterID, std::array<juce::ToggleButton, 12>& toggles, int count)
+    if (syncingMasks)
+        return;
+    const juce::ScopedValueSetter<bool> guard (syncingMasks, true);
+    const auto update = [this] (const char* id, auto& toggles)
     {
-        auto* parameter = processorRef.getValueTreeState().getParameter (parameterID);
-        if (parameter == nullptr)
-            return;
-
-        const auto maxMask = (1 << count) - 1;
-        const auto mask = juce::jlimit (1, maxMask, static_cast<int> (parameter->convertFrom0to1 (parameter->getValue()) + 0.5f));
-        for (int i = 0; i < count; ++i)
-            toggles[static_cast<size_t> (i)].setToggleState ((mask & (1 << i)) != 0, juce::dontSendNotification);
+        if (auto* parameter = processorRef.getValueTreeState().getParameter (id))
+        {
+            const auto mask = juce::jlimit (1, 4095,
+                static_cast<int> (parameter->convertFrom0to1 (parameter->getValue()) + 0.5f));
+            for (int i = 0; i < 12; ++i)
+                toggles[static_cast<std::size_t> (i)].setToggleState ((mask & (1 << i)) != 0,
+                                                                     juce::dontSendNotification);
+        }
     };
-
-    const juce::ScopedValueSetter<bool> setter (syncingMaskToggles, true);
-    sync (ParameterIDs::keyMask, keyToggles, Soli::ChordEngine::keyNames().size());
-    sync (ParameterIDs::scaleMask, scaleToggles, Soli::ChordEngine::scaleNames().size());
+    update (ParameterIDs::keyMask, keyToggles);
+    update (ParameterIDs::scaleMask, scaleToggles);
 }
 
-void SoliVoicerAudioProcessorEditor::commitMaskFromToggles (const juce::String& parameterID, const std::array<juce::ToggleButton, 12>& toggles, int count)
+void SoliVoicerAudioProcessorEditor::commitMask (const juce::String& id,
+                                                 const std::array<juce::ToggleButton, 12>& toggles,
+                                                 int count)
 {
-    if (syncingMaskToggles)
+    if (syncingMasks)
         return;
-
     auto mask = 0;
     for (int i = 0; i < count; ++i)
-        if (toggles[static_cast<size_t> (i)].getToggleState())
-            mask |= (1 << i);
+        if (toggles[static_cast<std::size_t> (i)].getToggleState())
+            mask |= 1 << i;
+    setParameterValue (id, static_cast<float> (juce::jmax (1, mask)));
+}
 
-    if (mask == 0)
-        mask = 1;
+void SoliVoicerAudioProcessorEditor::setParameterValue (const juce::String& id, float value)
+{
+    if (auto* parameter = processorRef.getValueTreeState().getParameter (id))
+    {
+        parameter->beginChangeGesture();
+        parameter->setValueNotifyingHost (parameter->convertTo0to1 (value));
+        parameter->endChangeGesture();
+    }
+}
 
-    setParameterValue (parameterID, static_cast<float> (mask));
+void SoliVoicerAudioProcessorEditor::updatePerformanceSubStyleChoices()
+{
+    const auto styleIndex = juce::jmax (0, performanceStyleBox.getSelectedItemIndex());
+    if (styleIndex == lastPerformanceStyle && performanceSubStyleBox.getNumItems() > 0)
+        return;
+
+    const juce::ScopedValueSetter<bool> guard (updatingSubStyleChoices, true);
+    const auto selected = juce::jmax (0, performanceSubStyleBox.getSelectedItemIndex());
+    const auto names = SoliVoicerAudioProcessor::performanceSubStyleNames (styleIndex);
+    performanceSubStyleBox.clear (juce::dontSendNotification);
+    for (int i = 0; i < names.size(); ++i)
+        performanceSubStyleBox.addItem (names[i], i + 1);
+    performanceSubStyleBox.setSelectedItemIndex (juce::jlimit (0, names.size() - 1, selected),
+                                                juce::dontSendNotification);
+    lastPerformanceStyle = styleIndex;
+}
+
+void SoliVoicerAudioProcessorEditor::updateRecorderControls()
+{
+    const auto isRecording = recordedMidi.recording || processorRef.isMidiRecording();
+    recordMidiButton.setToggleState (isRecording, juce::dontSendNotification);
+    recordMidiButton.setButtonText (isRecording ? "Stop MIDI" : "Record MIDI");
+    const auto eventCount = static_cast<int> (recordedMidi.events.size());
+    dragMidiButton.setEnabled (! isRecording && eventCount > 0);
+    clearMidiButton.setEnabled (eventCount > 0 || recordedMidi.hasOrigin);
+
+    if (isRecording)
+        midiRecordStatusLabel.setText ("Recording", juce::dontSendNotification);
+    else if (eventCount > 0)
+        midiRecordStatusLabel.setText (juce::String (eventCount / 2) + " notes captured", juce::dontSendNotification);
+    else
+        midiRecordStatusLabel.setText ("No take", juce::dontSendNotification);
+}
+
+void SoliVoicerAudioProcessorEditor::randomizeKeyScaleSettings()
+{
+    auto& random = juce::Random::getSystemRandom();
+    const auto randomMask = [&random] (int total, int minCount, int maxCount)
+    {
+        const auto count = minCount + random.nextInt (juce::jmax (1, maxCount - minCount + 1));
+        auto mask = 0;
+        const auto bitCount = [] (int value)
+        {
+            auto result = 0;
+            while (value != 0)
+            {
+                result += value & 1;
+                value >>= 1;
+            }
+            return result;
+        };
+        while (bitCount (mask) < count)
+            mask |= 1 << random.nextInt (total);
+        return juce::jmax (1, mask);
+    };
+
+    setParameterValue (ParameterIDs::keyMask, static_cast<float> (randomMask (12, 1, 3)));
+    setParameterValue (ParameterIDs::scaleMask, static_cast<float> (randomMask (Soli::ChordEngine::scaleNames().size(), 1, 4)));
     updateMaskToggles();
 }
 
-void SoliVoicerAudioProcessorEditor::setParameterValue (const juce::String& parameterID, float value)
-{
-    auto* parameter = processorRef.getValueTreeState().getParameter (parameterID);
-    if (parameter == nullptr)
-        return;
-
-    parameter->beginChangeGesture();
-    parameter->setValueNotifyingHost (parameter->convertTo0to1 (value));
-    parameter->endChangeGesture();
-}
-
-void SoliVoicerAudioProcessorEditor::randomizeSettings()
+void SoliVoicerAudioProcessorEditor::randomizeVoicingSettings()
 {
     auto& random = juce::Random::getSystemRandom();
-    const auto keyMask = 1 + random.nextInt ((1 << Soli::ChordEngine::keyNames().size()) - 1);
-    const auto scaleMask = 1 + random.nextInt ((1 << Soli::ChordEngine::scaleNames().size()) - 1);
+    const auto minNote = 28 + random.nextInt (25);
+    const auto maxNote = juce::jlimit (minNote + 12, 127, minNote + 36 + random.nextInt (36));
 
-    setParameterValue (ParameterIDs::keyMask, static_cast<float> (keyMask));
-    setParameterValue (ParameterIDs::scaleMask, static_cast<float> (scaleMask));
     setParameterValue (ParameterIDs::role, static_cast<float> (random.nextInt (Soli::ChordEngine::roleNames().size())));
     setParameterValue (ParameterIDs::style, static_cast<float> (random.nextInt (Soli::ChordEngine::styleNames().size())));
     setParameterValue (ParameterIDs::playability, static_cast<float> (random.nextInt (Soli::ChordEngine::playabilityNames().size())));
     setParameterValue (ParameterIDs::strumMode, static_cast<float> (random.nextInt (Soli::ChordEngine::strumModeNames().size())));
-    setParameterValue (ParameterIDs::chordSize, static_cast<float> (2 + random.nextInt (23)));
+    setParameterValue (ParameterIDs::chordSize, static_cast<float> (3 + random.nextInt (7)));
     setParameterValue (ParameterIDs::complexity, random.nextFloat());
-    setParameterValue (ParameterIDs::voiceLeading, random.nextFloat());
-    setParameterValue (ParameterIDs::outside, random.nextFloat());
-    setParameterValue (ParameterIDs::variation, random.nextFloat());
-    setParameterValue (ParameterIDs::repeatChance, random.nextFloat() * 0.6f);
-    setParameterValue (ParameterIDs::strumSpeed, random.nextFloat());
-    setParameterValue (ParameterIDs::minNote, static_cast<float> (24 + random.nextInt (25)));
-    setParameterValue (ParameterIDs::maxNote, static_cast<float> (84 + random.nextInt (32)));
+    setParameterValue (ParameterIDs::voiceLeading, 0.45f + random.nextFloat() * 0.55f);
+    setParameterValue (ParameterIDs::outside, random.nextFloat() * 0.55f);
+    setParameterValue (ParameterIDs::variation, random.nextFloat() * 0.8f);
+    setParameterValue (ParameterIDs::repeatChance, random.nextFloat() * 0.45f);
+    setParameterValue (ParameterIDs::strumSpeed, random.nextFloat() * 0.65f);
+    setParameterValue (ParameterIDs::minNote, static_cast<float> (minNote));
+    setParameterValue (ParameterIDs::maxNote, static_cast<float> (maxNote));
+    setParameterValue (ParameterIDs::contextMode, static_cast<float> (random.nextInt (Soli::ChordEngine::contextModeNames().size())));
+    setParameterValue (ParameterIDs::substitutionDepth, random.nextFloat() * 0.8f);
     processorRef.panic();
+}
+
+void SoliVoicerAudioProcessorEditor::randomizeAllSettings()
+{
+    randomizeKeyScaleSettings();
+    randomizeVoicingSettings();
+    randomizePerformanceSettings();
     updateMaskToggles();
+}
+
+void SoliVoicerAudioProcessorEditor::randomizePerformanceSettings()
+{
+    auto& random = juce::Random::getSystemRandom();
+    const auto style = random.nextInt (SoliVoicerAudioProcessor::performanceStyleNames().size());
+    setParameterValue (ParameterIDs::performanceStyle, static_cast<float> (style));
+    performanceStyleBox.setSelectedItemIndex (style, juce::dontSendNotification);
+    lastPerformanceStyle = -1;
+    updatePerformanceSubStyleChoices();
+    setParameterValue (ParameterIDs::performanceSubStyle,
+                       static_cast<float> (random.nextInt (SoliVoicerAudioProcessor::performanceSubStyleNames (style).size())));
+    setParameterValue (ParameterIDs::performanceComplexity, 0.25f + random.nextFloat() * 0.75f);
+    setParameterValue (ParameterIDs::rhythmDensity, 0.25f + random.nextFloat() * 0.75f);
+    setParameterValue (ParameterIDs::syncopation, random.nextFloat() * 0.85f);
+    setParameterValue (ParameterIDs::swing, random.nextFloat() * 0.72f);
+    setParameterValue (ParameterIDs::humanize, 0.04f + random.nextFloat() * 0.34f);
+    setParameterValue (ParameterIDs::gate, 0.28f + random.nextFloat() * 0.64f);
+    setParameterValue (ParameterIDs::doubleTime, random.nextBool() ? 1.0f : 0.0f);
+    processorRef.panic();
 }
 
 void SoliVoicerAudioProcessorEditor::resetDefaults()
@@ -462,66 +992,20 @@ void SoliVoicerAudioProcessorEditor::resetDefaults()
     setParameterValue (ParameterIDs::strumSpeed, 0.0f);
     setParameterValue (ParameterIDs::minNote, 36.0f);
     setParameterValue (ParameterIDs::maxNote, 96.0f);
+    setParameterValue (ParameterIDs::contextMode, 3.0f);
+    setParameterValue (ParameterIDs::substitutionDepth, 0.35f);
+    setParameterValue (ParameterIDs::performanceStyle, 0.0f);
+    setParameterValue (ParameterIDs::performanceSubStyle, 0.0f);
+    setParameterValue (ParameterIDs::performanceComplexity, 0.45f);
+    setParameterValue (ParameterIDs::rhythmDensity, 0.48f);
+    setParameterValue (ParameterIDs::syncopation, 0.20f);
+    setParameterValue (ParameterIDs::swing, 0.0f);
+    setParameterValue (ParameterIDs::humanize, 0.12f);
+    setParameterValue (ParameterIDs::gate, 0.72f);
+    setParameterValue (ParameterIDs::doubleTime, 0.0f);
+    performanceStyleBox.setSelectedItemIndex (0, juce::dontSendNotification);
+    lastPerformanceStyle = -1;
+    updatePerformanceSubStyleChoices();
     processorRef.panic();
     updateMaskToggles();
-}
-
-void SoliVoicerAudioProcessorEditor::updateHelpState()
-{
-    if (helpButton.getToggleState())
-        tooltipWindow = std::make_unique<juce::TooltipWindow> (this, 900);
-    else
-        tooltipWindow.reset();
-
-    for (auto& button : infoButtons)
-        button.setVisible (helpButton.getToggleState());
-}
-
-void SoliVoicerAudioProcessorEditor::installTooltips()
-{
-    setHelpTooltip (keyLabel, infoButtons[0], "Select one or more tonal centers. With multiple keys enabled, Lead Voicer can borrow harmony from related or contrasting key areas.");
-    setHelpTooltip (scaleLabel, infoButtons[1], "Select one or more scale sources. Multiple scales allow modal interchange and color borrowing while the voice-leading score decides what fits.");
-    for (auto& button : keyToggles)
-        button.setTooltip ("Enable or disable this tonal center for key borrowing and modulation.");
-    for (auto& button : scaleToggles)
-        button.setTooltip ("Enable or disable this scale source for modal interchange.");
-    setHelpTooltip (roleBox, infoButtons[2], "Chooses where the incoming MIDI note sits in the generated chord. Melody Top is the default lead-line harmonizer behavior.");
-    roleLabel.setTooltip (roleBox.getTooltip());
-    setHelpTooltip (styleBox, infoButtons[3], "Changes the harmonic scoring bias: close lead, large ensemble block movement, quartal color, classical tension/release, gospel, outside, modal, mediant, counterpoint, neo-soul, or progressive rock.");
-    styleLabel.setTooltip (styleBox.getTooltip());
-    setHelpTooltip (playabilityBox, infoButtons[4], "Constrains spacing and chord size toward piano, guitar, horn section, orchestra, or unrestricted voicings.");
-    playabilityLabel.setTooltip (playabilityBox.getTooltip());
-    setHelpTooltip (strumModeBox, infoButtons[5], "Rakes generated notes together, upward, downward, or in a shuffled random note order.");
-    strumModeLabel.setTooltip (strumModeBox.getTooltip());
-    setHelpTooltip (chordSizeSlider, infoButtons[6], "Approximate number of notes in the generated chord.");
-    chordSizeLabel.setTooltip (chordSizeSlider.getTooltip());
-    setHelpTooltip (complexitySlider, infoButtons[7], "Higher values allow richer extensions, altered tones, clusters, and more complex sonorities.");
-    complexityLabel.setTooltip (complexitySlider.getTooltip());
-    setHelpTooltip (voiceLeadingSlider, infoButtons[8], "Higher values prioritize smooth motion from the previous generated chord.");
-    voiceLeadingLabel.setTooltip (voiceLeadingSlider.getTooltip());
-    setHelpTooltip (outsideSlider, infoButtons[9], "Controls how far the engine can borrow from outside the selected key and scale pools.");
-    outsideLabel.setTooltip (outsideSlider.getTooltip());
-    setHelpTooltip (variationSlider, infoButtons[10], "Controls how often the engine chooses alternatives instead of the highest-scoring chord.");
-    variationLabel.setTooltip (variationSlider.getTooltip());
-    setHelpTooltip (repeatSlider, infoButtons[11], "Chance that the previous voicing is repeated instead of reharmonizing the incoming note.");
-    repeatLabel.setTooltip (repeatSlider.getTooltip());
-    setHelpTooltip (strumSpeedSlider, infoButtons[12], "Controls how spread out the rake is. At zero, chord notes fire together.");
-    strumSpeedLabel.setTooltip (strumSpeedSlider.getTooltip());
-    setHelpTooltip (minNoteSlider, infoButtons[13], "Lowest generated MIDI note allowed.");
-    minNoteLabel.setTooltip (minNoteSlider.getTooltip());
-    setHelpTooltip (maxNoteSlider, infoButtons[14], "Highest generated MIDI note allowed.");
-    maxNoteLabel.setTooltip (maxNoteSlider.getTooltip());
-    randomButton.setTooltip ("Randomizes all musical settings and selections.");
-    resetButton.setTooltip ("Restores the default melody-first C Ionian voice-leading setup.");
-    helpButton.setTooltip ("Turns detailed hover help on or off.");
-}
-
-void SoliVoicerAudioProcessorEditor::setHelpTooltip (juce::SettableTooltipClient& component, juce::TextButton& infoButton, const juce::String& text)
-{
-    component.setTooltip (text);
-    infoButton.setTooltip (text);
-    infoButton.onClick = [text]
-    {
-        juce::AlertWindow::showMessageBoxAsync (juce::AlertWindow::InfoIcon, "Lead Voicer Help", text);
-    };
 }

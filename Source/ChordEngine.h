@@ -67,6 +67,14 @@ enum class Playability
     unrestricted
 };
 
+enum class ContextMode
+{
+    exact = 0,
+    diatonic,
+    substitutions,
+    adaptive
+};
+
 struct Settings
 {
     int keyMask = 1;
@@ -82,6 +90,8 @@ struct Settings
     float variation = 0.35f;
     float repeatChance = 0.15f;
     float strumSpeed = 0.0f;
+    ContextMode contextMode = ContextMode::adaptive;
+    float substitutionDepth = 0.35f;
     int minNote = 36;
     int maxNote = 96;
 };
@@ -104,6 +114,11 @@ public:
     };
 
     GeneratedChord generate (int inputNote, int velocity, const Settings& settings);
+    GeneratedChord generateForContext (int inputNote,
+                                       const juce::String& currentChord,
+                                       const juce::String& previousContext,
+                                       const juce::String& nextChord,
+                                       const Settings& settings);
     void reset();
 
     static juce::StringArray keyNames();
@@ -112,6 +127,7 @@ public:
     static juce::StringArray styleNames();
     static juce::StringArray playabilityNames();
     static juce::StringArray strumModeNames();
+    static juce::StringArray contextModeNames();
 
 private:
     struct Candidate
