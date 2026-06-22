@@ -23,4 +23,4 @@ The AU is copied by JUCE after build. If Logic does not show it immediately, res
 - **Held Voicing** sustains the generated voicing and supports rake direction and speed.
 - **Performance** interprets the voicing at Logic's project tempo with Baroque, classical, jazz, walking, and bossa patterns. Density, sophistication, syncopation, swing, humanization, and gate are adjustable.
 
-All generated notes currently output on the same MIDI channel as the incoming note.
+Generated notes output on the incoming MIDI channel by default. Enable **Multi Ch** next to Chord Size to split each generated voicing across MIDI channels from highest to lowest, with channel 1 carrying the highest note.

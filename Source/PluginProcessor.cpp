@@ -3,6 +3,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <functional>
 #include <random>
 
 namespace
@@ -46,6 +47,54 @@ int SoliVoicerAudioProcessor::activeIndex (int channel, int note) noexcept
 int SoliVoicerAudioProcessor::refIndex (int channel, int note) noexcept
 {
     return activeIndex (channel, note);
+}
+
+bool SoliVoicerAudioProcessor::multiChannelOutEnabled() const noexcept
+{
+    return parameters.getRawParameterValue (ParameterIDs::multiChannelOut)->load() > 0.5f;
+}
+
+std::vector<int> SoliVoicerAudioProcessor::outputChannelsForNotes (const std::vector<int>& notes,
+                                                                   int fallbackChannel) const
+{
+    const auto safeFallback = juce::jlimit (1, 16, fallbackChannel);
+    std::vector<int> channels (notes.size(), safeFallback);
+    if (! multiChannelOutEnabled())
+        return channels;
+
+    auto ranked = notes;
+    std::sort (ranked.begin(), ranked.end(), std::greater<int>());
+    ranked.erase (std::unique (ranked.begin(), ranked.end()), ranked.end());
+
+    for (std::size_t i = 0; i < notes.size(); ++i)
+    {
+        const auto rank = std::find (ranked.begin(), ranked.end(), notes[i]);
+        if (rank != ranked.end())
+            channels[i] = juce::jlimit (1, 16, static_cast<int> (std::distance (ranked.begin(), rank)) + 1);
+    }
+
+    return channels;
+}
+
+int SoliVoicerAudioProcessor::outputChannelForNote (const std::vector<int>& notes,
+                                                    int note,
+                                                    int fallbackChannel) const
+{
+    const auto channels = outputChannelsForNotes (notes, fallbackChannel);
+    for (std::size_t i = 0; i < notes.size(); ++i)
+        if (notes[i] == note)
+            return channels[i];
+
+    return juce::jlimit (1, 16, fallbackChannel);
+}
+
+int SoliVoicerAudioProcessor::activeOutputChannel (const ActiveChord& active,
+                                                  std::size_t index) noexcept
+{
+    if (index < active.outputChannels.size())
+        return juce::jlimit (1, 16, active.outputChannels[index]);
+
+    return juce::jlimit (1, 16, active.channel);
 }
 
 Soli::Settings SoliVoicerAudioProcessor::readSettings() const
@@ -136,9 +185,10 @@ void SoliVoicerAudioProcessor::scheduleMidiEvent (const juce::MidiMessage& messa
 void SoliVoicerAudioProcessor::releaseActiveChord (int channel, int inputNote, int samplePosition, int blockSamples, juce::MidiBuffer& output)
 {
     auto& active = activeChords[static_cast<size_t> (activeIndex (channel, inputNote))];
-    for (const auto note : active.notes)
-        sendGeneratedNoteOff (active.channel, note, samplePosition, blockSamples, output);
+    for (std::size_t i = 0; i < active.notes.size(); ++i)
+        sendGeneratedNoteOff (activeOutputChannel (active, i), active.notes[i], samplePosition, blockSamples, output);
     active.notes.clear();
+    active.outputChannels.clear();
 }
 
 bool SoliVoicerAudioProcessor::releaseOtherActiveChordsOnChannel (int channel, int keepInputNote, int samplePosition, int blockSamples, juce::MidiBuffer& output)
@@ -154,10 +204,11 @@ bool SoliVoicerAudioProcessor::releaseOtherActiveChordsOnChannel (int channel, i
         if (active.notes.empty())
             continue;
 
-        for (const auto generatedNote : active.notes)
-            sendGeneratedNoteOff (active.channel, generatedNote, samplePosition, blockSamples, output);
+        for (std::size_t i = 0; i < active.notes.size(); ++i)
+            sendGeneratedNoteOff (activeOutputChannel (active, i), active.notes[i], samplePosition, blockSamples, output);
 
         active.notes.clear();
+        active.outputChannels.clear();
         releasedAny = true;
     }
 
@@ -232,59 +283,94 @@ void SoliVoicerAudioProcessor::transitionLeadChordOnChannel (int channel,
                                                              juce::MidiBuffer& output,
                                                              const Soli::Settings& settings)
 {
-    std::vector<int> soundingNotes;
+    struct RoutedNote
+    {
+        int channel = 1;
+        int note = 0;
+    };
+
+    const auto routedLess = [] (const RoutedNote& a, const RoutedNote& b)
+    {
+        if (a.channel != b.channel)
+            return a.channel < b.channel;
+        return a.note < b.note;
+    };
+
+    std::vector<RoutedNote> soundingNotes;
     for (int note = 0; note < 128; ++note)
     {
         const auto& active = activeChords[static_cast<size_t> (activeIndex (channel, note))];
         if (active.notes.empty())
             continue;
 
-        soundingNotes.insert (soundingNotes.end(), active.notes.begin(), active.notes.end());
+        for (std::size_t i = 0; i < active.notes.size(); ++i)
+            soundingNotes.push_back ({ activeOutputChannel (active, i), active.notes[i] });
     }
 
-    std::sort (soundingNotes.begin(), soundingNotes.end());
-    soundingNotes.erase (std::unique (soundingNotes.begin(), soundingNotes.end()), soundingNotes.end());
+    std::sort (soundingNotes.begin(), soundingNotes.end(), routedLess);
+    soundingNotes.erase (std::unique (soundingNotes.begin(), soundingNotes.end(), [] (const RoutedNote& a, const RoutedNote& b)
+    {
+        return a.channel == b.channel && a.note == b.note;
+    }), soundingNotes.end());
 
     auto sortedNewNotes = newNotes;
     std::sort (sortedNewNotes.begin(), sortedNewNotes.end());
     sortedNewNotes.erase (std::unique (sortedNewNotes.begin(), sortedNewNotes.end()), sortedNewNotes.end());
+    const auto newOutputChannels = outputChannelsForNotes (sortedNewNotes, channel);
 
-    std::vector<int> notesToKeep;
+    std::vector<RoutedNote> routedNewNotes;
+    routedNewNotes.reserve (sortedNewNotes.size());
+    for (std::size_t i = 0; i < sortedNewNotes.size(); ++i)
+        routedNewNotes.push_back ({ newOutputChannels[i], sortedNewNotes[i] });
+    std::sort (routedNewNotes.begin(), routedNewNotes.end(), routedLess);
+
+    std::vector<RoutedNote> notesToKeep;
     std::set_intersection (soundingNotes.begin(), soundingNotes.end(),
-                           sortedNewNotes.begin(), sortedNewNotes.end(),
-                           std::back_inserter (notesToKeep));
+                           routedNewNotes.begin(), routedNewNotes.end(),
+                           std::back_inserter (notesToKeep),
+                           routedLess);
 
-    std::vector<int> notesToStop;
+    std::vector<RoutedNote> notesToStop;
     std::set_difference (soundingNotes.begin(), soundingNotes.end(),
-                         sortedNewNotes.begin(), sortedNewNotes.end(),
-                         std::back_inserter (notesToStop));
+                         routedNewNotes.begin(), routedNewNotes.end(),
+                         std::back_inserter (notesToStop),
+                         routedLess);
 
-    std::vector<int> notesToStart;
-    std::set_difference (sortedNewNotes.begin(), sortedNewNotes.end(),
+    std::vector<RoutedNote> notesToStart;
+    std::set_difference (routedNewNotes.begin(), routedNewNotes.end(),
                          soundingNotes.begin(), soundingNotes.end(),
-                         std::back_inserter (notesToStart));
+                         std::back_inserter (notesToStart),
+                         routedLess);
 
     for (auto& active : activeChords)
     {
         if (active.channel == channel)
+        {
             active.notes.clear();
+            active.outputChannels.clear();
+        }
     }
 
     auto& active = activeChords[static_cast<size_t> (activeIndex (channel, inputNote))];
     active.channel = channel;
     active.notes = sortedNewNotes;
+    active.outputChannels = newOutputChannels;
 
     for (const auto note : notesToKeep)
-        generatedNoteRefs[static_cast<size_t> (refIndex (channel, note))] = 1;
+        generatedNoteRefs[static_cast<size_t> (refIndex (note.channel, note.note))] = 1;
 
     for (const auto note : notesToStop)
     {
-        auto& refs = generatedNoteRefs[static_cast<size_t> (refIndex (channel, note))];
+        auto& refs = generatedNoteRefs[static_cast<size_t> (refIndex (note.channel, note.note))];
         while (refs > 0)
-            sendGeneratedNoteOff (channel, note, samplePosition, blockSamples, output);
+            sendGeneratedNoteOff (note.channel, note.note, samplePosition, blockSamples, output);
     }
 
     auto orderedNotes = notesToStart;
+    std::sort (orderedNotes.begin(), orderedNotes.end(), [] (const RoutedNote& a, const RoutedNote& b)
+    {
+        return a.note < b.note;
+    });
     auto strumMode = settings.strumMode;
     if (strumMode == Soli::StrumMode::random)
     {
@@ -305,7 +391,10 @@ void SoliVoicerAudioProcessor::transitionLeadChordOnChannel (int channel,
                                                                    juce::jmax (8, static_cast<int> (0.0015 * getSampleRate())));
 
     for (int i = 0; i < static_cast<int> (orderedNotes.size()); ++i)
-        sendGeneratedNoteOn (channel, orderedNotes[static_cast<size_t> (i)], velocity, samplePosition + startOffset + i * step, blockSamples, output);
+    {
+        const auto routed = orderedNotes[static_cast<size_t> (i)];
+        sendGeneratedNoteOn (routed.channel, routed.note, velocity, samplePosition + startOffset + i * step, blockSamples, output);
+    }
 }
 
 void SoliVoicerAudioProcessor::replaceActiveChord (int channel,
@@ -318,32 +407,61 @@ void SoliVoicerAudioProcessor::replaceActiveChord (int channel,
                                                    const Soli::Settings& settings)
 {
     auto& active = activeChords[static_cast<size_t> (activeIndex (channel, inputNote))];
-    auto oldNotes = active.notes;
-    auto notesToStart = newNotes;
-    auto notesToStop = oldNotes;
 
-    std::sort (oldNotes.begin(), oldNotes.end());
-    std::sort (notesToStart.begin(), notesToStart.end());
-    std::sort (notesToStop.begin(), notesToStop.end());
+    auto sortedNewNotes = newNotes;
+    std::sort (sortedNewNotes.begin(), sortedNewNotes.end());
+    sortedNewNotes.erase (std::unique (sortedNewNotes.begin(), sortedNewNotes.end()), sortedNewNotes.end());
+    const auto newOutputChannels = outputChannelsForNotes (sortedNewNotes, channel);
 
-    std::vector<int> common;
-    std::set_intersection (oldNotes.begin(), oldNotes.end(),
-                           notesToStart.begin(), notesToStart.end(),
-                           std::back_inserter (common));
-
-    for (const auto note : common)
+    struct RoutedNote
     {
-        notesToStart.erase (std::remove (notesToStart.begin(), notesToStart.end(), note), notesToStart.end());
-        notesToStop.erase (std::remove (notesToStop.begin(), notesToStop.end(), note), notesToStop.end());
-    }
+        int channel = 1;
+        int note = 0;
+    };
+
+    const auto routedLess = [] (const RoutedNote& a, const RoutedNote& b)
+    {
+        if (a.channel != b.channel)
+            return a.channel < b.channel;
+        return a.note < b.note;
+    };
+
+    std::vector<RoutedNote> oldRoutedNotes;
+    oldRoutedNotes.reserve (active.notes.size());
+    for (std::size_t i = 0; i < active.notes.size(); ++i)
+        oldRoutedNotes.push_back ({ activeOutputChannel (active, i), active.notes[i] });
+    std::sort (oldRoutedNotes.begin(), oldRoutedNotes.end(), routedLess);
+
+    std::vector<RoutedNote> newRoutedNotes;
+    newRoutedNotes.reserve (sortedNewNotes.size());
+    for (std::size_t i = 0; i < sortedNewNotes.size(); ++i)
+        newRoutedNotes.push_back ({ newOutputChannels[i], sortedNewNotes[i] });
+    std::sort (newRoutedNotes.begin(), newRoutedNotes.end(), routedLess);
+
+    std::vector<RoutedNote> notesToStart;
+    std::set_difference (newRoutedNotes.begin(), newRoutedNotes.end(),
+                         oldRoutedNotes.begin(), oldRoutedNotes.end(),
+                         std::back_inserter (notesToStart),
+                         routedLess);
+
+    std::vector<RoutedNote> notesToStop;
+    std::set_difference (oldRoutedNotes.begin(), oldRoutedNotes.end(),
+                         newRoutedNotes.begin(), newRoutedNotes.end(),
+                         std::back_inserter (notesToStop),
+                         routedLess);
 
     for (const auto note : notesToStop)
-        sendGeneratedNoteOff (active.channel, note, samplePosition, blockSamples, output);
+        sendGeneratedNoteOff (note.channel, note.note, samplePosition, blockSamples, output);
 
     active.channel = channel;
-    active.notes = newNotes;
+    active.notes = sortedNewNotes;
+    active.outputChannels = newOutputChannels;
 
     auto orderedNotes = notesToStart;
+    std::sort (orderedNotes.begin(), orderedNotes.end(), [] (const RoutedNote& a, const RoutedNote& b)
+    {
+        return a.note < b.note;
+    });
     auto strumMode = settings.strumMode;
     if (strumMode == Soli::StrumMode::random)
     {
@@ -363,7 +481,10 @@ void SoliVoicerAudioProcessor::replaceActiveChord (int channel,
     const auto startOffset = notesToStop.empty() ? 0 : juce::jmin (blockSamples > 0 ? blockSamples - 1 : 0,
                                                                    juce::jmax (8, static_cast<int> (0.003 * getSampleRate())));
     for (int i = 0; i < static_cast<int> (orderedNotes.size()); ++i)
-        sendGeneratedNoteOn (channel, orderedNotes[static_cast<size_t> (i)], velocity, samplePosition + startOffset + i * step, blockSamples, output);
+    {
+        const auto routed = orderedNotes[static_cast<size_t> (i)];
+        sendGeneratedNoteOn (routed.channel, routed.note, velocity, samplePosition + startOffset + i * step, blockSamples, output);
+    }
 }
 
 void SoliVoicerAudioProcessor::sendGeneratedNoteOn (int channel, int note, int velocity, int samplePosition, int blockSamples, juce::MidiBuffer& output)
@@ -455,6 +576,8 @@ void SoliVoicerAudioProcessor::startPerformance (int channel,
     state.inputNote = inputNote;
     state.velocity = velocity;
     state.voicing = notes;
+    std::sort (state.voicing.begin(), state.voicing.end());
+    state.voicing.erase (std::unique (state.voicing.begin(), state.voicing.end()), state.voicing.end());
     state.step = 0;
     std::uniform_int_distribution<int> phraseDistribution (0, 17);
     std::uniform_int_distribution<int> articulationDistribution (0, 7);
@@ -475,12 +598,45 @@ void SoliVoicerAudioProcessor::stopPerformance (int channel,
     if (! state.held || state.inputNote != inputNote)
         return;
 
+    const auto releasedVoicing = state.voicing;
     state = {};
-    pendingMidi.erase (std::remove_if (pendingMidi.begin(), pendingMidi.end(), [channel] (const PendingMidi& event)
+    std::array<bool, 16> releasedChannels {};
+    if (multiChannelOutEnabled())
     {
-        return event.message.isForChannel (channel);
+        for (const auto outputChannel : outputChannelsForNotes (releasedVoicing, channel))
+            releasedChannels[static_cast<std::size_t> (juce::jlimit (1, 16, outputChannel) - 1)] = true;
+    }
+    else
+    {
+        releasedChannels[static_cast<std::size_t> (juce::jlimit (1, 16, channel) - 1)] = true;
+    }
+
+    pendingMidi.erase (std::remove_if (pendingMidi.begin(), pendingMidi.end(), [&releasedChannels] (const PendingMidi& event)
+    {
+        const auto eventChannel = event.message.getChannel();
+        return eventChannel >= 1
+            && eventChannel <= 16
+            && releasedChannels[static_cast<std::size_t> (eventChannel - 1)];
     }), pendingMidi.end());
-    output.addEvent (juce::MidiMessage::allNotesOff (channel), juce::jmax (0, samplePosition));
+    if (multiChannelOutEnabled())
+    {
+        std::array<bool, 16> sent {};
+        for (int outputChannel = 1; outputChannel <= 16; ++outputChannel)
+        {
+            const auto safeChannel = juce::jlimit (1, 16, outputChannel);
+            if (! releasedChannels[static_cast<std::size_t> (safeChannel - 1)])
+                continue;
+            if (sent[static_cast<std::size_t> (safeChannel - 1)])
+                continue;
+
+            sent[static_cast<std::size_t> (safeChannel - 1)] = true;
+            output.addEvent (juce::MidiMessage::allNotesOff (safeChannel), juce::jmax (0, samplePosition));
+        }
+    }
+    else
+    {
+        output.addEvent (juce::MidiMessage::allNotesOff (channel), juce::jmax (0, samplePosition));
+    }
 }
 
 std::vector<int> SoliVoicerAudioProcessor::performanceNotes (const PerformanceChannel& state,
@@ -793,10 +949,11 @@ void SoliVoicerAudioProcessor::renderPerformance (const Transport& transport,
                 const auto noteLength = static_cast<int> ((stepPpq * phraseGate) / ppqPerSample);
                 for (const auto note : notes)
                 {
-                    scheduleMidiEvent (juce::MidiMessage::noteOn (state.channel, note,
+                    const auto outputChannel = outputChannelForNote (state.voicing, note, state.channel);
+                    scheduleMidiEvent (juce::MidiMessage::noteOn (outputChannel, note,
                                                                  static_cast<juce::uint8> (velocity)),
                                        sampleOffset, blockSamples, output);
-                    scheduleMidiEvent (juce::MidiMessage::noteOff (state.channel, note),
+                    scheduleMidiEvent (juce::MidiMessage::noteOff (outputChannel, note),
                                        sampleOffset + juce::jmax (1, noteLength), blockSamples, output);
                 }
             }
@@ -812,7 +969,25 @@ void SoliVoicerAudioProcessor::clearPerformance (juce::MidiBuffer* output, int s
     for (auto& state : performanceChannels)
     {
         if (output != nullptr && state.held)
-            output->addEvent (juce::MidiMessage::allNotesOff (state.channel), juce::jmax (0, samplePosition));
+        {
+            if (multiChannelOutEnabled())
+            {
+                std::array<bool, 16> sent {};
+                for (const auto outputChannel : outputChannelsForNotes (state.voicing, state.channel))
+                {
+                    const auto safeChannel = juce::jlimit (1, 16, outputChannel);
+                    if (sent[static_cast<std::size_t> (safeChannel - 1)])
+                        continue;
+
+                    sent[static_cast<std::size_t> (safeChannel - 1)] = true;
+                    output->addEvent (juce::MidiMessage::allNotesOff (safeChannel), juce::jmax (0, samplePosition));
+                }
+            }
+            else
+            {
+                output->addEvent (juce::MidiMessage::allNotesOff (state.channel), juce::jmax (0, samplePosition));
+            }
+        }
         state = {};
     }
     pendingMidi.clear();
@@ -917,7 +1092,25 @@ void SoliVoicerAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
             for (auto& state : performanceChannels)
             {
                 if (state.held)
-                    output.addEvent (juce::MidiMessage::allNotesOff (state.channel), 0);
+                {
+                    if (multiChannelOutEnabled())
+                    {
+                        std::array<bool, 16> sent {};
+                        for (const auto outputChannel : outputChannelsForNotes (state.voicing, state.channel))
+                        {
+                            const auto safeChannel = juce::jlimit (1, 16, outputChannel);
+                            if (sent[static_cast<std::size_t> (safeChannel - 1)])
+                                continue;
+
+                            sent[static_cast<std::size_t> (safeChannel - 1)] = true;
+                            output.addEvent (juce::MidiMessage::allNotesOff (safeChannel), 0);
+                        }
+                    }
+                    else
+                    {
+                        output.addEvent (juce::MidiMessage::allNotesOff (state.channel), 0);
+                    }
+                }
                 state.nextStepPpq = -1.0;
             }
         }
@@ -998,10 +1191,21 @@ void SoliVoicerAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
         {
             clearPerformance();
             for (auto& active : activeChords)
+            {
                 active.notes.clear();
+                active.outputChannels.clear();
+            }
             generatedNoteRefs.fill (0);
             engine.reset();
-            output.addEvent (message, samplePosition);
+            if (multiChannelOutEnabled())
+            {
+                for (int channel = 1; channel <= 16; ++channel)
+                    output.addEvent (juce::MidiMessage::allNotesOff (channel), samplePosition);
+            }
+            else
+            {
+                output.addEvent (message, samplePosition);
+            }
         }
         else
         {
@@ -1197,7 +1401,10 @@ bool SoliVoicerAudioProcessor::writeRecordedMidiFile (const juce::File& destinat
 void SoliVoicerAudioProcessor::panic()
 {
     for (auto& active : activeChords)
+    {
         active.notes.clear();
+        active.outputChannels.clear();
+    }
     generatedNoteRefs.fill (0);
     lastLeadNoteSample.fill (-1);
     pendingMidi.clear();
@@ -1233,6 +1440,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout SoliVoicerAudioProcessor::cr
     params.push_back (std::make_unique<juce::AudioParameterFloat> (juce::ParameterID { ParameterIDs::strumSpeed, 1 }, "Strum Speed", juce::NormalisableRange<float> (0.0f, 1.0f, 0.01f), 0.0f));
     params.push_back (std::make_unique<juce::AudioParameterInt> (juce::ParameterID { ParameterIDs::minNote, 1 }, "Min Note", 0, 126, 36));
     params.push_back (std::make_unique<juce::AudioParameterInt> (juce::ParameterID { ParameterIDs::maxNote, 1 }, "Max Note", 1, 127, 96));
+    params.push_back (std::make_unique<juce::AudioParameterBool> (juce::ParameterID { ParameterIDs::multiChannelOut, 1 }, "Multi Channel Out", false));
     addChoice (ParameterIDs::sourceMode, "Harmony Source", sourceModeNames(), 0);
     addChoice (ParameterIDs::outputMode, "Output Mode", outputModeNames(), 0);
     addChoice (ParameterIDs::contextMode, "Chord Relationship", Soli::ChordEngine::contextModeNames(), 3);

@@ -26,6 +26,7 @@ namespace ParameterIDs
     static constexpr auto strumSpeed = "strumSpeed";
     static constexpr auto minNote = "minNote";
     static constexpr auto maxNote = "maxNote";
+    static constexpr auto multiChannelOut = "multiChannelOut";
     static constexpr auto sourceMode = "sourceMode";
     static constexpr auto outputMode = "outputMode";
     static constexpr auto contextMode = "contextMode";
@@ -109,6 +110,7 @@ private:
     struct ActiveChord
     {
         std::vector<int> notes;
+        std::vector<int> outputChannels;
         int channel = 1;
     };
 
@@ -145,6 +147,10 @@ private:
 
     static int activeIndex (int channel, int note) noexcept;
     static int refIndex (int channel, int note) noexcept;
+    bool multiChannelOutEnabled() const noexcept;
+    std::vector<int> outputChannelsForNotes (const std::vector<int>& notes, int fallbackChannel) const;
+    int outputChannelForNote (const std::vector<int>& notes, int note, int fallbackChannel) const;
+    static int activeOutputChannel (const ActiveChord& active, std::size_t index) noexcept;
     Soli::Settings readSettings() const;
     void emitPendingMidi (int blockSamples, juce::MidiBuffer& output);
     void scheduleMidiEvent (const juce::MidiMessage& message, int sampleOffset, int blockSamples, juce::MidiBuffer& output);

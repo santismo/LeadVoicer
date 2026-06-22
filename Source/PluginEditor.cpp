@@ -218,6 +218,11 @@ SoliVoicerAudioProcessorEditor::SoliVoicerAudioProcessorEditor (SoliVoicerAudioP
     setLabelStyle (linkStatusLabel, 12.0f, muted(), true);
 
     addSlider (chordSizeSlider, chordSizeLabel, "Chord Size", "Number of generated voices.");
+    addAndMakeVisible (multiChannelButton);
+    multiChannelButton.setButtonText ("Multi Ch");
+    multiChannelButton.setTooltip ("Send generated notes to ranked MIDI channels: highest note on channel 1, next note on channel 2, and so on.");
+    multiChannelButton.setColour (juce::ToggleButton::textColourId, text());
+    multiChannelButton.setColour (juce::ToggleButton::tickColourId, green());
     addSlider (complexitySlider, complexityLabel, "Voicing Complexity", "Controls extensions and richer chord colors.");
     addSlider (voiceLeadingSlider, voiceLeadingLabel, "Voice Leading", "Prioritizes smooth movement from the previous voicing.");
     addSlider (outsideSlider, outsideLabel, "Outside Harmony", "Allows notes and chord choices outside the immediate scale.");
@@ -253,6 +258,7 @@ SoliVoicerAudioProcessorEditor::SoliVoicerAudioProcessorEditor (SoliVoicerAudioP
     strumSpeedAttachment = std::make_unique<SliderAttachment> (state, ParameterIDs::strumSpeed, strumSpeedSlider);
     minNoteAttachment = std::make_unique<SliderAttachment> (state, ParameterIDs::minNote, minNoteSlider);
     maxNoteAttachment = std::make_unique<SliderAttachment> (state, ParameterIDs::maxNote, maxNoteSlider);
+    multiChannelAttachment = std::make_unique<ButtonAttachment> (state, ParameterIDs::multiChannelOut, multiChannelButton);
     substitutionAttachment = std::make_unique<SliderAttachment> (state, ParameterIDs::substitutionDepth, substitutionSlider);
     performanceComplexityAttachment = std::make_unique<SliderAttachment> (state, ParameterIDs::performanceComplexity, performanceComplexitySlider);
     densityAttachment = std::make_unique<SliderAttachment> (state, ParameterIDs::rhythmDensity, densitySlider);
@@ -769,7 +775,16 @@ void SoliVoicerAudioProcessorEditor::layoutSliderGrid (
         auto cell = juce::Rectangle<int> (bounds.getX() + column * cellWidth,
                                           bounds.getY() + row * cellHeight,
                                           cellWidth, cellHeight).reduced (6, 2);
-        controls[i].second->setBounds (cell.removeFromTop (19));
+        auto labelRow = cell.removeFromTop (19);
+        if (controls[i].first == &chordSizeSlider)
+        {
+            multiChannelButton.setBounds (labelRow.removeFromRight (74).reduced (4, 0));
+            controls[i].second->setBounds (labelRow);
+        }
+        else
+        {
+            controls[i].second->setBounds (labelRow);
+        }
         controls[i].first->setBounds (cell);
     }
 }
@@ -798,6 +813,7 @@ void SoliVoicerAudioProcessorEditor::updateModeVisibility()
     repeatLabel.setVisible (true);
     strumSpeedSlider.setVisible (true);
     strumSpeedLabel.setVisible (true);
+    multiChannelButton.setVisible (true);
     performanceStyleBox.setVisible (performance);
     performanceStyleLabel.setVisible (performance);
     performanceSubStyleBox.setVisible (performance);
@@ -992,6 +1008,7 @@ void SoliVoicerAudioProcessorEditor::resetDefaults()
     setParameterValue (ParameterIDs::strumSpeed, 0.0f);
     setParameterValue (ParameterIDs::minNote, 36.0f);
     setParameterValue (ParameterIDs::maxNote, 96.0f);
+    setParameterValue (ParameterIDs::multiChannelOut, 0.0f);
     setParameterValue (ParameterIDs::contextMode, 3.0f);
     setParameterValue (ParameterIDs::substitutionDepth, 0.35f);
     setParameterValue (ParameterIDs::performanceStyle, 0.0f);
