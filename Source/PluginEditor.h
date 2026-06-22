@@ -97,7 +97,7 @@ private:
     juce::TextButton recordMidiButton { "Record MIDI" };
     SoliVoicerMidiDragButton dragMidiButton { "Drag MIDI" };
     juce::TextButton clearMidiButton { "Clear MIDI" };
-    juce::ToggleButton multiChannelButton;
+    juce::TextButton multiChannelButton { "Multi Ch" };
 
     juce::ComboBox sourceModeBox;
     juce::ComboBox outputModeBox;

@@ -220,9 +220,12 @@ SoliVoicerAudioProcessorEditor::SoliVoicerAudioProcessorEditor (SoliVoicerAudioP
     addSlider (chordSizeSlider, chordSizeLabel, "Chord Size", "Number of generated voices.");
     addAndMakeVisible (multiChannelButton);
     multiChannelButton.setButtonText ("Multi Ch");
+    multiChannelButton.setClickingTogglesState (true);
     multiChannelButton.setTooltip ("Send generated notes to ranked MIDI channels: highest note on channel 1, next note on channel 2, and so on.");
-    multiChannelButton.setColour (juce::ToggleButton::textColourId, text());
-    multiChannelButton.setColour (juce::ToggleButton::tickColourId, green());
+    multiChannelButton.setColour (juce::TextButton::buttonColourId, panelRaised());
+    multiChannelButton.setColour (juce::TextButton::buttonOnColourId, green());
+    multiChannelButton.setColour (juce::TextButton::textColourOffId, text());
+    multiChannelButton.setColour (juce::TextButton::textColourOnId, background());
     addSlider (complexitySlider, complexityLabel, "Voicing Complexity", "Controls extensions and richer chord colors.");
     addSlider (voiceLeadingSlider, voiceLeadingLabel, "Voice Leading", "Prioritizes smooth movement from the previous voicing.");
     addSlider (outsideSlider, outsideLabel, "Outside Harmony", "Allows notes and chord choices outside the immediate scale.");
@@ -775,14 +778,28 @@ void SoliVoicerAudioProcessorEditor::layoutSliderGrid (
         auto cell = juce::Rectangle<int> (bounds.getX() + column * cellWidth,
                                           bounds.getY() + row * cellHeight,
                                           cellWidth, cellHeight).reduced (6, 2);
-        auto labelRow = cell.removeFromTop (19);
         if (controls[i].first == &chordSizeSlider)
         {
-            multiChannelButton.setBounds (labelRow.removeFromRight (74).reduced (4, 0));
-            controls[i].second->setBounds (labelRow);
+            constexpr auto buttonWidth = 82;
+            auto labelRow = cell.removeFromTop (23);
+            if (labelRow.getWidth() >= 150)
+            {
+                multiChannelButton.setBounds (labelRow.removeFromRight (buttonWidth).reduced (2, 1));
+                labelRow.removeFromRight (4);
+                controls[i].second->setBounds (labelRow.withHeight (19));
+            }
+            else
+            {
+                controls[i].second->setBounds (labelRow.withHeight (19));
+                auto buttonRow = cell.removeFromTop (22);
+                multiChannelButton.setBounds (buttonRow.withSizeKeepingCentre (juce::jmin (buttonWidth, buttonRow.getWidth()), 20));
+                cell.removeFromTop (2);
+            }
+            multiChannelButton.toFront (false);
         }
         else
         {
+            auto labelRow = cell.removeFromTop (19);
             controls[i].second->setBounds (labelRow);
         }
         controls[i].first->setBounds (cell);
