@@ -28,10 +28,10 @@ input[type=number]{width:44px;background:#090b12;border:1px solid var(--line);bo
 #voicerBtn{height:34px;display:flex;align-items:center;justify-content:center;padding:0;border-color:rgba(255,207,90,.38);background:rgba(255,207,90,.09)}
 #voicerBtn.active{border-color:var(--chord);background:rgba(255,207,90,.18);box-shadow:0 0 12px rgba(255,207,90,.16)}
 .chordGlyph{position:relative;display:block;width:20px;height:18px}.chordGlyph i{position:absolute;width:7px;height:7px;border-radius:50%;background:var(--chord);box-shadow:0 0 8px rgba(255,207,90,.28)}.chordGlyph i:nth-child(1){left:1px;bottom:1px}.chordGlyph i:nth-child(2){left:7px;top:1px}.chordGlyph i:nth-child(3){right:1px;bottom:3px}
-#voicerMenu{display:none;position:fixed;right:8px;top:calc(env(safe-area-inset-top) + 44px);width:min(92vw,390px);max-height:min(40dvh,330px);overflow:auto;transform:none;padding:10px;gap:8px;grid-template-columns:1fr;background:rgba(16,19,28,.985);border:1px solid var(--line);border-radius:14px;box-shadow:0 12px 34px rgba(0,0,0,.5);z-index:55;color:var(--text);font-size:11px;overscroll-behavior:contain}
-#voicerMenu.open{display:grid}.voicerTop{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center}.voicerTitle{font-size:12px;font-weight:900;color:var(--chord);letter-spacing:.02em}.voicerGrid{display:grid;grid-template-columns:1fr 1fr;gap:7px}.voicerControl{display:grid;gap:3px;min-width:0}.voicerControl label{font-size:9px;color:var(--muted);font-weight:900}.voicerControl select,.voicerControl input{width:100%;height:26px;font-size:10px;padding:3px 5px}.voicerControl input[type=range]{min-width:0;height:20px;padding:0}.voicerButtons{display:grid;grid-template-columns:1fr 1fr;gap:7px}.voicerReadout{font-size:10px;color:var(--muted);line-height:1.25;border:1px solid var(--line);border-radius:10px;padding:7px;background:rgba(0,0,0,.18)}.voicerLast{font-size:11px;color:var(--text);font-weight:900;margin-bottom:3px}.voicerHint{color:var(--muted)}.voicerWide{grid-column:1 / -1}
+#voicerMenu{display:none;position:fixed;right:8px;top:calc(env(safe-area-inset-top) + 44px);width:min(94vw,430px);max-height:min(52dvh,390px);overflow:auto;transform:none;padding:10px;gap:8px;grid-template-columns:1fr;background:rgba(16,19,28,.985);border:1px solid var(--line);border-radius:14px;box-shadow:0 12px 34px rgba(0,0,0,.5);z-index:55;color:var(--text);font-size:11px;overscroll-behavior:contain}
+#voicerMenu.open{display:grid}.voicerTop{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center}.voicerTitle{font-size:12px;font-weight:900;color:var(--chord);letter-spacing:.02em}.voicerGrid{display:grid;grid-template-columns:1fr 1fr;gap:7px}.voicerControl{display:grid;gap:3px;min-width:0;position:relative}.voicerControl label{font-size:9px;color:var(--muted);font-weight:900;display:flex;justify-content:space-between;gap:6px}.voicerControl select,.voicerControl input,.voicerChoiceBtn{width:100%;height:26px;font-size:10px;padding:3px 5px}.voicerControl input[type=range]{min-width:0;height:20px;padding:0}.valueReadout{color:var(--chord);font-variant-numeric:tabular-nums}.choiceMenu{display:none;position:absolute;left:0;right:0;top:44px;z-index:80;max-height:185px;overflow:auto;background:rgba(16,19,28,.99);border:1px solid var(--line);border-radius:10px;padding:6px;box-shadow:0 8px 20px rgba(0,0,0,.45)}.choiceMenu.open{display:grid;gap:4px}.choiceMenu label{display:flex;align-items:center;justify-content:flex-start;gap:6px;font-size:10px;color:var(--text);font-weight:800}.choiceMenu input{width:auto!important;height:auto!important}.voicerButtons{display:grid;grid-template-columns:1fr 1fr;gap:7px}.voicerReadout{font-size:10px;color:var(--muted);line-height:1.25;border:1px solid var(--line);border-radius:10px;padding:7px;background:rgba(0,0,0,.18)}.voicerLast{font-size:11px;color:var(--text);font-weight:900;margin-bottom:3px}.voicerHint{color:var(--muted)}.voicerWide{grid-column:1 / -1}
 .timelineShell{position:relative;flex:1 1 0;min-height:0;background:var(--panel);border:1px solid var(--line);border-radius:16px;overflow:hidden}
-.timelineHeader{height:34px;padding:3px;display:grid;grid-template-columns:60px minmax(0,1fr) 46px 0px;align-items:center;gap:6px;padding:4px 6px;border-bottom:1px solid var(--line);background:rgba(255,255,255,.025)}
+.timelineHeader{height:34px;padding:3px;display:grid;grid-template-columns:60px minmax(0,1fr) 46px 46px;align-items:center;gap:6px;padding:4px 6px;border-bottom:1px solid var(--line);background:rgba(255,255,255,.025)}
 .trackSelect,.soundSelect,.colorSelect{min-width:0;height:24px;padding:0 6px;border-radius:8px;font-size:11px}.miniBtn{min-height:24px;height:24px;padding:0 7px;border-radius:8px;font-size:10px}
 #timelineViewport{position:absolute;left:0;right:0;top:36px;bottom:0;overflow:hidden;touch-action:none;background:#090b12;cursor:grab}#timelineContent{position:absolute;left:0;top:0;min-width:100%;transform-origin:0 0}
 .pianoKey{position:absolute;left:0;width:38px;border-right:1px solid var(--line);border-bottom:1px solid rgba(255,255,255,.045);font-size:7px;color:var(--muted);padding:1px 3px;z-index:5;background:rgba(6,7,11,.95)}.pianoKey.black{color:rgba(255,255,255,.38);background:rgba(0,0,0,.92)}.vZoomStrip{position:absolute;left:0;top:0;width:38px;bottom:0;z-index:40;pointer-events:auto;background:transparent;touch-action:none}.vZoomThumb{display:none}
@@ -54,7 +54,7 @@ input[type=number]{width:44px;background:#090b12;border:1px solid var(--line);bo
 .barZoomHeader{cursor:ew-resize;position:absolute;left:38px;right:0;top:0;height:12px;z-index:18;background:color-mix(in srgb,var(--panel) 78%,transparent);border-bottom:1px solid var(--line);touch-action:none;overflow:hidden;pointer-events:auto}
 .barZoomHeader .barNumber{top:0!important;font-size:8px!important}
 .barNumber{position:absolute;top:0;font-size:8px;color:rgba(255,255,255,.72);z-index:2;pointer-events:none;transform:translateX(3px)}
-#loopMenu{left:auto!important;right:8px!important;top:76px!important;transform:none!important;width:min(72vw,270px)!important}.trackMenu{left:6px!important;right:auto!important;top:68px!important;transform:none!important;width:min(94vw,320px)!important}.themeMenu{left:8px!important;right:auto!important;top:76px!important;transform:none!important;width:min(96vw,390px)!important}.volInput{width:34px!important;font-size:9px!important;padding:1px!important}.trackMixerRow{display:grid;grid-template-columns:64px 92px 34px;gap:4px;align-items:center;border:1px solid var(--line);border-radius:10px;padding:5px;background:rgba(0,0,0,.18)}.trackColorMenu{left:8px!important;right:auto!important;top:104px!important;transform:none!important;width:min(92vw,330px)!important}.bpmMenu{top:82px!important;left:50%!important;transform:translateX(-50%)!important;width:min(94vw,390px)!important}
+#loopMenu{left:auto!important;right:8px!important;top:76px!important;transform:none!important;width:min(72vw,270px)!important}.trackMenu{left:6px!important;right:auto!important;top:68px!important;transform:none!important;width:min(96vw,410px)!important}.themeMenu{left:8px!important;right:auto!important;top:76px!important;transform:none!important;width:min(96vw,390px)!important}.volInput{width:34px!important;font-size:9px!important;padding:1px!important}.trackMixerRow{display:grid;grid-template-columns:70px 82px 34px 28px 28px;gap:4px;align-items:center;border:1px solid var(--line);border-radius:10px;padding:5px;background:rgba(0,0,0,.18)}.trackRowBtn{min-width:0!important;width:28px!important;height:26px!important;min-height:26px!important;padding:0!important;border-radius:7px!important;font-size:9px!important}.trackColorMenu{left:8px!important;right:auto!important;top:104px!important;transform:none!important;width:min(92vw,330px)!important}.trackFxMenu{left:8px!important;right:auto!important;top:112px!important;transform:none!important;width:min(96vw,410px)!important;max-height:78dvh;overflow:auto}.trackFxControl{display:grid!important;grid-template-columns:88px minmax(0,1fr) 42px!important;align-items:center!important;gap:7px!important}.trackFxControl input[type=range]{min-width:0!important;width:100%!important}.trackFxControl select{height:26px;font-size:10px}.trackFxControl span{text-align:right;color:var(--chord);font-size:10px;font-variant-numeric:tabular-nums}.bpmMenu{top:82px!important;left:50%!important;transform:translateX(-50%)!important;width:min(94vw,390px)!important}
 .trackColorGrid{display:grid;grid-template-columns:repeat(8,1fr);gap:6px}
 .colorSwatchBtn{min-height:26px!important;height:26px!important;border-radius:7px!important;padding:0!important;border:2px solid rgba(255,255,255,.22)!important}
 .colorSwatchBtn.selected{border-color:var(--text)!important;box-shadow:0 0 0 2px var(--accent)}
@@ -76,7 +76,7 @@ button.active,.primary{background:color-mix(in srgb,var(--accent) 35%,var(--pane
 .fret{background:linear-gradient(180deg,color-mix(in srgb,var(--panel2) 90%,var(--accent)),color-mix(in srgb,var(--bg) 92%,var(--panel)));border-color:var(--line)}
 .fretMarkers .marker,.marker{background:color-mix(in srgb,var(--muted) 70%,transparent)!important}
 .popupMenu{background:color-mix(in srgb,var(--panel) 97%,var(--bg))!important;border-color:var(--line)!important;color:var(--text)!important}
-.trackMixerRow input[type=range]{width:92px!important;min-width:92px!important;max-width:92px!important}.trackMixerRow,.projectRow{background:color-mix(in srgb,var(--panel2) 78%,transparent)!important;border-color:var(--line)!important}
+.trackMixerRow input[type=range]{width:82px!important;min-width:82px!important;max-width:82px!important}.trackMixerRow,.projectRow{background:color-mix(in srgb,var(--panel2) 78%,transparent)!important;border-color:var(--line)!important}
 .note{box-sizing:border-box;min-width:6px;box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--text) 15%,transparent)}
 
 .pianoStripMask{position:absolute;left:0;top:0;bottom:0;width:38px;z-index:25;background:var(--panel);border-right:1px solid var(--line);pointer-events:none}
@@ -84,7 +84,7 @@ button.active,.primary{background:color-mix(in srgb,var(--accent) 35%,var(--pane
 
 .trackMixerRow.activeTrack{background:color-mix(in srgb,var(--accent) 28%,var(--panel2))!important;border-color:var(--accent)!important;box-shadow:0 0 0 1px color-mix(in srgb,var(--accent) 45%,transparent) inset}
 .trackMixerRow.activeTrack button{background:color-mix(in srgb,var(--accent) 22%,var(--panel2))!important}
-@media(max-height:720px){#app{gap:5px}.keyboardShell{min-height:285px}.timelineShell{min-height:170px}button{min-height:31px;font-size:10px}.statusRow{display:none;flex:0 0 auto}#voicerMenu{max-height:34dvh;width:min(92vw,370px)}}
+@media(max-height:720px){#app{gap:5px}.keyboardShell{min-height:285px}.timelineShell{min-height:170px}button{min-height:31px;font-size:10px}.statusRow{display:none;flex:0 0 auto}#voicerMenu{max-height:48dvh;width:min(94vw,410px)}}
 </style>
 </head>
 <body>
@@ -95,19 +95,19 @@ button.active,.primary{background:color-mix(in srgb,var(--accent) 35%,var(--pane
 <div class="voicerWrap"><button id="voicerBtn" title="Voicizer"><span class="chordGlyph"><i></i><i></i><i></i></span></button><div id="voicerMenu">
   <div class="voicerTop"><div class="voicerTitle">Voicizer</div><button id="voicerEnableBtn">On</button></div>
   <div class="voicerGrid">
-    <div class="voicerControl"><label for="voicerKey">Key</label><select id="voicerKey"></select></div>
-    <div class="voicerControl"><label for="voicerScale">Scale</label><select id="voicerScale"></select></div>
+    <div class="voicerControl"><label>Key</label><button id="voicerKeyBtn" class="voicerChoiceBtn">C</button><div id="voicerKeyMenu" class="choiceMenu"></div></div>
+    <div class="voicerControl"><label>Scale</label><button id="voicerScaleBtn" class="voicerChoiceBtn">Ionian</button><div id="voicerScaleMenu" class="choiceMenu"></div></div>
     <div class="voicerControl"><label for="voicerStyle">Voicing Style</label><select id="voicerStyle"></select></div>
     <div class="voicerControl"><label for="voicerRole">Input Role</label><select id="voicerRole"></select></div>
     <div class="voicerControl"><label for="voicerPlayability">Playability</label><select id="voicerPlayability"></select></div>
     <div class="voicerControl"><label for="voicerRakeMode">Rake</label><select id="voicerRakeMode"></select></div>
-    <div class="voicerControl"><label for="voicerChordSize">Chord Size</label><input id="voicerChordSize" type="range" min="3" max="8" step="1"/></div>
-    <div class="voicerControl"><label for="voicerRakeSpeed">Rake Speed</label><input id="voicerRakeSpeed" type="range" min="0" max="1" step=".01"/></div>
-    <div class="voicerControl"><label for="voicerComplexity">Complexity</label><input id="voicerComplexity" type="range" min="0" max="1" step=".01"/></div>
-    <div class="voicerControl"><label for="voicerVoiceLeading">Voice Lead</label><input id="voicerVoiceLeading" type="range" min="0" max="1" step=".01"/></div>
-    <div class="voicerControl"><label for="voicerOutside">Outside</label><input id="voicerOutside" type="range" min="0" max="1" step=".01"/></div>
-    <div class="voicerControl"><label for="voicerVariation">Variation</label><input id="voicerVariation" type="range" min="0" max="1" step=".01"/></div>
-    <div class="voicerControl"><label for="voicerRepeat">Repeat</label><input id="voicerRepeat" type="range" min="0" max="1" step=".01"/></div>
+    <div class="voicerControl"><label for="voicerChordSize">Chord Size <span id="voicerChordSizeValue" class="valueReadout">4</span></label><input id="voicerChordSize" type="range" min="3" max="8" step="1"/></div>
+    <div class="voicerControl"><label for="voicerRakeSpeed">Rake Speed <span id="voicerRakeSpeedValue" class="valueReadout">0</span></label><input id="voicerRakeSpeed" type="range" min="0" max="1" step=".01"/></div>
+    <div class="voicerControl"><label for="voicerComplexity">Complexity <span id="voicerComplexityValue" class="valueReadout">45</span></label><input id="voicerComplexity" type="range" min="0" max="1" step=".01"/></div>
+    <div class="voicerControl"><label for="voicerVoiceLeading">Voice Lead <span id="voicerVoiceLeadingValue" class="valueReadout">75</span></label><input id="voicerVoiceLeading" type="range" min="0" max="1" step=".01"/></div>
+    <div class="voicerControl"><label for="voicerOutside">Outside <span id="voicerOutsideValue" class="valueReadout">10</span></label><input id="voicerOutside" type="range" min="0" max="1" step=".01"/></div>
+    <div class="voicerControl"><label for="voicerVariation">Variation <span id="voicerVariationValue" class="valueReadout">35</span></label><input id="voicerVariation" type="range" min="0" max="1" step=".01"/></div>
+    <div class="voicerControl"><label for="voicerRepeat">Repeat <span id="voicerRepeatValue" class="valueReadout">15</span></label><input id="voicerRepeat" type="range" min="0" max="1" step=".01"/></div>
     <div class="voicerControl"><label for="voicerMinNote">Min Note</label><input id="voicerMinNote" type="number" min="0" max="127"/></div>
     <div class="voicerControl"><label for="voicerMaxNote">Max Note</label><input id="voicerMaxNote" type="number" min="0" max="127"/></div>
     <div class="voicerControl voicerWide"><div id="voicerReadout" class="voicerReadout"><div class="voicerLast">Last: <span id="voicerLastChord">--</span></div><div id="voicerLastNotes" class="voicerHint">Play a fret to write or audition a voiced chord.</div></div></div>
@@ -116,7 +116,7 @@ button.active,.primary{background:color-mix(in srgb,var(--accent) 35%,var(--pane
 </div></div>
 <div class="settingsWrap"><button id="settingsBtn">⚙︎</button><div id="settingsMenu"><button id="exportBtn">Export MIDI</button><button id="saveBtn">Save Local</button><button id="loadBtn">Load Local</button><button id="exportProjectBtn">Export Project</button><button id="importProjectBtn">Import Project</button><button id="newProjectBtn">New Project</button><button id="themeBtn">Themes</button><button id="hideFretBtn">Hide Fretboard</button><button id="sfBtn">Engine: SF2</button><button id="sfLoadBtn">Load SF2</button><div id="sfStatus" style="font-size:10px;color:var(--muted);line-height:1.1;padding:1px 4px;">SF2 not loaded</div></div></div>
 </header>
-<section class="timelineShell"><div class="timelineHeader"><button id="trackMenuBtn" class="miniBtn">Tracks</button><select id="soundSelect" class="soundSelect"><option value="gm:0">Piano 1</option><option value="gm:1">Bright Piano</option><option value="gm:4">EPiano</option><option value="gm:16">Organ</option><option value="gm:24">Nylon Guitar</option><option value="gm:25">Steel Guitar</option><option value="gm:26">Jazz Guitar</option><option value="gm:32">Acoustic Bass</option><option value="gm:33">Finger Bass</option><option value="gm:34">Pick Bass</option><option value="gm:48">Strings</option><option value="gm:52">Choir</option><option value="gm:56">Trumpet</option><option value="gm:61">Brass</option><option value="gm:80">Square Lead</option><option value="gm:81">Saw Lead</option><option value="gm:88">New Age Pad</option><option value="gm:89">Warm Pad</option><option value="sine">Internal Sine</option><option value="triangle">Internal Triangle</option><option value="square">Internal Square</option><option value="sawtooth">Internal Saw</option><option value="pulse">Internal Pulse</option><option value="organ">Internal Organ</option><option value="pluck">Internal Pluck</option><option value="bass">Internal Bass</option></select><button id="colorSelect" class="miniBtn">Color</button><span id="trackStatusBtn" style="display:none"></span></div><div id="timelineViewport"><div id="timelineContent"></div><div id="pianoStripMask" class="pianoStripMask"></div><div id="barZoomHeader" class="barZoomHeader"></div><div id="vZoomStrip" class="vZoomStrip"><div id="vZoomThumb" class="vZoomThumb"></div></div></div></section>
+<section class="timelineShell"><div class="timelineHeader"><button id="trackMenuBtn" class="miniBtn">Tracks</button><select id="soundSelect" class="soundSelect"><option value="gm:0">Piano 1</option><option value="gm:1">Bright Piano</option><option value="gm:4">EPiano</option><option value="gm:16">Organ</option><option value="gm:24">Nylon Guitar</option><option value="gm:25">Steel Guitar</option><option value="gm:26">Jazz Guitar</option><option value="gm:32">Acoustic Bass</option><option value="gm:33">Finger Bass</option><option value="gm:34">Pick Bass</option><option value="gm:48">Strings</option><option value="gm:52">Choir</option><option value="gm:56">Trumpet</option><option value="gm:61">Brass</option><option value="gm:80">Square Lead</option><option value="gm:81">Saw Lead</option><option value="gm:88">New Age Pad</option><option value="gm:89">Warm Pad</option><option value="sine">Internal Sine</option><option value="triangle">Internal Triangle</option><option value="square">Internal Square</option><option value="sawtooth">Internal Saw</option><option value="pulse">Internal Pulse</option><option value="organ">Internal Organ</option><option value="pluck">Internal Pluck</option><option value="bass">Internal Bass</option></select><button id="copyBtn" class="miniBtn">Copy</button><button id="pasteBtn" class="miniBtn">Paste</button><span id="trackStatusBtn" style="display:none"></span></div><div id="timelineViewport"><div id="timelineContent"></div><div id="pianoStripMask" class="pianoStripMask"></div><div id="barZoomHeader" class="barZoomHeader"></div><div id="vZoomStrip" class="vZoomStrip"><div id="vZoomThumb" class="vZoomThumb"></div></div></div></section>
 <section class="zoomControls"><button id="playBtn" class="primary">▶︎ Play</button><button id="undoBtn">Undo</button><button id="redoBtn">Redo</button><button id="focusBtn">View</button></section>
 <section class="middleControls"><button id="leftBtn">◀︎ Step</button><button id="rightBtn">Step ▶︎</button><button id="chordBtn">Chord</button><button id="deleteBtn">Delete</button><button id="divDownBtn">Div −</button><button id="divUpBtn">Div +</button><button id="octDownBtn">Oct −</button><button id="octUpBtn">Oct +</button></section>
 <section class="statusRow"><div class="pill">Input: <b id="stepReadout">1/16 · Oct +0</b></div><div class="pill">Playhead: <b id="posReadout">1.1.000</b></div><div class="pill">Chord: <b id="chordReadout">—</b></div></section>
@@ -125,6 +125,18 @@ button.active,.primary{background:color-mix(in srgb,var(--accent) 35%,var(--pane
   <b>Track Color</b>
   <div id="trackColorGrid" class="trackColorGrid"></div>
   <button id="trackColorCloseBtn">Close</button>
+</div>
+<div id="trackFxMenu" class="popupMenu trackFxMenu">
+  <b id="trackFxTitle">Track FX</b>
+  <label class="trackFxControl">Low Cut <input id="fxLowCut" type="range" min="20" max="1000" step="1"/><span id="fxLowCutValue">20</span></label>
+  <label class="trackFxControl">High Cut <input id="fxHighCut" type="range" min="800" max="20000" step="50"/><span id="fxHighCutValue">18k</span></label>
+  <label class="trackFxControl">Reverb <input id="fxReverbMix" type="range" min="0" max="1" step=".01"/><span id="fxReverbMixValue">0</span></label>
+  <label class="trackFxControl">Time <input id="fxReverbTime" type="range" min=".2" max="5" step=".1"/><span id="fxReverbTimeValue">1.2</span></label>
+  <label class="trackFxControl">Room <select id="fxReverbType"><option>Room</option><option>Hall</option><option>Plate</option><option>Spring</option><option>Shimmer</option></select><span></span></label>
+  <label class="trackFxControl">Delay <input id="fxDelayMix" type="range" min="0" max="1" step=".01"/><span id="fxDelayMixValue">0</span></label>
+  <label class="trackFxControl">Delay T <input id="fxDelayTime" type="range" min=".06" max="1.2" step=".01"/><span id="fxDelayTimeValue">0.25</span></label>
+  <label class="trackFxControl">Chorus <input id="fxChorus" type="range" min="0" max="1" step=".01"/><span id="fxChorusValue">0</span></label>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;"><button id="trackFxResetBtn">Reset FX</button><button id="trackFxCloseBtn">Close</button></div>
 </div>
 <div id="themeMenu" class="popupMenu themeMenu">
   <b>Themes</b>
@@ -183,10 +195,11 @@ const voicingStyleNames=[
  "New Age","Film Noir","Doo-Wop","Surf Rock","Grunge","Orchestral Hybrid","K-Pop Ballad","City Pop","Desert Blues","Middle Eastern","Indian Raga",
  "Celtic Modal","Christmas Classic","Auto Genre Blend","Random Genre"
 ];
-function defaultVoicerSettings(){return{key:0,scale:0,role:"Melody Top",style:"Close Lead",playability:"Piano",rakeMode:"Together",chordSize:4,complexity:.45,voiceLeading:.75,outside:.1,variation:.35,repeatChance:.15,rakeSpeed:0,minNote:36,maxNote:96}}
-const state={armed:true,playing:false,chordMode:false,semitoneMode:false,tempo:120,timeSigNum:4,timeSigDen:4,subdivision:16,metronome:false,lastMetroStep:-1,inputOctave:0,tick:0,zoom:.9,viewAllTracks:false,hideFretboard:false,useSoundFont:true,sfReady:false,sfLoading:false,sfSynth:null,sfNode:null,sfId:null,sfProgramCache:{},loopEnabled:false,loopStart:0,loopEnd:PPQ*4,loopSetMode:0,undoStack:[],redoStack:[],scrollX:0,scrollY:250,selectedIds:new Set(),nextNoteId:1,tracks:[{id:1,name:"Track 1",sound:"gm:0",color:"blue",volume:100,notes:[]},{id:2,name:"Track 2",sound:"gm:33",color:"green",volume:100,notes:[]},{id:3,name:"Track 3",sound:"gm:48",color:"purple",volume:100,notes:[]}],activeTrackId:1,audioCtx:null,playbackStartTime:0,playbackStartTick:0,scheduledNotes:new Set(),scheduleTimer:null,liveFretLights:[],voicerEnabled:true,voicer:defaultVoicerSettings(),voicerMemory:{previousNotes:[],previousName:"",previousRoot:-1}};
-const $=id=>document.getElementById(id),el={tempo:$("tempo"),tempoSlider:$("tempoSlider"),bpmLabel:$("bpmLabel"),bpmMenu:$("bpmMenu"),bpmCloseBtn:$("bpmCloseBtn"),subdivTop:$("subdivTop"),tsBtn:$("tsBtn"),tsMenu:$("tsMenu"),metroBtn:$("metroBtn"),loopMenu:$("loopMenu"),loopStartInput:$("loopStartInput"),loopEndInput:$("loopEndInput"),loopToggleBtn:$("loopToggleBtn"),loopApplyBtn:$("loopApplyBtn"),loopCloseBtn:$("loopCloseBtn"),settingsBtn:$("settingsBtn"),settingsMenu:$("settingsMenu"),playBtn:$("playBtn"),leftBtn:$("leftBtn"),rightBtn:$("rightBtn"),divDownBtn:$("divDownBtn"),divUpBtn:$("divUpBtn"),octDownBtn:$("octDownBtn"),octUpBtn:$("octUpBtn"),chordBtn:$("chordBtn"),recordBtn:$("recordBtn"),deleteBtn:$("deleteBtn"),newProjectBtn:$("newProjectBtn"),exportProjectBtn:$("exportProjectBtn"),importProjectBtn:$("importProjectBtn"),projectImport:$("projectImport"),trackColorMenu:$("trackColorMenu"),trackColorGrid:$("trackColorGrid"),trackColorCloseBtn:$("trackColorCloseBtn"),themeBtn:$("themeBtn"),themeMenu:$("themeMenu"),themeList:$("themeList"),randomThemeBtn:$("randomThemeBtn"),randomMonoThemeBtn:$("randomMonoThemeBtn"),themeMenuCloseBtn:$("themeMenuCloseBtn"),hideFretBtn:$("hideFretBtn"),sfBtn:$("sfBtn"),sfLoadBtn:$("sfLoadBtn"),sfStatus:$("sfStatus"),exportBtn:$("exportBtn"),saveBtn:$("saveBtn"),loadBtn:$("loadBtn"),localProjectsMenu:$("localProjectsMenu"),projectNameInput:$("projectNameInput"),saveNamedProjectBtn:$("saveNamedProjectBtn"),localProjectsList:$("localProjectsList"),undoBtn:$("undoBtn"),redoBtn:$("redoBtn"),loopBtn:$("loopBtn"),focusBtn:$("focusBtn"),fretboard:$("fretboard"),fretMarkers:$("fretMarkers"),fretChordLabel:$("fretChordLabel"),timelineViewport:$("timelineViewport"),timelineContent:$("timelineContent"),barZoomHeader:$("barZoomHeader"),vZoomStrip:$("vZoomStrip"),vZoomThumb:$("vZoomThumb"),trackMenuBtn:$("trackMenuBtn"),trackStatusBtn:$("trackStatusBtn"),trackMenu:$("trackMenu"),viewAllToggleBtn:$("viewAllToggleBtn"),trackList:$("trackList"),addTrackMenuBtn:$("addTrackMenuBtn"),deleteTrackMenuBtn:$("deleteTrackMenuBtn"),trackMenuCloseBtn:$("trackMenuCloseBtn"),soundSelect:$("soundSelect"),colorSelect:$("colorSelect"),stepReadout:$("stepReadout"),posReadout:$("posReadout"),chordReadout:$("chordReadout")};
-Object.assign(el,{voicerBtn:$("voicerBtn"),voicerMenu:$("voicerMenu"),voicerEnableBtn:$("voicerEnableBtn"),voicerKey:$("voicerKey"),voicerScale:$("voicerScale"),voicerStyle:$("voicerStyle"),voicerRole:$("voicerRole"),voicerPlayability:$("voicerPlayability"),voicerRakeMode:$("voicerRakeMode"),voicerChordSize:$("voicerChordSize"),voicerRakeSpeed:$("voicerRakeSpeed"),voicerComplexity:$("voicerComplexity"),voicerVoiceLeading:$("voicerVoiceLeading"),voicerOutside:$("voicerOutside"),voicerVariation:$("voicerVariation"),voicerRepeat:$("voicerRepeat"),voicerMinNote:$("voicerMinNote"),voicerMaxNote:$("voicerMaxNote"),voicerReadout:$("voicerReadout"),voicerLastChord:$("voicerLastChord"),voicerLastNotes:$("voicerLastNotes"),voicerResetBtn:$("voicerResetBtn"),voicerRandomizeBtn:$("voicerRandomizeBtn"),voicerCloseBtn:$("voicerCloseBtn")});
+function defaultVoicerSettings(){return{key:0,scale:0,keyMask:1,scaleMask:1,role:"Melody Top",style:"Close Lead",playability:"Piano",rakeMode:"Together",chordSize:4,complexity:.45,voiceLeading:.75,outside:.1,variation:.35,repeatChance:.15,rakeSpeed:0,minNote:36,maxNote:96}}
+function defaultTrackFx(){return{lowCut:20,highCut:18000,reverbType:"Room",reverbMix:0,reverbTime:1.2,delayMix:0,delayTime:.25,chorus:0}}
+const state={armed:true,playing:false,chordMode:false,semitoneMode:false,tempo:120,timeSigNum:4,timeSigDen:4,subdivision:16,metronome:false,lastMetroStep:-1,inputOctave:0,tick:0,zoom:.9,viewAllTracks:false,hideFretboard:false,useSoundFont:true,sfReady:false,sfLoading:false,sfSynth:null,sfNode:null,sfId:null,sfProgramCache:{},loopEnabled:false,loopStart:0,loopEnd:PPQ*4,loopSetMode:0,undoStack:[],redoStack:[],scrollX:0,scrollY:250,selectedIds:new Set(),clipboardNotes:[],nextNoteId:1,tracks:[{id:1,name:"Track 1",sound:"gm:0",color:"blue",volume:100,fx:defaultTrackFx(),notes:[]},{id:2,name:"Track 2",sound:"gm:33",color:"green",volume:100,fx:defaultTrackFx(),notes:[]},{id:3,name:"Track 3",sound:"gm:48",color:"purple",volume:100,fx:defaultTrackFx(),notes:[]}],activeTrackId:1,audioCtx:null,playbackStartTime:0,playbackStartTick:0,scheduledNotes:new Set(),scheduleTimer:null,liveFretLights:[],voicerEnabled:true,voicer:defaultVoicerSettings(),voicerMemory:{previousNotes:[],previousName:"",previousRoot:-1}};
+const $=id=>document.getElementById(id),el={tempo:$("tempo"),tempoSlider:$("tempoSlider"),bpmLabel:$("bpmLabel"),bpmMenu:$("bpmMenu"),bpmCloseBtn:$("bpmCloseBtn"),subdivTop:$("subdivTop"),tsBtn:$("tsBtn"),tsMenu:$("tsMenu"),metroBtn:$("metroBtn"),loopMenu:$("loopMenu"),loopStartInput:$("loopStartInput"),loopEndInput:$("loopEndInput"),loopToggleBtn:$("loopToggleBtn"),loopApplyBtn:$("loopApplyBtn"),loopCloseBtn:$("loopCloseBtn"),settingsBtn:$("settingsBtn"),settingsMenu:$("settingsMenu"),playBtn:$("playBtn"),leftBtn:$("leftBtn"),rightBtn:$("rightBtn"),divDownBtn:$("divDownBtn"),divUpBtn:$("divUpBtn"),octDownBtn:$("octDownBtn"),octUpBtn:$("octUpBtn"),chordBtn:$("chordBtn"),recordBtn:$("recordBtn"),deleteBtn:$("deleteBtn"),newProjectBtn:$("newProjectBtn"),exportProjectBtn:$("exportProjectBtn"),importProjectBtn:$("importProjectBtn"),projectImport:$("projectImport"),trackColorMenu:$("trackColorMenu"),trackColorGrid:$("trackColorGrid"),trackColorCloseBtn:$("trackColorCloseBtn"),trackFxMenu:$("trackFxMenu"),trackFxTitle:$("trackFxTitle"),fxLowCut:$("fxLowCut"),fxLowCutValue:$("fxLowCutValue"),fxHighCut:$("fxHighCut"),fxHighCutValue:$("fxHighCutValue"),fxReverbMix:$("fxReverbMix"),fxReverbMixValue:$("fxReverbMixValue"),fxReverbTime:$("fxReverbTime"),fxReverbTimeValue:$("fxReverbTimeValue"),fxReverbType:$("fxReverbType"),fxDelayMix:$("fxDelayMix"),fxDelayMixValue:$("fxDelayMixValue"),fxDelayTime:$("fxDelayTime"),fxDelayTimeValue:$("fxDelayTimeValue"),fxChorus:$("fxChorus"),fxChorusValue:$("fxChorusValue"),trackFxResetBtn:$("trackFxResetBtn"),trackFxCloseBtn:$("trackFxCloseBtn"),themeBtn:$("themeBtn"),themeMenu:$("themeMenu"),themeList:$("themeList"),randomThemeBtn:$("randomThemeBtn"),randomMonoThemeBtn:$("randomMonoThemeBtn"),themeMenuCloseBtn:$("themeMenuCloseBtn"),hideFretBtn:$("hideFretBtn"),sfBtn:$("sfBtn"),sfLoadBtn:$("sfLoadBtn"),sfStatus:$("sfStatus"),exportBtn:$("exportBtn"),saveBtn:$("saveBtn"),loadBtn:$("loadBtn"),localProjectsMenu:$("localProjectsMenu"),projectNameInput:$("projectNameInput"),saveNamedProjectBtn:$("saveNamedProjectBtn"),localProjectsList:$("localProjectsList"),undoBtn:$("undoBtn"),redoBtn:$("redoBtn"),loopBtn:$("loopBtn"),focusBtn:$("focusBtn"),fretboard:$("fretboard"),fretMarkers:$("fretMarkers"),fretChordLabel:$("fretChordLabel"),timelineViewport:$("timelineViewport"),timelineContent:$("timelineContent"),barZoomHeader:$("barZoomHeader"),vZoomStrip:$("vZoomStrip"),vZoomThumb:$("vZoomThumb"),trackMenuBtn:$("trackMenuBtn"),trackStatusBtn:$("trackStatusBtn"),trackMenu:$("trackMenu"),viewAllToggleBtn:$("viewAllToggleBtn"),trackList:$("trackList"),addTrackMenuBtn:$("addTrackMenuBtn"),deleteTrackMenuBtn:$("deleteTrackMenuBtn"),trackMenuCloseBtn:$("trackMenuCloseBtn"),soundSelect:$("soundSelect"),copyBtn:$("copyBtn"),pasteBtn:$("pasteBtn"),colorSelect:$("colorSelect"),stepReadout:$("stepReadout"),posReadout:$("posReadout"),chordReadout:$("chordReadout")};
+Object.assign(el,{voicerBtn:$("voicerBtn"),voicerMenu:$("voicerMenu"),voicerEnableBtn:$("voicerEnableBtn"),voicerKeyBtn:$("voicerKeyBtn"),voicerScaleBtn:$("voicerScaleBtn"),voicerKeyMenu:$("voicerKeyMenu"),voicerScaleMenu:$("voicerScaleMenu"),voicerStyle:$("voicerStyle"),voicerRole:$("voicerRole"),voicerPlayability:$("voicerPlayability"),voicerRakeMode:$("voicerRakeMode"),voicerChordSize:$("voicerChordSize"),voicerChordSizeValue:$("voicerChordSizeValue"),voicerRakeSpeed:$("voicerRakeSpeed"),voicerRakeSpeedValue:$("voicerRakeSpeedValue"),voicerComplexity:$("voicerComplexity"),voicerComplexityValue:$("voicerComplexityValue"),voicerVoiceLeading:$("voicerVoiceLeading"),voicerVoiceLeadingValue:$("voicerVoiceLeadingValue"),voicerOutside:$("voicerOutside"),voicerOutsideValue:$("voicerOutsideValue"),voicerVariation:$("voicerVariation"),voicerVariationValue:$("voicerVariationValue"),voicerRepeat:$("voicerRepeat"),voicerRepeatValue:$("voicerRepeatValue"),voicerMinNote:$("voicerMinNote"),voicerMaxNote:$("voicerMaxNote"),voicerReadout:$("voicerReadout"),voicerLastChord:$("voicerLastChord"),voicerLastNotes:$("voicerLastNotes"),voicerResetBtn:$("voicerResetBtn"),voicerRandomizeBtn:$("voicerRandomizeBtn"),voicerCloseBtn:$("voicerCloseBtn")});
 
 
 
@@ -393,10 +406,10 @@ function snapshot(){
 function restoreSnapshot(raw){
  const d=JSON.parse(raw);
  state.tempo=d.tempo||120;state.timeSigNum=d.timeSigNum||4;state.timeSigDen=d.timeSigDen||4;state.subdivision=d.subdivision||16;state.metronome=!!d.metronome;state.semitoneMode=!!d.semitoneMode;state.inputOctave=d.inputOctave||0;
- state.tick=d.tick||0;state.tracks=d.tracks||state.tracks;state.activeTrackId=d.activeTrackId||state.tracks[0].id;
+ state.tick=d.tick||0;state.tracks=(d.tracks||state.tracks).map(ensureTrackDefaults);state.activeTrackId=d.activeTrackId||state.tracks[0].id;
  state.viewAllTracks=!!d.viewAllTracks;state.hideFretboard=!!d.hideFretboard;state.useSoundFont=d.useSoundFont!==false;
  state.loopEnabled=!!d.loopEnabled;state.loopStart=d.loopStart||0;state.loopEnd=d.loopEnd||PPQ*4;state.nextNoteId=d.nextNoteId||1;
- state.voicerEnabled=d.voicerEnabled!==false;state.voicer={...defaultVoicerSettings(),...(d.voicer||{})};state.voicerMemory=d.voicerMemory||{previousNotes:[],previousName:"",previousRoot:-1};
+ state.voicerEnabled=d.voicerEnabled!==false;state.voicer=normalizeVoicerSettings({...defaultVoicerSettings(),...(d.voicer||{})});state.voicerMemory=d.voicerMemory||{previousNotes:[],previousName:"",previousRoot:-1};
  state.selectedIds.clear();el.tempo.value=state.tempo;el.tempoSlider.value=state.tempo;syncVoicerControls();render();
 }
 function pushUndo(){
@@ -430,7 +443,24 @@ function internalSoundForTrack(tr){
  if(p>=88&&p<=95)return "triangle";
  return "sine";
 }
-function beatsPerBar(){return state.timeSigNum*(4/state.timeSigDen)}function barTicks(){return PPQ*beatsPerBar()}function stepTicks(){return PPQ*4/state.subdivision}function snapTick(t){return Math.max(0,Math.round(t/stepTicks())*stepTicks())}function activeTrack(){return state.tracks.find(t=>t.id===state.activeTrackId)||state.tracks[0]}function totalTicks(){let m=barTicks()*4;for(const t of state.tracks)for(const n of t.notes)m=Math.max(m,n.start+n.duration+barTicks());return m}
+function beatsPerBar(){return state.timeSigNum*(4/state.timeSigDen)}function barTicks(){return PPQ*beatsPerBar()}function stepTicks(){return PPQ*4/state.subdivision}function snapTick(t){return Math.max(0,Math.round(t/stepTicks())*stepTicks())}
+function ensureTrackDefaults(t){
+ if(!t)return t;
+ if(!t.name)t.name="Track "+(t.id||1);
+ if(!t.sound)t.sound=state.useSoundFont?"gm:0":"sine";
+ if(!t.color)t.color="blue";
+ if(t.volume==null)t.volume=100;
+ if(!Array.isArray(t.notes))t.notes=[];
+ t.fx={...defaultTrackFx(),...(t.fx||{})};
+ return t;
+}
+function normalizeTracks(){
+ if(!Array.isArray(state.tracks)||!state.tracks.length)state.tracks=makeFreshProjectData().tracks;
+ state.tracks=state.tracks.map(ensureTrackDefaults);
+ if(!state.tracks.some(t=>t.id===state.activeTrackId))state.activeTrackId=state.tracks[0].id;
+}
+function activeTrack(){normalizeTracks();return ensureTrackDefaults(state.tracks.find(t=>t.id===state.activeTrackId)||state.tracks[0])}
+function totalTicks(){let m=barTicks()*4;normalizeTracks();for(const t of state.tracks)for(const n of t.notes)m=Math.max(m,n.start+n.duration+barTicks());return m}
 function visibleEndTicks(){
  const visibleSteps=(state.scrollX+el.timelineViewport.clientWidth+1200)/(baseStepPx*Math.max(.08,state.zoom));
  return Math.max(totalTicks(),visibleSteps*stepTicks(),barTicks()*16);
@@ -457,10 +487,59 @@ function silentUnlock(){
  }catch(e){}
 }
 function ticksToSeconds(t){return(t/PPQ)*(60/state.tempo)}
+function trackFx(tr){return ensureTrackDefaults(tr||activeTrack()).fx}
+function trackFxIsActive(tr){
+ const fx=trackFx(tr);
+ return (Number(fx.reverbMix)||0)>0.005||(Number(fx.delayMix)||0)>0.005||(Number(fx.chorus)||0)>0.005||(Number(fx.lowCut)||20)>20||(Number(fx.highCut)||18000)<18000;
+}
+function connectTrackOutput(source,tr,c,cleanupAt=0){
+ const fx={...defaultTrackFx(),...(trackFx(tr)||{})};
+ const low=clamp(Number(fx.lowCut)||20,20,8000);
+ const high=clamp(Number(fx.highCut)||18000,Math.max(low+80,800),20000);
+ const reverbMix=clamp(Number(fx.reverbMix)||0,0,1);
+ const reverbTime=clamp(Number(fx.reverbTime)||1.2,.2,5);
+ const delayMix=clamp(Number(fx.delayMix)||0,0,1);
+ const delayTime=clamp(Number(fx.delayTime)||.25,.06,1.2);
+ const chorus=clamp(Number(fx.chorus)||0,0,1);
+ const hp=c.createBiquadFilter();
+ const lp=c.createBiquadFilter();
+ hp.type="highpass";hp.frequency.value=low;hp.Q.value=.65;
+ lp.type="lowpass";lp.frequency.value=high;lp.Q.value=.55;
+ source.connect(hp);hp.connect(lp);
+ const dry=c.createGain();
+ dry.gain.value=clamp(1-reverbMix*.22-delayMix*.18-chorus*.12,.45,1);
+ lp.connect(dry);dry.connect(c.destination);
+ if(delayMix>0.005){
+  const d=c.createDelay(1.5),w=c.createGain();
+  d.delayTime.value=delayTime;w.gain.value=delayMix*.42;
+  lp.connect(d);d.connect(w);w.connect(c.destination);
+ }
+ if(reverbMix>0.005){
+  const scale={Room:.75,Hall:1.35,Plate:.95,Spring:.55,Shimmer:1.65}[fx.reverbType]||1;
+  const taps=[.031,.047,.073,.109,.151];
+  taps.forEach((tap,i)=>{
+   const d=c.createDelay(1.6),w=c.createGain(),f=c.createBiquadFilter();
+   d.delayTime.value=Math.min(1.5,tap*reverbTime*scale);
+   f.type=fx.reverbType==="Shimmer"?"highpass":"lowpass";
+   f.frequency.value=fx.reverbType==="Shimmer"?900:clamp(7600-reverbTime*700,2200,8000);
+   w.gain.value=reverbMix*(.12/(i+1));
+   lp.connect(d);d.connect(f);f.connect(w);w.connect(c.destination);
+  });
+ }
+ if(chorus>0.005){
+  const d=c.createDelay(.05),w=c.createGain(),lfo=c.createOscillator(),depth=c.createGain();
+  d.delayTime.value=.018;w.gain.value=chorus*.24;
+  lfo.frequency.value=.55+chorus*.9;depth.gain.value=.0035+chorus*.006;
+  lfo.connect(depth);depth.connect(d.delayTime);
+  lp.connect(d);d.connect(w);w.connect(c.destination);
+  lfo.start(c.currentTime);
+  try{lfo.stop(cleanupAt||c.currentTime+2)}catch(e){}
+ }
+}
 function playNote(m,d=stepTicks(),tr=activeTrack(),when=0){
  ensureAudio();
  if(state.audioCtx&&state.audioCtx.state==='suspended')state.audioCtx.resume().catch(()=>{});
- if(state.useSoundFont&&state.sfReady&&tr.sound&&tr.sound.startsWith('gm:')&&playSfNote(m,d,tr,when))return;
+ if(state.useSoundFont&&!trackFxIsActive(tr)&&state.sfReady&&tr.sound&&tr.sound.startsWith('gm:')&&playSfNote(m,d,tr,when))return;
  const c=state.audioCtx;
  const vol=trackVolume(tr)/100;
  const raw=tr.sound||"sine";
@@ -474,7 +553,7 @@ function playNote(m,d=stepTicks(),tr=activeTrack(),when=0){
   g.gain.setValueAtTime(0,start);
   g.gain.linearRampToValueAtTime(amp*vol,start+attack);
   g.gain.linearRampToValueAtTime(0,start+releaseEnd);
-  o.connect(g);g.connect(c.destination);
+  o.connect(g);connectTrackOutput(g,tr,c,start+stopDur+2);
   o.start(start);o.stop(start+stopDur+.04);
  }
  const f=freq(m);
@@ -580,10 +659,60 @@ function mod12(n){return((n%12)+12)%12}
 function clamp(v,lo,hi){return Math.max(lo,Math.min(hi,v))}
 function uniqueSorted(a){return[...new Set(a.map(n=>Math.round(n)))].sort((x,y)=>x-y)}
 function midiPc(m){return mod12(m)}
-function selectedScale(){return scaleDefs[state.voicer.scale]||scaleDefs[0]}
-function pcInCurrentScale(pc){
- const ints=selectedScale()[1];
- return ints.includes(mod12(pc-state.voicer.key));
+function boundedMask(mask,count,fallback=0){
+ const max=(1<<count)-1;
+ let n=Math.trunc(Number(mask));
+ if(!Number.isFinite(n)||n<=0)n=1<<fallback;
+ n&=max;
+ return n||1<<fallback;
+}
+function maskBits(mask,count){
+ const m=boundedMask(mask,count);
+ const bits=[];
+ for(let i=0;i<count;i++)if(m&(1<<i))bits.push(i);
+ return bits.length?bits:[0];
+}
+function primaryMaskIndex(mask,count){return maskBits(mask,count)[0]||0}
+function normalizeVoicerSettings(v=state.voicer){
+ const hadKeyMask=v&&Object.prototype.hasOwnProperty.call(v,"keyMask");
+ const hadScaleMask=v&&Object.prototype.hasOwnProperty.call(v,"scaleMask");
+ const base={...defaultVoicerSettings(),...(v||{})};
+ base.key=clamp(Math.round(Number(base.key)||0),0,noteNames.length-1);
+ base.scale=clamp(Math.round(Number(base.scale)||0),0,scaleDefs.length-1);
+ if(!hadKeyMask)base.keyMask=1<<base.key;
+ if(!hadScaleMask)base.scaleMask=1<<base.scale;
+ base.keyMask=boundedMask(base.keyMask,noteNames.length,base.key);
+ base.scaleMask=boundedMask(base.scaleMask,scaleDefs.length,base.scale);
+ base.key=primaryMaskIndex(base.keyMask,noteNames.length);
+ base.scale=primaryMaskIndex(base.scaleMask,scaleDefs.length);
+ return base;
+}
+function selectedKeys(settings=state.voicer){return maskBits(normalizeVoicerSettings(settings).keyMask,noteNames.length)}
+function selectedScales(settings=state.voicer){return maskBits(normalizeVoicerSettings(settings).scaleMask,scaleDefs.length)}
+function choiceSummary(labels,mask,count=labels.length){
+ const bits=maskBits(mask,count);
+ if(bits.length===1)return labels[bits[0]];
+ if(bits.length===2)return bits.map(i=>labels[i]).join("+");
+ return labels[bits[0]]+" +"+(bits.length-1);
+}
+function pcInCurrentScale(pc,settings=state.voicer){
+ const s=normalizeVoicerSettings(settings);
+ for(const key of selectedKeys(s)){
+  for(const scaleIndex of selectedScales(s)){
+   const scale=scaleDefs[scaleIndex]||scaleDefs[0];
+   if(scale[1].includes(mod12(pc-key)))return true;
+  }
+ }
+ return false;
+}
+function nearestSelectedKeyDistance(root,settings=state.voicer){
+ const keys=selectedKeys(settings);
+ let best=12;
+ for(const key of keys){
+  const d=mod12(root-key);
+  best=Math.min(best,d,12-d);
+ }
+ return best;
 }
 function suffixHas(type,tag){return type.tags&&type.tags.includes(tag)}
 function styleProfile(styleName){
@@ -717,7 +846,7 @@ function voiceCandidate(inputNote,root,type,profile,settings){
 }
 function scoreVoicerCandidate(c,inputNote,profile,settings){
  let score=0;
- const keyDistance=Math.min(mod12(c.root-settings.key),12-mod12(c.root-settings.key));
+ const keyDistance=nearestSelectedKeyDistance(c.root,settings);
  const fit=chordScaleFit(c.root,c.type);
  const freedom=clamp(settings.outside+profile.outsideShift+settings.variation*.3,0,1);
  score+=fit*(60-25*freedom);
@@ -741,7 +870,9 @@ function scoreVoicerCandidate(c,inputNote,profile,settings){
  return score;
 }
 function generateVoicerChord(inputNote){
- const settings={...state.voicer,minNote:clamp(Number(state.voicer.minNote)||36,0,127),maxNote:clamp(Number(state.voicer.maxNote)||96,0,127)};
+ const normalized=normalizeVoicerSettings(state.voicer);
+ state.voicer=normalized;
+ const settings={...normalized,minNote:clamp(Number(normalized.minNote)||36,0,127),maxNote:clamp(Number(normalized.maxNote)||96,0,127)};
  if(state.voicerMemory.previousNotes.length&&Math.random()<settings.repeatChance)return{name:state.voicerMemory.previousName,notes:[...state.voicerMemory.previousNotes],root:state.voicerMemory.previousRoot};
  const profile=styleProfile(settings.style);
  const inputPc=midiPc(inputNote);
@@ -833,44 +964,111 @@ function populateSelect(select,items){
  });
  if([...select.options].some(o=>o.value===current))select.value=current;
 }
+function closeChoiceMenus(except=null){
+ for(const menu of [el.voicerKeyMenu,el.voicerScaleMenu]){
+  if(menu&&menu!==except)menu.classList.remove("open");
+ }
+}
+function updateVoicerChoiceButtons(){
+ state.voicer=normalizeVoicerSettings(state.voicer);
+ if(el.voicerKeyBtn)el.voicerKeyBtn.textContent=choiceSummary(noteNames,state.voicer.keyMask,noteNames.length);
+ if(el.voicerScaleBtn)el.voicerScaleBtn.textContent=choiceSummary(scaleDefs.map(s=>s[0]),state.voicer.scaleMask,scaleDefs.length);
+}
+function renderVoicerChoiceMenu(kind){
+ const isKey=kind==="key";
+ const menu=isKey?el.voicerKeyMenu:el.voicerScaleMenu;
+ if(!menu)return;
+ const labels=isKey?noteNames:scaleDefs.map(s=>s[0]);
+ const maskProp=isKey?"keyMask":"scaleMask";
+ const indexProp=isKey?"key":"scale";
+ const count=labels.length;
+ state.voicer=normalizeVoicerSettings(state.voicer);
+ menu.innerHTML="";
+ for(let i=0;i<count;i++){
+  const label=document.createElement("label");
+  const input=document.createElement("input");
+  input.type="checkbox";
+  input.checked=!!(state.voicer[maskProp]&(1<<i));
+  input.onchange=()=>{
+   let mask=boundedMask(state.voicer[maskProp],count,state.voicer[indexProp]);
+   if(input.checked)mask|=1<<i;
+   else mask&=~(1<<i);
+   if(!mask){mask=1<<i;input.checked=true}
+   pushUndo();
+   state.voicer[maskProp]=boundedMask(mask,count,i);
+   state.voicer[indexProp]=primaryMaskIndex(state.voicer[maskProp],count);
+   updateVoicerChoiceButtons();
+   resetVoicerEngine();
+   renderStatus();
+  };
+  label.appendChild(input);
+  label.appendChild(document.createTextNode(labels[i]));
+  menu.appendChild(label);
+ }
+}
+function toggleVoicerChoice(kind,e){
+ e?.stopPropagation();
+ const menu=kind==="key"?el.voicerKeyMenu:el.voicerScaleMenu;
+ if(!menu)return;
+ renderVoicerChoiceMenu(kind);
+ const open=!menu.classList.contains("open");
+ closeChoiceMenus(menu);
+ menu.classList.toggle("open",open);
+}
+function controlNumber(control,fallback){
+ const n=Number(control?.value);
+ return Number.isFinite(n)?n:fallback;
+}
+function updateVoicerValueLabels(){
+ const v=state.voicer;
+ const pct=n=>String(Math.round(clamp(Number(n)||0,0,1)*100));
+ if(el.voicerChordSizeValue)el.voicerChordSizeValue.textContent=String(Math.round(v.chordSize));
+ if(el.voicerRakeSpeedValue)el.voicerRakeSpeedValue.textContent=pct(v.rakeSpeed);
+ if(el.voicerComplexityValue)el.voicerComplexityValue.textContent=pct(v.complexity);
+ if(el.voicerVoiceLeadingValue)el.voicerVoiceLeadingValue.textContent=pct(v.voiceLeading);
+ if(el.voicerOutsideValue)el.voicerOutsideValue.textContent=pct(v.outside);
+ if(el.voicerVariationValue)el.voicerVariationValue.textContent=pct(v.variation);
+ if(el.voicerRepeatValue)el.voicerRepeatValue.textContent=pct(v.repeatChance);
+}
 function setupVoicerControls(){
- populateSelect(el.voicerKey,noteNames.map((label,index)=>({label,value:index})));
- populateSelect(el.voicerScale,scaleDefs.map((s,index)=>({label:s[0],value:index})));
  populateSelect(el.voicerStyle,voicingStyleNames);
  populateSelect(el.voicerRole,roleNames);
  populateSelect(el.voicerPlayability,playabilityNames);
  populateSelect(el.voicerRakeMode,rakeModes);
- const controls=[el.voicerKey,el.voicerScale,el.voicerStyle,el.voicerRole,el.voicerPlayability,el.voicerRakeMode,el.voicerChordSize,el.voicerRakeSpeed,el.voicerComplexity,el.voicerVoiceLeading,el.voicerOutside,el.voicerVariation,el.voicerRepeat,el.voicerMinNote,el.voicerMaxNote];
+ if(el.voicerKeyBtn)el.voicerKeyBtn.onclick=e=>toggleVoicerChoice("key",e);
+ if(el.voicerScaleBtn)el.voicerScaleBtn.onclick=e=>toggleVoicerChoice("scale",e);
+ const controls=[el.voicerStyle,el.voicerRole,el.voicerPlayability,el.voicerRakeMode,el.voicerChordSize,el.voicerRakeSpeed,el.voicerComplexity,el.voicerVoiceLeading,el.voicerOutside,el.voicerVariation,el.voicerRepeat,el.voicerMinNote,el.voicerMaxNote];
  controls.forEach(c=>{
   if(!c)return;
   c.addEventListener(c.type==="range"?"input":"change",()=>{readVoicerControls();renderStatus()});
  });
+ renderVoicerChoiceMenu("key");
+ renderVoicerChoiceMenu("scale");
  syncVoicerControls();
 }
 function readVoicerControls(){
- const v=state.voicer;
- v.key=Number(el.voicerKey?.value)||0;
- v.scale=Number(el.voicerScale?.value)||0;
+ const v=normalizeVoicerSettings(state.voicer);
  v.style=el.voicerStyle?.value||v.style;
  v.role=el.voicerRole?.value||v.role;
  v.playability=el.voicerPlayability?.value||v.playability;
  v.rakeMode=el.voicerRakeMode?.value||v.rakeMode;
- v.chordSize=clamp(Number(el.voicerChordSize?.value)||4,3,8);
- v.rakeSpeed=clamp(Number(el.voicerRakeSpeed?.value)||0,0,1);
- v.complexity=clamp(Number(el.voicerComplexity?.value)||0,0,1);
- v.voiceLeading=clamp(Number(el.voicerVoiceLeading?.value)||0,0,1);
- v.outside=clamp(Number(el.voicerOutside?.value)||0,0,1);
- v.variation=clamp(Number(el.voicerVariation?.value)||0,0,1);
- v.repeatChance=clamp(Number(el.voicerRepeat?.value)||0,0,1);
- v.minNote=clamp(Number(el.voicerMinNote?.value)||36,0,127);
- v.maxNote=clamp(Number(el.voicerMaxNote?.value)||96,v.minNote,127);
+ v.chordSize=clamp(controlNumber(el.voicerChordSize,4),3,8);
+ v.rakeSpeed=clamp(controlNumber(el.voicerRakeSpeed,0),0,1);
+ v.complexity=clamp(controlNumber(el.voicerComplexity,0),0,1);
+ v.voiceLeading=clamp(controlNumber(el.voicerVoiceLeading,0),0,1);
+ v.outside=clamp(controlNumber(el.voicerOutside,0),0,1);
+ v.variation=clamp(controlNumber(el.voicerVariation,0),0,1);
+ v.repeatChance=clamp(controlNumber(el.voicerRepeat,0),0,1);
+ v.minNote=clamp(controlNumber(el.voicerMinNote,36),0,127);
+ v.maxNote=clamp(controlNumber(el.voicerMaxNote,96),v.minNote,127);
+ state.voicer=normalizeVoicerSettings(v);
+ updateVoicerChoiceButtons();
+ updateVoicerValueLabels();
 }
 function syncVoicerControls(){
- if(!el.voicerKey)return;
- const v={...defaultVoicerSettings(),...state.voicer};
+ if(!el.voicerStyle)return;
+ const v=normalizeVoicerSettings(state.voicer);
  state.voicer=v;
- el.voicerKey.value=String(v.key);
- el.voicerScale.value=String(v.scale);
  el.voicerStyle.value=v.style;
  el.voicerRole.value=v.role;
  el.voicerPlayability.value=v.playability;
@@ -884,11 +1082,23 @@ function syncVoicerControls(){
  el.voicerRepeat.value=String(v.repeatChance);
  el.voicerMinNote.value=String(v.minNote);
  el.voicerMaxNote.value=String(v.maxNote);
+ updateVoicerChoiceButtons();
+ updateVoicerValueLabels();
+ renderVoicerChoiceMenu("key");
+ renderVoicerChoiceMenu("scale");
+}
+function randomChoiceMask(count,primary){
+ let mask=1<<primary;
+ if(Math.random()<.32)mask|=1<<Math.floor(Math.random()*count);
+ if(Math.random()<.14)mask|=1<<Math.floor(Math.random()*count);
+ return boundedMask(mask,count,primary);
 }
 function randomizeVoicerSettings(){
  const v=state.voicer;
  v.key=Math.floor(Math.random()*12);
  v.scale=Math.floor(Math.random()*scaleDefs.length);
+ v.keyMask=randomChoiceMask(noteNames.length,v.key);
+ v.scaleMask=randomChoiceMask(scaleDefs.length,v.scale);
  v.role=roleNames[Math.floor(Math.random()*roleNames.length)];
  v.style=voicingStyleNames[Math.floor(Math.random()*voicingStyleNames.length)];
  v.playability=playabilityNames[Math.floor(Math.random()*playabilityNames.length)];
@@ -984,9 +1194,9 @@ function currentChordRegionName(){
  return currentChordName();
 }
 function renderTrackControls(){
+ normalizeTracks();
  renderSoundMenu();
  const active=activeTrack();
- if(active && active.volume==null)active.volume=100;
  if(el.trackStatusBtn)el.trackStatusBtn.textContent="";
  if(el.trackMenuBtn)el.trackMenuBtn.textContent=(state.viewAllTracks?"All/":"")+trackDisplayName(active);
 
@@ -995,7 +1205,7 @@ function renderTrackControls(){
  el.viewAllToggleBtn.classList.toggle("active",state.viewAllTracks);
  el.trackList.innerHTML="";
  for(const t of state.tracks){
-  if(t.volume==null)t.volume=100;
+  ensureTrackDefaults(t);
   const row=document.createElement("div");
   row.className="trackMixerRow"+(t.id===state.activeTrackId?" activeTrack":"");
 
@@ -1010,14 +1220,29 @@ function renderTrackControls(){
 
   const slider=document.createElement("input");
   slider.type="range";slider.min="0";slider.max="150";slider.value=trackVolume(t);
-  slider.style.width="92px";
+  slider.style.width="82px";
   slider.oninput=()=>{t.volume=Number(slider.value);num.value=t.volume};
 
   const num=document.createElement("input");
   num.type="number";num.min="0";num.max="150";num.value=trackVolume(t);
   num.className="volInput";
   num.onchange=()=>{t.volume=Math.max(0,Math.min(150,Number(num.value)||0));slider.value=t.volume;num.value=t.volume};
-  row.appendChild(name);row.appendChild(slider);row.appendChild(num);
+
+  const color=document.createElement("button");
+  color.className="trackRowBtn trackColorBtn";
+  color.title="Track color";
+  color.textContent="●";
+  color.style.color=solidColors[t.color||"blue"]||solidColors.blue;
+  color.onclick=e=>{e.stopPropagation();openTrackColorMenu(t)};
+
+  const fx=document.createElement("button");
+  fx.className="trackRowBtn trackFxBtn";
+  fx.title="Track FX";
+  fx.textContent="FX";
+  fx.classList.toggle("active",trackFxIsActive(t));
+  fx.onclick=e=>{e.stopPropagation();openTrackFxMenu(t)};
+
+  row.appendChild(name);row.appendChild(slider);row.appendChild(num);row.appendChild(color);row.appendChild(fx);
   el.trackList.appendChild(row);
  }
 }
@@ -1048,7 +1273,63 @@ function makeNoteInteractive(node,note){
   render();
  });
 }
-function getSelectedNotes(){const out=[];for(const t of state.tracks)for(const n of t.notes)if(state.selectedIds.has(n.id))out.push(n);return out}function forEachSelected(fn){for(const n of getSelectedNotes())fn(n)}
+function getSelectedNoteRefs(){const out=[];normalizeTracks();for(const t of state.tracks)for(const n of t.notes)if(state.selectedIds.has(n.id))out.push({track:t,note:n});return out}
+function getSelectedNotes(){return getSelectedNoteRefs().map(r=>r.note)}function forEachSelected(fn){for(const n of getSelectedNotes())fn(n)}
+function copySelectedNotes(){
+ const refs=getSelectedNoteRefs();
+ if(!refs.length)return false;
+ const origin=Math.min(...refs.map(r=>r.note.start));
+ state.clipboardNotes=refs.map(({track,note})=>({
+  trackId:track.id,
+  startOffset:note.start-origin,
+  duration:note.duration,
+  midi:note.midi,
+  displayMidi:note.displayMidi,
+  stringName:note.stringName||"",
+  fret:note.fret==null?null:note.fret,
+  channel:note.channel||1,
+  chordGroup:note.chordGroup||"",
+  chordStartOffset:(note.chordStart??note.start)-origin,
+  chordName:note.chordName||""
+ }));
+ renderStatus();
+ return true;
+}
+function pasteClipboardNotes(){
+ if(!state.clipboardNotes||!state.clipboardNotes.length)return false;
+ pushUndo();
+ normalizeTracks();
+ const pasteStart=snapTick(state.tick);
+ const groupMap=new Map();
+ state.selectedIds.clear();
+ for(const item of state.clipboardNotes){
+  const target=state.tracks.find(t=>t.id===item.trackId)||activeTrack();
+  ensureTrackDefaults(target);
+  let group="";
+  if(item.chordGroup){
+   if(!groupMap.has(item.chordGroup))groupMap.set(item.chordGroup,"p"+Date.now().toString(36)+Math.random().toString(36).slice(2,7));
+   group=groupMap.get(item.chordGroup);
+  }
+  const note={
+   id:state.nextNoteId++,
+   trackId:target.id,
+   start:Math.max(0,pasteStart+item.startOffset),
+   duration:Math.max(1,item.duration),
+   midi:clamp(Math.round(item.midi),pianoMin,pianoMax),
+   displayMidi:item.displayMidi,
+   stringName:item.stringName||"",
+   fret:item.fret,
+   channel:item.channel||1
+  };
+  if(group)note.chordGroup=group;
+  if(item.chordName)note.chordName=item.chordName;
+  if(item.chordStartOffset!=null)note.chordStart=Math.max(0,pasteStart+item.chordStartOffset);
+  target.notes.push(note);
+  state.selectedIds.add(note.id);
+ }
+ render();
+ return true;
+}
 function detectChord(midis){
  const pcs=[...new Set(midis.map(m=>((m%12)+12)%12))].sort((a,b)=>a-b);if(pcs.length<2)return"—";
  const names=["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
@@ -1126,6 +1407,8 @@ function renderStatus(){
  el.sfBtn.textContent=state.useSoundFont?(state.sfReady?"Engine: SF2":"Engine: Fast"):"Engine: Stock";
  el.loopBtn.textContent="Loop";
  el.loopBtn.classList.toggle("active",state.loopEnabled);
+ if(el.copyBtn)el.copyBtn.disabled=!state.selectedIds.size;
+ if(el.pasteBtn)el.pasteBtn.disabled=!(state.clipboardNotes&&state.clipboardNotes.length);
  document.getElementById("app").classList.toggle("hideFretboard",state.hideFretboard);
  el.focusBtn.textContent=state.chordMode?(state.semitoneMode?"Semi On":"Semi"):"View";
  const octLabel=state.selectedIds.size?(state.semitoneMode?"Semi":"Oct"):"Oct";
@@ -1290,23 +1573,22 @@ function setupTimelineGestures(){
  function finishBoxSelect(clientX,clientY){
   if(!selectStart)return;
   const rect=el.timelineViewport.getBoundingClientRect();
-  const x1=Math.min(selectStart.x,clientX)-rect.left;
-  const x2=Math.max(selectStart.x,clientX)-rect.left;
-  const y1=Math.min(selectStart.y,clientY)-rect.top;
-  const y2=Math.max(selectStart.y,clientY)-rect.top;
-  const minTick=Math.min(xToTick(x1),xToTick(x2));
-  const maxTick=Math.max(xToTick(x1),xToTick(x2));
-  const midiA=pianoMax-((y1+state.scrollY)/rowH);
-  const midiB=pianoMax-((y2+state.scrollY)/rowH);
-  const minMidi=Math.min(midiA,midiB);
-  const maxMidi=Math.max(midiA,midiB);
+  const boxLeft=Math.min(selectStart.x,clientX)-rect.left;
+  const boxRight=Math.max(selectStart.x,clientX)-rect.left;
+  const boxTop=Math.min(selectStart.y,clientY)-rect.top;
+  const boxBottom=Math.max(selectStart.y,clientY)-rect.top;
+  const noteHeight=Math.max(1.2,Math.min(Math.max(1,rowH-0.6),10));
   const tracks=state.viewAllTracks?state.tracks:[activeTrack()];
   if(!state.chordMode)state.selectedIds.clear();
   for(const tr of tracks){
    for(const n of tr.notes){
-    const tickHit=(n.start+n.duration)>=minTick&&n.start<=maxTick;
-    const midiHit=n.midi>=minMidi&&n.midi<=maxMidi;
-    if(tickHit&&midiHit)state.selectedIds.add(n.id);
+    const noteLeft=tickToX(n.start);
+    const noteWidth=Math.max(state.zoom<.55?1:6,(n.duration/stepTicks())*baseStepPx*state.zoom-2);
+    const noteRight=noteLeft+noteWidth;
+    const noteTop=midiToY(n.midi)+1+Math.max(0,(rowH-noteHeight)/2);
+    const noteBottom=noteTop+noteHeight;
+    const hit=noteRight>=boxLeft&&noteLeft<=boxRight&&noteBottom>=boxTop&&noteTop<=boxBottom;
+    if(hit)state.selectedIds.add(n.id);
    }
   }
  }
@@ -1495,8 +1777,10 @@ function makeMidiFile(){const file=[];writeStr(file,"MThd");write32(file,6);writ
 function exportMidi(){const blob=new Blob([new Uint8Array(makeMidiFile())],{type:"audio/midi"}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="leadvoicer.mid";document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url)}
 
 function projectData(){
+ normalizeTracks();
+ state.voicer=normalizeVoicerSettings(state.voicer);
  return {
-  version:23,tempo:state.tempo,timeSigNum:state.timeSigNum,timeSigDen:state.timeSigDen,metronome:state.metronome,semitoneMode:state.semitoneMode,subdivision:state.subdivision,metronome:state.metronome,inputOctave:state.inputOctave,
+  version:24,tempo:state.tempo,timeSigNum:state.timeSigNum,timeSigDen:state.timeSigDen,metronome:state.metronome,semitoneMode:state.semitoneMode,subdivision:state.subdivision,metronome:state.metronome,inputOctave:state.inputOctave,
   tracks:state.tracks,activeTrackId:state.activeTrackId,viewAllTracks:state.viewAllTracks,
   hideFretboard:state.hideFretboard,useSoundFont:state.useSoundFont,
   loopEnabled:state.loopEnabled,loopStart:state.loopStart,loopEnd:state.loopEnd,
@@ -1506,10 +1790,10 @@ function projectData(){
 }
 function applyProjectData(d){
  state.tempo=d.tempo||120;state.timeSigNum=d.timeSigNum||4;state.timeSigDen=d.timeSigDen||4;state.subdivision=d.subdivision||16;state.metronome=!!d.metronome;state.inputOctave=d.inputOctave||0;
- state.tracks=d.tracks||state.tracks;state.activeTrackId=d.activeTrackId||state.tracks[0].id;
+ state.tracks=(d.tracks||state.tracks).map(ensureTrackDefaults);state.activeTrackId=d.activeTrackId||state.tracks[0].id;
  state.viewAllTracks=!!d.viewAllTracks;state.hideFretboard=!!d.hideFretboard;state.useSoundFont=d.useSoundFont!==false;
  state.loopEnabled=!!d.loopEnabled;state.loopStart=d.loopStart||0;state.loopEnd=d.loopEnd||PPQ*4;state.nextNoteId=d.nextNoteId||1;
- state.voicerEnabled=d.voicerEnabled!==false;state.voicer={...defaultVoicerSettings(),...(d.voicer||{})};state.voicerMemory=d.voicerMemory||{previousNotes:[],previousName:"",previousRoot:-1};
+ state.voicerEnabled=d.voicerEnabled!==false;state.voicer=normalizeVoicerSettings({...defaultVoicerSettings(),...(d.voicer||{})});state.voicerMemory=d.voicerMemory||{previousNotes:[],previousName:"",previousRoot:-1};
  if(d.zoom)state.zoom=d.zoom;if(d.rowH)rowH=d.rowH;state.selectedIds.clear();el.tempo.value=state.tempo;el.tempoSlider.value=state.tempo;syncVoicerControls();render();
 }
 function exportProject(){
@@ -1526,7 +1810,7 @@ function importProjectFile(file){
 
 function makeFreshProjectData(){
  return {
-  version:22,
+  version:24,
   tempo:120,
   timeSigNum:4,
   timeSigDen:4,
@@ -1535,9 +1819,9 @@ function makeFreshProjectData(){
   inputOctave:0,
   semitoneMode:false,
   tracks:[
-   {id:1,name:"Track 1",sound:"gm:0",color:"blue",volume:100,notes:[]},
-   {id:2,name:"Track 2",sound:"gm:33",color:"green",volume:100,notes:[]},
-   {id:3,name:"Track 3",sound:"gm:48",color:"purple",volume:100,notes:[]}
+   {id:1,name:"Track 1",sound:"gm:0",color:"blue",volume:100,fx:defaultTrackFx(),notes:[]},
+   {id:2,name:"Track 2",sound:"gm:33",color:"green",volume:100,fx:defaultTrackFx(),notes:[]},
+   {id:3,name:"Track 3",sound:"gm:48",color:"purple",volume:100,fx:defaultTrackFx(),notes:[]}
   ],
   activeTrackId:1,
   viewAllTracks:false,
@@ -1667,7 +1951,20 @@ el.settingsBtn.addEventListener("pointerup",e=>{
  clearTimeout(gearPressTimer);
  if(!gearLongPress)el.settingsMenu.classList.toggle("open");
 });
-el.settingsBtn.addEventListener("pointercancel",()=>clearTimeout(gearPressTimer));document.addEventListener("pointerdown",e=>{if(!e.target.closest(".settingsWrap"))el.settingsMenu.classList.remove("open");if(!e.target.closest(".voicerWrap")&&!e.target.closest(".keyboardShell"))el.voicerMenu.classList.remove("open");if(!e.target.closest("#loopMenu")&&!e.target.closest("#loopBtn"))el.loopMenu.classList.remove("open");if(!e.target.closest("#tsMenu")&&!e.target.closest("#tsBtn"))el.tsMenu.classList.remove("open");if(!e.target.closest("#bpmMenu")&&!e.target.closest("#bpmLabel"))el.bpmMenu.classList.remove("open");if(!e.target.closest("#localProjectsMenu")&&!e.target.closest("#saveBtn")&&!e.target.closest("#loadBtn"))el.localProjectsMenu.classList.remove("open");if(!e.target.closest("#trackMenu")&&!e.target.closest("#trackMenuBtn")&&!e.target.closest("#trackStatusBtn"))el.trackMenu.classList.remove("open");if(!e.target.closest("#themeMenu")&&!e.target.closest("#themeBtn"))el.themeMenu.classList.remove("open");if(!e.target.closest("#trackColorMenu")&&!e.target.closest("#colorSelect")&&!e.target.closest(".colorSwatchBtn"))el.trackColorMenu.classList.remove("open")});
+el.settingsBtn.addEventListener("pointercancel",()=>clearTimeout(gearPressTimer));
+document.addEventListener("pointerdown",e=>{
+ if(!e.target.closest(".settingsWrap"))el.settingsMenu.classList.remove("open");
+ if(!e.target.closest(".voicerWrap")&&!e.target.closest(".keyboardShell")){el.voicerMenu.classList.remove("open");closeChoiceMenus()}
+ if(!e.target.closest(".choiceMenu")&&!e.target.closest(".voicerChoiceBtn"))closeChoiceMenus();
+ if(!e.target.closest("#loopMenu")&&!e.target.closest("#loopBtn"))el.loopMenu.classList.remove("open");
+ if(!e.target.closest("#tsMenu")&&!e.target.closest("#tsBtn"))el.tsMenu.classList.remove("open");
+ if(!e.target.closest("#bpmMenu")&&!e.target.closest("#bpmLabel"))el.bpmMenu.classList.remove("open");
+ if(!e.target.closest("#localProjectsMenu")&&!e.target.closest("#saveBtn")&&!e.target.closest("#loadBtn"))el.localProjectsMenu.classList.remove("open");
+ if(!e.target.closest("#trackMenu")&&!e.target.closest("#trackMenuBtn")&&!e.target.closest("#trackStatusBtn"))el.trackMenu.classList.remove("open");
+ if(!e.target.closest("#themeMenu")&&!e.target.closest("#themeBtn"))el.themeMenu.classList.remove("open");
+ if(!e.target.closest("#trackColorMenu")&&!e.target.closest(".trackColorBtn")&&!e.target.closest(".colorSwatchBtn"))el.trackColorMenu.classList.remove("open");
+ if(!e.target.closest("#trackFxMenu")&&!e.target.closest(".trackFxBtn")){el.trackFxMenu.classList.remove("open");trackFxTarget=null;trackFxUndoArmed=false}
+});
 let voicerPressTimer=null,voicerLongPress=false;
 if(el.voicerBtn){
  el.voicerBtn.addEventListener("pointerdown",e=>{
@@ -1725,7 +2022,10 @@ el.loopBtn.addEventListener("pointerup",e=>{
  el.loopMenu.classList.toggle("open");
 });
 el.loopBtn.addEventListener("pointercancel",()=>clearTimeout(loopPressTimer));el.focusBtn.onclick=focusAllNotes;el.chordBtn.onclick=()=>{state.chordMode=!state.chordMode;if(!state.chordMode)state.semitoneMode=false;render()};el.recordBtn.onclick=()=>{state.armed=!state.armed;render()};el.deleteBtn.onclick=delSel;el.newProjectBtn.onclick=askNewProject;el.hideFretBtn.onclick=()=>{state.hideFretboard=!state.hideFretboard;render();scheduleStabilize()};el.sfBtn.onclick=()=>{state.useSoundFont=!state.useSoundFont;for(const t of state.tracks){t.sound=state.useSoundFont?"gm:0":"sine"}if(state.useSoundFont&&!state.sfReady)loadDefaultSoundFont();render()};el.exportProjectBtn.onclick=exportProject;el.importProjectBtn.onclick=()=>el.projectImport.click();el.projectImport.onchange=e=>{const f=e.target.files&&e.target.files[0];if(f)importProjectFile(f);e.target.value=""};el.sfLoadBtn.onclick=loadDefaultSoundFont;el.exportBtn.onclick=exportMidi;el.saveBtn.onclick=saveProject;el.loadBtn.onclick=loadProject;
-el.soundSelect.onchange=()=>{pushUndo();activeTrack().sound=el.soundSelect.value;state.sfProgramCache={};setTrackProgram(activeTrack());if(el.sfStatus&&state.useSoundFont)el.sfStatus.textContent='Preset: '+el.soundSelect.options[el.soundSelect.selectedIndex].textContent;render()};if(el.colorSelect)el.colorSelect.onclick=()=>openTrackColorMenu(activeTrack());
+el.soundSelect.onchange=()=>{pushUndo();activeTrack().sound=el.soundSelect.value;state.sfProgramCache={};setTrackProgram(activeTrack());if(el.sfStatus&&state.useSoundFont)el.sfStatus.textContent='Preset: '+el.soundSelect.options[el.soundSelect.selectedIndex].textContent;render()};
+if(el.copyBtn)el.copyBtn.onclick=()=>copySelectedNotes();
+if(el.pasteBtn)el.pasteBtn.onclick=()=>pasteClipboardNotes();
+if(el.colorSelect)el.colorSelect.onclick=()=>openTrackColorMenu(activeTrack());
 if(el.trackMenuBtn)el.trackMenuBtn.onclick=e=>{e.stopPropagation();renderTrackControls();el.trackMenu.classList.toggle("open")};
 if(el.trackStatusBtn)el.trackStatusBtn.onclick=e=>{e.stopPropagation();renderTrackControls();el.trackMenu.classList.toggle("open")};
 if(el.trackMenuCloseBtn)el.trackMenuCloseBtn.onclick=()=>el.trackMenu.classList.remove("open");
@@ -1734,7 +2034,7 @@ if(el.addTrackMenuBtn)el.addTrackMenuBtn.onclick=()=>{
  const id=Math.max(0,...state.tracks.map(t=>t.id))+1;
  const col=["blue","green","purple","orange","pink","yellow","red","cyan","lime","white"][(id-1)%10];
  pushUndo();
- state.tracks.push({id,name:"Track "+id,sound:state.useSoundFont?"gm:0":"sine",color:col,volume:100,notes:[]});
+ state.tracks.push(ensureTrackDefaults({id,name:"Track "+id,sound:state.useSoundFont?"gm:0":"sine",color:col,volume:100,fx:defaultTrackFx(),notes:[]}));
  state.activeTrackId=id;
  state.selectedIds.clear();
  render();
@@ -1773,7 +2073,7 @@ if(el.addTrackMenuBtn)el.addTrackMenuBtn.onclick=()=>{
  const id=Math.max(0,...state.tracks.map(t=>t.id))+1;
  const col=["blue","green","purple","orange","pink","yellow","red","cyan","lime","white"][(id-1)%10];
  pushUndo();
- state.tracks.push({id,name:"Track "+id,sound:state.useSoundFont?"gm:0":"sine",color:col,volume:100,notes:[]});
+ state.tracks.push(ensureTrackDefaults({id,name:"Track "+id,sound:state.useSoundFont?"gm:0":"sine",color:col,volume:100,fx:defaultTrackFx(),notes:[]}));
  state.activeTrackId=id;
  state.selectedIds.clear();
  render();
@@ -1862,6 +2162,68 @@ function openTrackColorMenu(track){
  el.trackColorMenu.classList.add("open");
 }
 if(el.trackColorCloseBtn)el.trackColorCloseBtn.onclick=()=>el.trackColorMenu.classList.remove("open");
+let trackFxTarget=null,trackFxUndoArmed=false;
+function hzLabel(v){return v>=1000?(Math.round(v/100)/10)+"k":String(Math.round(v))}
+function fxPct(v){return String(Math.round(clamp(Number(v)||0,0,1)*100))}
+function syncTrackFxValueLabels(){
+ if(!trackFxTarget)return;
+ const fx=trackFx(trackFxTarget);
+ if(el.fxLowCutValue)el.fxLowCutValue.textContent=hzLabel(Number(fx.lowCut)||20);
+ if(el.fxHighCutValue)el.fxHighCutValue.textContent=hzLabel(Number(fx.highCut)||18000);
+ if(el.fxReverbMixValue)el.fxReverbMixValue.textContent=fxPct(fx.reverbMix);
+ if(el.fxReverbTimeValue)el.fxReverbTimeValue.textContent=Number(fx.reverbTime||1.2).toFixed(1);
+ if(el.fxDelayMixValue)el.fxDelayMixValue.textContent=fxPct(fx.delayMix);
+ if(el.fxDelayTimeValue)el.fxDelayTimeValue.textContent=Number(fx.delayTime||.25).toFixed(2);
+ if(el.fxChorusValue)el.fxChorusValue.textContent=fxPct(fx.chorus);
+}
+function writeFxControls(track){
+ const fx=trackFx(track);
+ if(el.fxLowCut)el.fxLowCut.value=String(fx.lowCut);
+ if(el.fxHighCut)el.fxHighCut.value=String(fx.highCut);
+ if(el.fxReverbMix)el.fxReverbMix.value=String(fx.reverbMix);
+ if(el.fxReverbTime)el.fxReverbTime.value=String(fx.reverbTime);
+ if(el.fxReverbType)el.fxReverbType.value=fx.reverbType||"Room";
+ if(el.fxDelayMix)el.fxDelayMix.value=String(fx.delayMix);
+ if(el.fxDelayTime)el.fxDelayTime.value=String(fx.delayTime);
+ if(el.fxChorus)el.fxChorus.value=String(fx.chorus);
+ syncTrackFxValueLabels();
+}
+function markTrackFxEdit(){
+ if(!trackFxTarget)return;
+ if(!trackFxUndoArmed){pushUndo();trackFxUndoArmed=true}
+}
+function readTrackFxControls(){
+ if(!trackFxTarget)return;
+ const fx=trackFx(trackFxTarget);
+ fx.lowCut=clamp(controlNumber(el.fxLowCut,20),20,8000);
+ fx.highCut=clamp(controlNumber(el.fxHighCut,18000),Math.max(800,fx.lowCut+80),20000);
+ fx.reverbMix=clamp(controlNumber(el.fxReverbMix,0),0,1);
+ fx.reverbTime=clamp(controlNumber(el.fxReverbTime,1.2),.2,5);
+ fx.reverbType=el.fxReverbType?.value||"Room";
+ fx.delayMix=clamp(controlNumber(el.fxDelayMix,0),0,1);
+ fx.delayTime=clamp(controlNumber(el.fxDelayTime,.25),.06,1.2);
+ fx.chorus=clamp(controlNumber(el.fxChorus,0),0,1);
+ if(el.fxHighCut&&Number(el.fxHighCut.value)!==fx.highCut)el.fxHighCut.value=String(fx.highCut);
+ syncTrackFxValueLabels();
+}
+function openTrackFxMenu(track){
+ if(!el.trackFxMenu)return;
+ trackFxTarget=ensureTrackDefaults(track);
+ trackFxUndoArmed=false;
+ if(el.trackFxTitle)el.trackFxTitle.textContent=trackDisplayName(trackFxTarget)+" FX";
+ writeFxControls(trackFxTarget);
+ el.trackFxMenu.classList.add("open");
+}
+function bindTrackFxControls(){
+ const controls=[el.fxLowCut,el.fxHighCut,el.fxReverbMix,el.fxReverbTime,el.fxReverbType,el.fxDelayMix,el.fxDelayTime,el.fxChorus];
+ for(const c of controls){
+  if(!c)return;
+  c.addEventListener(c.type==="range"?"input":"change",()=>{markTrackFxEdit();readTrackFxControls()});
+ }
+ if(el.trackFxCloseBtn)el.trackFxCloseBtn.onclick=()=>{el.trackFxMenu.classList.remove("open");trackFxTarget=null;trackFxUndoArmed=false;render()};
+ if(el.trackFxResetBtn)el.trackFxResetBtn.onclick=()=>{if(!trackFxTarget)return;pushUndo();trackFxTarget.fx=defaultTrackFx();writeFxControls(trackFxTarget);render()};
+}
+bindTrackFxControls();
 
 const appThemes=[
  ["Blood","#120305","#22070a","#330b10","#641b24","#ffecef","#c28b92","#ef233c","#2ec4b6","#ffbe0b"],
