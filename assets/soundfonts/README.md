@@ -10,4 +10,4 @@ Additional GM banks in `index.html` are loaded from `bratpeki/soundfonts` as ext
 
 The TR-808 drum font is loaded as an external URL from `vigliensoni/soundfonts`.
 
-The Analog Drum Lab, Retro Game Drums, Built-In 8-Bit, and Built-In 16-Bit banks are generated directly by FretStep2 with Web Audio. They are not external SoundFonts, which keeps their labels, FX routing, and audition behavior deterministic.
+The Analog Drum Lab, Retro Game Drums, Built-In 8-Bit, Built-In 16-Bit, and Classic Analog banks are generated directly by FretStep2 with Web Audio. They are not external SoundFonts, which keeps their labels, FX routing, and audition behavior deterministic.

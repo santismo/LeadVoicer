@@ -31,8 +31,8 @@ input[type=number]{width:44px;background:#090b12;border:1px solid var(--line);bo
 #voicerMenu{display:none;position:fixed;right:8px;top:calc(env(safe-area-inset-top) + 44px);width:min(94vw,430px);max-height:min(52dvh,390px);overflow:auto;transform:none;padding:10px;gap:8px;grid-template-columns:1fr;background:rgba(16,19,28,.985);border:1px solid var(--line);border-radius:14px;box-shadow:0 12px 34px rgba(0,0,0,.5);z-index:55;color:var(--text);font-size:11px;overscroll-behavior:contain}
 #voicerMenu.open{display:grid}.voicerTop{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center}.voicerTitle{font-size:12px;font-weight:900;color:var(--chord);letter-spacing:.02em}.voicerGrid{display:grid;grid-template-columns:1fr 1fr;gap:7px}.voicerControl{display:grid;gap:3px;min-width:0;position:relative}.voicerControl label{font-size:9px;color:var(--muted);font-weight:900;display:flex;justify-content:space-between;gap:6px}.voicerControl select,.voicerControl input,.voicerChoiceBtn{width:100%;height:26px;font-size:10px;padding:3px 5px}.voicerControl input[type=range]{min-width:0;height:20px;padding:0}.valueReadout{color:var(--chord);font-variant-numeric:tabular-nums}.choiceMenu{display:none;position:absolute;left:0;right:0;top:44px;z-index:80;max-height:185px;overflow:auto;background:rgba(16,19,28,.99);border:1px solid var(--line);border-radius:10px;padding:6px;box-shadow:0 8px 20px rgba(0,0,0,.45)}.choiceMenu.open{display:grid;gap:4px}.choiceMenu label{display:flex;align-items:center;justify-content:flex-start;gap:6px;font-size:10px;color:var(--text);font-weight:800}.choiceMenu input{width:auto!important;height:auto!important}.voicerButtons{display:grid;grid-template-columns:1fr 1fr;gap:7px}.voicerReadout{font-size:10px;color:var(--muted);line-height:1.25;border:1px solid var(--line);border-radius:10px;padding:7px;background:rgba(0,0,0,.18)}.voicerLast{font-size:11px;color:var(--text);font-weight:900;margin-bottom:3px}.voicerHint{color:var(--muted)}.voicerWide{grid-column:1 / -1}
 .timelineShell{position:relative;flex:1 1 0;min-height:0;background:var(--panel);border:1px solid var(--line);border-radius:16px;overflow:hidden}
-.timelineHeader{height:34px;padding:3px;display:grid;grid-template-columns:60px 82px minmax(0,1fr) 46px 46px;align-items:center;gap:6px;padding:4px 6px;border-bottom:1px solid var(--line);background:rgba(255,255,255,.025)}
-.trackSelect,.soundSelect,.sfSelect,.colorSelect{min-width:0;height:24px;padding:0 6px;border-radius:8px;font-size:11px}.miniBtn{min-height:24px;height:24px;padding:0 7px;border-radius:8px;font-size:10px}
+.timelineHeader{height:34px;padding:3px;display:grid;grid-template-columns:60px minmax(0,1fr) 46px 46px;align-items:center;gap:6px;padding:4px 6px;border-bottom:1px solid var(--line);background:rgba(255,255,255,.025)}
+.trackSelect,.soundSelect,.sfSelect,.colorSelect{min-width:0;height:24px;padding:0 6px;border-radius:8px;font-size:11px}.miniBtn{min-height:24px;height:24px;padding:0 7px;border-radius:8px;font-size:10px}.hiddenSoundSelect{display:none!important}.soundPickerBtn{text-align:left;padding:0 8px!important;font-size:10px!important;color:var(--chord);border-color:rgba(255,207,90,.34);background:rgba(255,207,90,.08)}
 #timelineViewport{position:absolute;left:0;right:0;top:36px;bottom:0;overflow:hidden;touch-action:none;background:#090b12;cursor:grab}#timelineContent{position:absolute;left:0;top:0;min-width:100%;transform-origin:0 0}
 .pianoKey{position:absolute;left:0;width:38px;border-right:1px solid var(--line);border-bottom:1px solid rgba(255,255,255,.045);font-size:7px;color:var(--muted);padding:1px 3px;z-index:5;background:rgba(6,7,11,.95)}.pianoKey.black{color:rgba(255,255,255,.38);background:rgba(0,0,0,.92)}.vZoomStrip{position:absolute;left:0;top:0;width:38px;bottom:0;z-index:40;pointer-events:auto;background:transparent;touch-action:none}.vZoomThumb{display:none}
 .pianoRow{position:absolute;left:38px;right:0;border-bottom:1px solid rgba(255,255,255,.035)}.pianoRow.white{background:rgba(255,255,255,.075)}.pianoRow.black{background:rgba(255,255,255,.03)}
@@ -54,7 +54,7 @@ input[type=number]{width:44px;background:#090b12;border:1px solid var(--line);bo
 .barZoomHeader{cursor:ew-resize;position:absolute;left:38px;right:0;top:0;height:12px;z-index:18;background:color-mix(in srgb,var(--panel) 78%,transparent);border-bottom:1px solid var(--line);touch-action:none;overflow:hidden;pointer-events:auto}
 .barZoomHeader .barNumber{top:0!important;font-size:8px!important}
 .barNumber{position:absolute;top:0;font-size:8px;color:rgba(255,255,255,.72);z-index:2;pointer-events:none;transform:translateX(3px)}
-#loopMenu{left:auto!important;right:8px!important;top:76px!important;transform:none!important;width:min(72vw,270px)!important}.trackMenu{left:6px!important;right:auto!important;top:68px!important;width:min(96vw,410px)!important;z-index:70!important}.themeMenu{left:8px!important;right:auto!important;top:76px!important;transform:none!important;width:min(96vw,390px)!important}.volInput{width:34px!important;font-size:9px!important;padding:1px!important}.trackMixerRow{display:grid;grid-template-columns:70px 82px 34px 28px 28px;gap:4px;align-items:center;border:1px solid var(--line);border-radius:10px;padding:5px;background:rgba(0,0,0,.18)}.trackRowBtn{min-width:0!important;width:28px!important;height:26px!important;min-height:26px!important;padding:0!important;border-radius:7px!important;font-size:9px!important}.trackColorMenu{left:8px!important;right:auto!important;top:104px!important;transform:none!important;width:min(92vw,330px)!important;z-index:96!important}.trackFxMenu{left:8px!important;right:auto!important;top:112px!important;transform:none!important;width:min(96vw,410px)!important;max-height:78dvh;overflow:auto;z-index:98!important}.trackFxControl{display:grid!important;grid-template-columns:88px minmax(0,1fr) 42px!important;align-items:center!important;gap:7px!important}.trackFxControl input[type=range]{min-width:0!important;width:100%!important}.trackFxControl select{height:26px;font-size:10px}.trackFxControl span{text-align:right;color:var(--chord);font-size:10px;font-variant-numeric:tabular-nums}.bpmMenu{top:82px!important;left:50%!important;transform:translateX(-50%)!important;width:min(94vw,390px)!important}
+#loopMenu{left:auto!important;right:8px!important;top:76px!important;transform:none!important;width:min(72vw,270px)!important}.trackMenu{left:6px!important;right:auto!important;top:68px!important;width:min(96vw,410px)!important;z-index:70!important}.soundPickerMenu{left:6px!important;right:6px!important;top:38px!important;width:auto!important;max-height:min(78dvh,520px);overflow:hidden;z-index:95!important;grid-template-rows:auto auto auto minmax(0,1fr)}.soundPickerTop{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center}.soundSearch{width:100%!important;text-align:left!important;height:28px!important;font-size:12px!important;padding:5px 8px!important}.soundFilterRow{display:grid;grid-template-columns:repeat(4,1fr);gap:5px}.soundFilterBtn{height:25px!important;min-height:25px!important;font-size:9px!important;padding:0 4px!important}.soundPickerList{display:grid;gap:5px;overflow:auto;min-height:160px;max-height:360px;padding-right:2px}.soundChoice{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;text-align:left;min-height:34px!important;padding:5px 7px!important;border-radius:9px!important}.soundChoice.active{border-color:var(--chord)!important;background:rgba(255,207,90,.14)!important}.soundChoiceName{font-size:11px;font-weight:900;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.soundChoiceMeta{font-size:9px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.soundChoiceBank{font-size:9px;color:var(--accent2);font-weight:900}.themeMenu{left:8px!important;right:auto!important;top:76px!important;transform:none!important;width:min(96vw,390px)!important}.volInput{width:34px!important;font-size:9px!important;padding:1px!important}.trackMixerRow{display:grid;grid-template-columns:70px 82px 34px 28px 28px;gap:4px;align-items:center;border:1px solid var(--line);border-radius:10px;padding:5px;background:rgba(0,0,0,.18)}.trackRowBtn{min-width:0!important;width:28px!important;height:26px!important;min-height:26px!important;padding:0!important;border-radius:7px!important;font-size:9px!important}.trackColorMenu{left:8px!important;right:auto!important;top:104px!important;transform:none!important;width:min(92vw,330px)!important;z-index:96!important}.trackFxMenu{left:8px!important;right:auto!important;top:112px!important;transform:none!important;width:min(96vw,410px)!important;max-height:78dvh;overflow:auto;z-index:98!important}.trackFxControl{display:grid!important;grid-template-columns:88px minmax(0,1fr) 42px!important;align-items:center!important;gap:7px!important}.trackFxControl input[type=range]{min-width:0!important;width:100%!important}.trackFxControl select{height:26px;font-size:10px}.trackFxControl span{text-align:right;color:var(--chord);font-size:10px;font-variant-numeric:tabular-nums}.bpmMenu{top:82px!important;left:50%!important;transform:translateX(-50%)!important;width:min(94vw,390px)!important}
 .trackColorGrid{display:grid;grid-template-columns:repeat(8,1fr);gap:6px}
 .colorSwatchBtn{min-height:26px!important;height:26px!important;border-radius:7px!important;padding:0!important;border:2px solid rgba(255,255,255,.22)!important}
 .colorSwatchBtn.selected{border-color:var(--text)!important;box-shadow:0 0 0 2px var(--accent)}
@@ -116,7 +116,7 @@ button.active,.primary{background:color-mix(in srgb,var(--accent) 35%,var(--pane
 </div></div>
 <div class="settingsWrap"><button id="settingsBtn">⚙︎</button><div id="settingsMenu"><button id="exportBtn">Export MIDI</button><button id="saveBtn">Save Local</button><button id="loadBtn">Load Local</button><button id="exportProjectBtn">Export Project</button><button id="importProjectBtn">Import Project</button><button id="newProjectBtn">New Project</button><button id="themeBtn">Themes</button><button id="hideFretBtn">Hide Fretboard</button><button id="sfBtn">Engine: SF2</button><button id="sfLoadBtn">Load SF2</button><div id="sfStatus" style="font-size:10px;color:var(--muted);line-height:1.1;padding:1px 4px;">SF2 not loaded</div></div></div>
 </header>
-<section class="timelineShell"><div class="timelineHeader"><button id="trackMenuBtn" class="miniBtn">Tracks</button><select id="sfSelect" class="sfSelect"></select><select id="soundSelect" class="soundSelect"><option value="gm:0">Piano 1</option><option value="gm:1">Bright Piano</option><option value="gm:4">EPiano</option><option value="gm:16">Organ</option><option value="gm:24">Nylon Guitar</option><option value="gm:25">Steel Guitar</option><option value="gm:26">Jazz Guitar</option><option value="gm:32">Acoustic Bass</option><option value="gm:33">Finger Bass</option><option value="gm:34">Pick Bass</option><option value="gm:48">Strings</option><option value="gm:52">Choir</option><option value="gm:56">Trumpet</option><option value="gm:61">Brass</option><option value="gm:80">Square Lead</option><option value="gm:81">Saw Lead</option><option value="gm:88">New Age Pad</option><option value="gm:89">Warm Pad</option><option value="sine">Internal Sine</option><option value="triangle">Internal Triangle</option><option value="square">Internal Square</option><option value="sawtooth">Internal Saw</option><option value="pulse">Internal Pulse</option><option value="organ">Internal Organ</option><option value="pluck">Internal Pluck</option><option value="bass">Internal Bass</option></select><button id="copyBtn" class="miniBtn">Copy</button><button id="pasteBtn" class="miniBtn">Paste</button><span id="trackStatusBtn" style="display:none"></span></div><div id="timelineViewport"><div id="timelineContent"></div><div id="pianoStripMask" class="pianoStripMask"></div><div id="barZoomHeader" class="barZoomHeader"></div><div id="vZoomStrip" class="vZoomStrip"><div id="vZoomThumb" class="vZoomThumb"></div></div></div></section>
+<section class="timelineShell"><div class="timelineHeader"><button id="trackMenuBtn" class="miniBtn">Tracks</button><button id="soundPickerBtn" class="soundPickerBtn miniBtn">Sound</button><select id="sfSelect" class="sfSelect hiddenSoundSelect"></select><select id="soundSelect" class="soundSelect hiddenSoundSelect"><option value="gm:0">Piano 1</option><option value="gm:1">Bright Piano</option><option value="gm:4">EPiano</option><option value="gm:16">Organ</option><option value="gm:24">Nylon Guitar</option><option value="gm:25">Steel Guitar</option><option value="gm:26">Jazz Guitar</option><option value="gm:32">Acoustic Bass</option><option value="gm:33">Finger Bass</option><option value="gm:34">Pick Bass</option><option value="gm:48">Strings</option><option value="gm:52">Choir</option><option value="gm:56">Trumpet</option><option value="gm:61">Brass</option><option value="gm:80">Square Lead</option><option value="gm:81">Saw Lead</option><option value="gm:88">New Age Pad</option><option value="gm:89">Warm Pad</option><option value="sine">Internal Sine</option><option value="triangle">Internal Triangle</option><option value="square">Internal Square</option><option value="sawtooth">Internal Saw</option><option value="pulse">Internal Pulse</option><option value="organ">Internal Organ</option><option value="pluck">Internal Pluck</option><option value="bass">Internal Bass</option></select><button id="copyBtn" class="miniBtn">Copy</button><button id="pasteBtn" class="miniBtn">Paste</button><span id="trackStatusBtn" style="display:none"></span></div><div id="soundPickerMenu" class="popupMenu soundPickerMenu"><div class="soundPickerTop"><b>Sound</b><button id="soundPickerCloseBtn">Close</button></div><input id="soundSearch" class="soundSearch" type="text" placeholder="Search sounds"/><div id="soundFilterRow" class="soundFilterRow"><button class="soundFilterBtn active" data-filter="all">All</button><button class="soundFilterBtn" data-filter="internal">Internal</button><button class="soundFilterBtn" data-filter="external">External</button><button class="soundFilterBtn" data-filter="drums">Drums</button><button class="soundFilterBtn" data-filter="keys">Keys</button><button class="soundFilterBtn" data-filter="synth">Synth</button><button class="soundFilterBtn" data-filter="bass">Bass</button><button class="soundFilterBtn" data-filter="guitar">Guitar</button></div><div id="soundPickerList" class="soundPickerList"></div></div><div id="timelineViewport"><div id="timelineContent"></div><div id="pianoStripMask" class="pianoStripMask"></div><div id="barZoomHeader" class="barZoomHeader"></div><div id="vZoomStrip" class="vZoomStrip"><div id="vZoomThumb" class="vZoomThumb"></div></div></div></section>
 <section class="zoomControls"><button id="playBtn" class="primary">▶︎ Play</button><button id="undoBtn">Undo</button><button id="redoBtn">Redo</button><button id="focusBtn">View</button></section>
 <section class="middleControls"><button id="leftBtn">◀︎ Step</button><button id="rightBtn">Step ▶︎</button><button id="chordBtn">Chord</button><button id="deleteBtn">Delete</button><button id="divDownBtn">Div −</button><button id="divUpBtn">Div +</button><button id="octDownBtn">Oct −</button><button id="octUpBtn">Oct +</button></section>
 <section class="statusRow"><div class="pill">Input: <b id="stepReadout">1/16 · Oct +0</b></div><div class="pill">Playhead: <b id="posReadout">1.1.000</b></div><div class="pill">Chord: <b id="chordReadout">—</b></div></section>
@@ -225,25 +225,41 @@ const synthDrumPads=[
 ];
 const analogDrumPresets=[
  ["kit:analog-tight","Analog Tight"],["kit:analog-deep","Analog Deep"],["kit:analog-crunch","Analog Crunch"],
- ["kit:analog-air","Analog Air"],["kit:machine-808","Built-In 808"],["kit:machine-909","Built-In 909"]
+ ["kit:analog-air","Analog Air"],["kit:analog-dub","Analog Dub"],["kit:analog-disco","Analog Disco"],
+ ["kit:analog-electro","Analog Electro"],["kit:analog-industrial","Analog Industrial"],["kit:analog-minimal","Analog Minimal"],
+ ["kit:machine-606","Built-In 606"],["kit:machine-707","Built-In 707"],["kit:machine-808","Built-In 808"],["kit:machine-909","Built-In 909"]
 ];
 const retroDrumPresets=[
  ["kit:chip-square","8-Bit Square Kit"],["kit:chip-noise","8-Bit Noise Kit"],["kit:chip-click","Arcade Click Kit"],
- ["kit:fm-16","16-Bit FM Kit"],["kit:sampler-12","12-Bit Sampler"],["kit:modular-zap","Modular Zap Kit"]
+ ["kit:chip-dust","Bit Dust Kit"],["kit:chip-metal","Bit Metal Kit"],["kit:fm-16","16-Bit FM Kit"],
+ ["kit:fm-glass","16-Bit Glass Kit"],["kit:sampler-12","12-Bit Sampler"],["kit:sampler-dirt","Dirty Sampler"],
+ ["kit:modular-zap","Modular Zap Kit"],["kit:arcade-room","Arcade Room Kit"],["kit:console-pop","Console Pop Kit"]
 ];
 const chip8Presets=[
  ["chip:pulse","Pulse Lead"],["chip:triangle","Triangle Lead"],["chip:squarebass","Square Bass"],
- ["chip:arp","Arcade Arp"],["chip:organ","Twin Pulse Organ"],["chip:noise","Noise Lead"]
+ ["chip:arp","Arcade Arp"],["chip:organ","Twin Pulse Organ"],["chip:noise","Noise Lead"],
+ ["chip:duty12","12% Duty Lead"],["chip:duty25","25% Duty Lead"],["chip:bitpluck","Bit Pluck"],
+ ["chip:coin","Coin Bell"],["chip:laser","Laser Lead"],["chip:underwater","Underwater Pad"],
+ ["chip:thinbass","Thin Bass"],["chip:octave","Octave Stack"]
 ];
 const bit16Presets=[
  ["s16:fm-bell","FM Bell"],["s16:fm-bass","FM Bass"],["s16:soft-square","Soft Square"],
- ["s16:saw-pad","Saw Pad"],["s16:pluck","PCM Pluck"],["s16:brass","Stack Brass"]
+ ["s16:saw-pad","Saw Pad"],["s16:pluck","PCM Pluck"],["s16:brass","Stack Brass"],
+ ["s16:glass-ep","Glass EP"],["s16:halo","Halo Pad"],["s16:sync-lead","Sync Lead"],
+ ["s16:slap","Digital Slap"],["s16:choir","Sample Choir"],["s16:marimba","FM Marimba"],
+ ["s16:strings","PCM Strings"],["s16:resobass","Reso Bass"]
+];
+const analogSynthPresets=[
+ ["ana:mono","Mono Saw Lead"],["ana:round","Round Square"],["ana:bass","Moogish Bass"],["ana:acid","Acid Line"],
+ ["ana:poly","Vintage Poly"],["ana:pad","Warm Analog Pad"],["ana:strings","String Machine"],["ana:brass","Analog Brass"],
+ ["ana:sync","Hard Sync"],["ana:pluck","Analog Pluck"],["ana:drone","Soft Drone"],["ana:noiselead","Noise Lead"]
 ];
 const soundFontDefs=[
  {id:"analogdrums",name:"Analog Drum Lab",short:"Analog",type:"drum",engine:"synthDrum",presets:analogDrumPresets,pads:synthDrumPads},
  {id:"retrogamedrums",name:"Retro Game Drums",short:"GameDrm",type:"drum",engine:"synthDrum",presets:retroDrumPresets,pads:synthDrumPads},
  {id:"chip8",name:"Built-In 8-Bit",short:"Chip8",type:"synth",engine:"internal",presets:chip8Presets},
  {id:"bits16",name:"Built-In 16-Bit",short:"16-Bit",type:"synth",engine:"internal",presets:bit16Presets},
+ {id:"analogsynth",name:"Classic Analog",short:"AnalogS",type:"synth",engine:"internal",presets:analogSynthPresets},
  {id:"sc55",name:"SC-55",short:"SC-55",url:"assets/soundfonts/Roland.SC-55.sf2",type:"gm",presets:"gm"},
  {id:"generaluser",name:"GeneralUser GS",short:"GenUser",url:"assets/soundfonts/GeneralUser-GS.sf2",type:"gm",presets:"gm"},
  {id:"timgm",name:"TimGM6mb",short:"TimGM",url:"https://raw.githubusercontent.com/bratpeki/soundfonts/main/SF2/GM/TimGM.sf2",type:"gm",presets:"gm"},
@@ -255,9 +271,11 @@ const soundFontDefs=[
  {id:"tr808",name:"TR-808 Drums",short:"TR-808",url:"https://raw.githubusercontent.com/vigliensoni/soundfonts/master/hs_tr808/HS-TR-808-Drums.sf2",type:"drum",drumBank:0,presets:[["drum:0","808 V1"],["drum:1","808 V2"],["drum:2","808 V3"],["drum:3","808 V4"],["drum:4","808 V5"],["drum:5","808 V6"]],pads:tr808Pads},
  {id:"tr909",name:"TR-909 Drums",short:"TR-909",url:"assets/soundfonts/909_drum_sf.sf2",type:"drum",drumBank:0,presets:[["drum:0","909 Sustained"],["drum:1","909 Staccato"]],pads:tr909Pads}
 ];
-const state={armed:true,playing:false,chordMode:false,semitoneMode:false,tempo:120,timeSigNum:4,timeSigDen:4,subdivision:16,metronome:false,lastMetroStep:-1,inputOctave:0,tick:0,zoom:.9,viewAllTracks:false,hideFretboard:false,useSoundFont:true,sfReady:false,sfLoading:false,sfEnginePromise:null,sfSynth:null,sfNode:null,sfId:null,sfIds:{},sfLoadingIds:{},sfProgramCache:{},sfChannelPrograms:{},sfOutputKey:"",loopEnabled:false,loopStart:0,loopEnd:PPQ*16,loopSetMode:0,undoStack:[],redoStack:[],scrollX:0,scrollY:250,selectedIds:new Set(),clipboardNotes:[],nextNoteId:1,tracks:[{id:1,name:"Track 1",soundFontId:"sc55",sound:"gm:0",color:"blue",volume:100,fx:defaultTrackFx(),notes:[]},{id:2,name:"Track 2",soundFontId:"sc55",sound:"gm:33",color:"green",volume:100,fx:defaultTrackFx(),notes:[]},{id:3,name:"Track 3",soundFontId:"sc55",sound:"gm:48",color:"purple",volume:100,fx:defaultTrackFx(),notes:[]}],activeTrackId:1,audioCtx:null,masterCtx:null,masterGain:null,masterCompressor:null,trackFxBuses:new Map(),playbackStartTime:0,playbackStartTick:0,scheduledNotes:new Set(),scheduleTimer:null,liveFretLights:[],livePadLights:[],voicerAuditionTimers:[],fretDisplayChordName:"",voicerEnabled:true,voicer:defaultVoicerSettings(),voicerMemory:{previousNotes:[],previousName:"",previousRoot:-1}};
-const $=id=>document.getElementById(id),el={tempo:$("tempo"),tempoSlider:$("tempoSlider"),bpmLabel:$("bpmLabel"),bpmMenu:$("bpmMenu"),bpmCloseBtn:$("bpmCloseBtn"),subdivTop:$("subdivTop"),tsBtn:$("tsBtn"),tsMenu:$("tsMenu"),metroBtn:$("metroBtn"),loopMenu:$("loopMenu"),loopStartInput:$("loopStartInput"),loopEndInput:$("loopEndInput"),loopToggleBtn:$("loopToggleBtn"),loopApplyBtn:$("loopApplyBtn"),loopCloseBtn:$("loopCloseBtn"),settingsBtn:$("settingsBtn"),settingsMenu:$("settingsMenu"),playBtn:$("playBtn"),leftBtn:$("leftBtn"),rightBtn:$("rightBtn"),divDownBtn:$("divDownBtn"),divUpBtn:$("divUpBtn"),octDownBtn:$("octDownBtn"),octUpBtn:$("octUpBtn"),chordBtn:$("chordBtn"),recordBtn:$("recordBtn"),deleteBtn:$("deleteBtn"),newProjectBtn:$("newProjectBtn"),exportProjectBtn:$("exportProjectBtn"),importProjectBtn:$("importProjectBtn"),projectImport:$("projectImport"),trackColorMenu:$("trackColorMenu"),trackColorGrid:$("trackColorGrid"),trackColorCloseBtn:$("trackColorCloseBtn"),trackFxMenu:$("trackFxMenu"),trackFxTitle:$("trackFxTitle"),fxLowCut:$("fxLowCut"),fxLowCutValue:$("fxLowCutValue"),fxHighCut:$("fxHighCut"),fxHighCutValue:$("fxHighCutValue"),fxReverbMix:$("fxReverbMix"),fxReverbMixValue:$("fxReverbMixValue"),fxReverbTime:$("fxReverbTime"),fxReverbTimeValue:$("fxReverbTimeValue"),fxReverbType:$("fxReverbType"),fxDelayMix:$("fxDelayMix"),fxDelayMixValue:$("fxDelayMixValue"),fxDelayTime:$("fxDelayTime"),fxDelayTimeValue:$("fxDelayTimeValue"),fxChorus:$("fxChorus"),fxChorusValue:$("fxChorusValue"),trackFxResetBtn:$("trackFxResetBtn"),trackFxCloseBtn:$("trackFxCloseBtn"),themeBtn:$("themeBtn"),themeMenu:$("themeMenu"),themeList:$("themeList"),randomThemeBtn:$("randomThemeBtn"),randomMonoThemeBtn:$("randomMonoThemeBtn"),themeMenuCloseBtn:$("themeMenuCloseBtn"),hideFretBtn:$("hideFretBtn"),sfBtn:$("sfBtn"),sfLoadBtn:$("sfLoadBtn"),sfStatus:$("sfStatus"),exportBtn:$("exportBtn"),saveBtn:$("saveBtn"),loadBtn:$("loadBtn"),localProjectsMenu:$("localProjectsMenu"),projectNameInput:$("projectNameInput"),saveNamedProjectBtn:$("saveNamedProjectBtn"),localProjectsList:$("localProjectsList"),undoBtn:$("undoBtn"),redoBtn:$("redoBtn"),loopBtn:$("loopBtn"),focusBtn:$("focusBtn"),fretboard:$("fretboard"),fretMarkers:$("fretMarkers"),fretChordLabel:$("fretChordLabel"),timelineViewport:$("timelineViewport"),timelineContent:$("timelineContent"),barZoomHeader:$("barZoomHeader"),vZoomStrip:$("vZoomStrip"),vZoomThumb:$("vZoomThumb"),trackMenuBtn:$("trackMenuBtn"),trackStatusBtn:$("trackStatusBtn"),trackMenu:$("trackMenu"),viewAllToggleBtn:$("viewAllToggleBtn"),trackList:$("trackList"),addTrackMenuBtn:$("addTrackMenuBtn"),deleteTrackMenuBtn:$("deleteTrackMenuBtn"),trackMenuCloseBtn:$("trackMenuCloseBtn"),sfSelect:$("sfSelect"),soundSelect:$("soundSelect"),copyBtn:$("copyBtn"),pasteBtn:$("pasteBtn"),colorSelect:$("colorSelect"),stepReadout:$("stepReadout"),posReadout:$("posReadout"),chordReadout:$("chordReadout")};
+const soundFontIdMigrations={console8:"chip8",sc55kits:"sc55",generaluserkits:"generaluser",timgmkits:"timgm",jnskits:"jns",eawkits:"eawpats"};
+const state={armed:true,playing:false,chordMode:false,semitoneMode:false,tempo:120,timeSigNum:4,timeSigDen:4,subdivision:16,metronome:false,lastMetroStep:-1,inputOctave:0,tick:0,zoom:.9,viewAllTracks:false,hideFretboard:false,useSoundFont:true,sfReady:false,sfLoading:false,sfEnginePromise:null,sfSynth:null,sfNode:null,sfId:null,sfIds:{},sfLoadingIds:{},sfProgramCache:{},sfChannelPrograms:{},sfOutputKey:"",loopEnabled:false,loopStart:0,loopEnd:PPQ*16,loopSetMode:0,undoStack:[],redoStack:[],scrollX:0,scrollY:250,selectedIds:new Set(),clipboardNotes:[],nextNoteId:1,tracks:[{id:1,name:"Track 1",soundFontId:"sc55",sound:"gm:0",color:"blue",volume:100,fx:defaultTrackFx(),notes:[]},{id:2,name:"Track 2",soundFontId:"sc55",sound:"gm:33",color:"green",volume:100,fx:defaultTrackFx(),notes:[]},{id:3,name:"Track 3",soundFontId:"sc55",sound:"gm:48",color:"purple",volume:100,fx:defaultTrackFx(),notes:[]}],activeTrackId:1,audioCtx:null,masterCtx:null,masterGain:null,masterCompressor:null,trackFxBuses:new Map(),activeGeneratedVoices:[],playbackStartTime:0,playbackStartTick:0,scheduledNotes:new Set(),scheduleTimer:null,liveFretLights:[],livePadLights:[],voicerAuditionTimers:[],fretDisplayChordName:"",voicerEnabled:true,voicer:defaultVoicerSettings(),voicerMemory:{previousNotes:[],previousName:"",previousRoot:-1}};
+const $=id=>document.getElementById(id),el={tempo:$("tempo"),tempoSlider:$("tempoSlider"),bpmLabel:$("bpmLabel"),bpmMenu:$("bpmMenu"),bpmCloseBtn:$("bpmCloseBtn"),subdivTop:$("subdivTop"),tsBtn:$("tsBtn"),tsMenu:$("tsMenu"),metroBtn:$("metroBtn"),loopMenu:$("loopMenu"),loopStartInput:$("loopStartInput"),loopEndInput:$("loopEndInput"),loopToggleBtn:$("loopToggleBtn"),loopApplyBtn:$("loopApplyBtn"),loopCloseBtn:$("loopCloseBtn"),settingsBtn:$("settingsBtn"),settingsMenu:$("settingsMenu"),playBtn:$("playBtn"),leftBtn:$("leftBtn"),rightBtn:$("rightBtn"),divDownBtn:$("divDownBtn"),divUpBtn:$("divUpBtn"),octDownBtn:$("octDownBtn"),octUpBtn:$("octUpBtn"),chordBtn:$("chordBtn"),recordBtn:$("recordBtn"),deleteBtn:$("deleteBtn"),newProjectBtn:$("newProjectBtn"),exportProjectBtn:$("exportProjectBtn"),importProjectBtn:$("importProjectBtn"),projectImport:$("projectImport"),trackColorMenu:$("trackColorMenu"),trackColorGrid:$("trackColorGrid"),trackColorCloseBtn:$("trackColorCloseBtn"),trackFxMenu:$("trackFxMenu"),trackFxTitle:$("trackFxTitle"),fxLowCut:$("fxLowCut"),fxLowCutValue:$("fxLowCutValue"),fxHighCut:$("fxHighCut"),fxHighCutValue:$("fxHighCutValue"),fxReverbMix:$("fxReverbMix"),fxReverbMixValue:$("fxReverbMixValue"),fxReverbTime:$("fxReverbTime"),fxReverbTimeValue:$("fxReverbTimeValue"),fxReverbType:$("fxReverbType"),fxDelayMix:$("fxDelayMix"),fxDelayMixValue:$("fxDelayMixValue"),fxDelayTime:$("fxDelayTime"),fxDelayTimeValue:$("fxDelayTimeValue"),fxChorus:$("fxChorus"),fxChorusValue:$("fxChorusValue"),trackFxResetBtn:$("trackFxResetBtn"),trackFxCloseBtn:$("trackFxCloseBtn"),themeBtn:$("themeBtn"),themeMenu:$("themeMenu"),themeList:$("themeList"),randomThemeBtn:$("randomThemeBtn"),randomMonoThemeBtn:$("randomMonoThemeBtn"),themeMenuCloseBtn:$("themeMenuCloseBtn"),hideFretBtn:$("hideFretBtn"),sfBtn:$("sfBtn"),sfLoadBtn:$("sfLoadBtn"),sfStatus:$("sfStatus"),exportBtn:$("exportBtn"),saveBtn:$("saveBtn"),loadBtn:$("loadBtn"),localProjectsMenu:$("localProjectsMenu"),projectNameInput:$("projectNameInput"),saveNamedProjectBtn:$("saveNamedProjectBtn"),localProjectsList:$("localProjectsList"),undoBtn:$("undoBtn"),redoBtn:$("redoBtn"),loopBtn:$("loopBtn"),focusBtn:$("focusBtn"),fretboard:$("fretboard"),fretMarkers:$("fretMarkers"),fretChordLabel:$("fretChordLabel"),timelineViewport:$("timelineViewport"),timelineContent:$("timelineContent"),barZoomHeader:$("barZoomHeader"),vZoomStrip:$("vZoomStrip"),vZoomThumb:$("vZoomThumb"),trackMenuBtn:$("trackMenuBtn"),trackStatusBtn:$("trackStatusBtn"),trackMenu:$("trackMenu"),viewAllToggleBtn:$("viewAllToggleBtn"),trackList:$("trackList"),addTrackMenuBtn:$("addTrackMenuBtn"),deleteTrackMenuBtn:$("deleteTrackMenuBtn"),trackMenuCloseBtn:$("trackMenuCloseBtn"),sfSelect:$("sfSelect"),soundSelect:$("soundSelect"),soundPickerBtn:$("soundPickerBtn"),soundPickerMenu:$("soundPickerMenu"),soundSearch:$("soundSearch"),soundFilterRow:$("soundFilterRow"),soundPickerList:$("soundPickerList"),soundPickerCloseBtn:$("soundPickerCloseBtn"),copyBtn:$("copyBtn"),pasteBtn:$("pasteBtn"),colorSelect:$("colorSelect"),stepReadout:$("stepReadout"),posReadout:$("posReadout"),chordReadout:$("chordReadout")};
 Object.assign(el,{voicerBtn:$("voicerBtn"),voicerMenu:$("voicerMenu"),voicerEnableBtn:$("voicerEnableBtn"),voicerKeyBtn:$("voicerKeyBtn"),voicerScaleBtn:$("voicerScaleBtn"),voicerKeyMenu:$("voicerKeyMenu"),voicerScaleMenu:$("voicerScaleMenu"),voicerStyle:$("voicerStyle"),voicerRole:$("voicerRole"),voicerPlayability:$("voicerPlayability"),voicerRakeMode:$("voicerRakeMode"),voicerChordSize:$("voicerChordSize"),voicerChordSizeValue:$("voicerChordSizeValue"),voicerRakeSpeed:$("voicerRakeSpeed"),voicerRakeSpeedValue:$("voicerRakeSpeedValue"),voicerComplexity:$("voicerComplexity"),voicerComplexityValue:$("voicerComplexityValue"),voicerVoiceLeading:$("voicerVoiceLeading"),voicerVoiceLeadingValue:$("voicerVoiceLeadingValue"),voicerOutside:$("voicerOutside"),voicerOutsideValue:$("voicerOutsideValue"),voicerVariation:$("voicerVariation"),voicerVariationValue:$("voicerVariationValue"),voicerRepeat:$("voicerRepeat"),voicerRepeatValue:$("voicerRepeatValue"),voicerMinNote:$("voicerMinNote"),voicerMaxNote:$("voicerMaxNote"),voicerReadout:$("voicerReadout"),voicerLastChord:$("voicerLastChord"),voicerLastNotes:$("voicerLastNotes"),voicerResetBtn:$("voicerResetBtn"),voicerRandomizeBtn:$("voicerRandomizeBtn"),voicerCloseBtn:$("voicerCloseBtn")});
+const soundPickerState={filter:"all",query:""};
 
 
 
@@ -268,6 +286,10 @@ function normalizeSoundFontUrl(url){
  return u;
 }
 function soundFontById(id){return soundFontDefs.find(f=>f.id===id)||soundFontDefs[0]}
+function normalizeSoundFontId(id){
+ const mapped=soundFontIdMigrations[id]||id;
+ return soundFontDefs.some(f=>f.id===mapped)?mapped:soundFontDefs[0].id;
+}
 function soundFontKey(def){return (def&&def.cacheKey)||def.id}
 function trackSoundFont(track=activeTrack()){return soundFontById(ensureTrackDefaults(track).soundFontId)}
 function firstSoundForFont(def){
@@ -317,7 +339,7 @@ async function ensureRealSoundFont(){
    const synth=new window.JSSynth.Synthesizer();
    synth.init(state.audioCtx.sampleRate,{initialGain:.7,midiChannelCount:16});
    let node=null,lastErr=null;
-   for(const b of [512,1024,256,128]){
+   for(const b of [1024,2048,512,256]){
     try{
      node=synth.createAudioNode(state.audioCtx,b);
      break;
@@ -456,7 +478,7 @@ function playSfNote(m,d,tr,when=0){
  const def=trackSoundFont(tr);
  const ch=ensureSfProgram(tr,def);
  if(ch===null)return false;
- const forceFx=!!(!state.playing&&trackFxTarget&&el.trackFxMenu&&el.trackFxMenu.classList.contains("open")&&trackFxTarget.id===tr.id);
+ const forceFx=!state.playing;
  routeSfOutputForTrack(tr,forceFx);
  const vel=Math.max(1,Math.min(127,Math.round(76*(trackVolume(tr)/100))));
  const delayMs=Math.max(6,when*1000);
@@ -506,6 +528,114 @@ const gmPresets=[
  [92,"Bowed Pad"],[93,"Metallic Pad"],[94,"Halo Pad"],[95,"Sweep Pad"]
 ];
 const internalPresets=[["sine","Internal Sine"],["triangle","Internal Triangle"],["square","Internal Square"],["sawtooth","Internal Saw"],["pulse","Internal Pulse"],["organ","Internal Organ"],["pluck","Internal Pluck"],["bass","Internal Bass"]];
+function soundBankKind(def){
+ if(!def||def.stock)return "internal";
+ return (def.engine==="internal"||def.engine==="synthDrum"||!def.url)?"internal":"external";
+}
+function soundPresetList(def){
+ if(!def||def.stock)return internalPresets;
+ if(Array.isArray(def.presets))return def.presets;
+ if(def.presets==="gm"||def.type==="gm")return gmPresets.map(p=>["gm:"+p[0],p[1]]);
+ return internalPresets;
+}
+function soundEntryCategories(def,value,label){
+ const text=((def?.name||"")+" "+(def?.type||"")+" "+(def?.engine||"")+" "+value+" "+label).toLowerCase();
+ const cats=new Set([soundBankKind(def)]);
+ if(def?.type==="drum"||value.startsWith("kit:")||value.startsWith("drum:")||/(drum|kick|snare|hat|tom|ride|crash|perc|808|909|606|707|kit)/.test(text))cats.add("drums");
+ if(/(piano|epiano|electric grand|honky|harpsichord|clav|celesta|vibra|marimba|xylophone|organ|accordion|harmonica|bell|keys|keyboard)/.test(text))cats.add("keys");
+ if(def?.type==="synth"||/(synth|lead|pad|square|saw|pulse|chip|bit|fm|analog|acid|sync|poly|mono|osc|noise)/.test(text))cats.add("synth");
+ if(/bass/.test(text))cats.add("bass");
+ if(/(guitar|nylon|steel|jazz guitar|clean guitar|muted|overdrive|distortion|pluck)/.test(text))cats.add("guitar");
+ return [...cats];
+}
+function allSoundEntries(){
+ const stock={stock:true,id:"stock",name:"Stock Engine",short:"Stock",type:"internal",engine:"stock"};
+ const entries=soundPresetList(stock).map(([value,label])=>({def:stock,defId:"stock",value,label,categories:soundEntryCategories(stock,value,label)}));
+ for(const def of soundFontDefs){
+  for(const [value,label] of soundPresetList(def)){
+   entries.push({def,defId:def.id,value,label,categories:soundEntryCategories(def,value,label)});
+  }
+ }
+ return entries;
+}
+function soundEntrySearchText(entry){
+ return [entry.label,entry.value,entry.def.name,entry.def.short,entry.def.type,entry.def.engine,...entry.categories].filter(Boolean).join(" ").toLowerCase();
+}
+function currentSoundLabel(track=activeTrack()){
+ const t=ensureTrackDefaults(track);
+ if(!state.useSoundFont){
+  const p=internalPresets.find(x=>x[0]===t.sound);
+  return (p?p[1].replace(/^Internal\s+/,""):presetDisplayName(t.sound,t))+" · Stock";
+ }
+ const def=trackSoundFont(t);
+ return presetDisplayName(t.sound,t)+" · "+(def.short||def.name);
+}
+function selectSoundEntry(defId,value){
+ const tr=activeTrack();
+ const stock=defId==="stock";
+ const nextSf=stock?tr.soundFontId:normalizeSoundFontId(defId);
+ const nextSound=value||firstSoundForFont(soundFontById(nextSf));
+ const changed=state.useSoundFont===stock||tr.soundFontId!==nextSf||tr.sound!==nextSound;
+ if(changed)pushUndo();
+ state.useSoundFont=!stock;
+ if(!stock)tr.soundFontId=nextSf;
+ tr.sound=nextSound;
+ state.sfProgramCache={};
+ state.sfChannelPrograms={};
+ state.sfOutputKey="";
+ if(el.soundPickerMenu)el.soundPickerMenu.classList.remove("open");
+ if(!stock&&state.useSoundFont)loadDefaultSoundFont();
+ else if(el.sfStatus)setSfStatus("Stock engine ready");
+ renderFretboard();
+ render();
+}
+function renderSoundPicker(forceList=false){
+ if(!el.soundPickerBtn)return;
+ const tr=activeTrack();
+ el.soundPickerBtn.textContent=currentSoundLabel(tr);
+ if(!el.soundPickerList)return;
+ if(!forceList&&!el.soundPickerMenu?.classList.contains("open"))return;
+ const q=(soundPickerState.query||"").trim().toLowerCase();
+ const filter=soundPickerState.filter||"all";
+ if(el.soundSearch&&el.soundSearch.value!==soundPickerState.query)el.soundSearch.value=soundPickerState.query;
+ if(el.soundFilterRow)el.soundFilterRow.querySelectorAll("[data-filter]").forEach(b=>b.classList.toggle("active",b.dataset.filter===filter));
+ const currentSf=state.useSoundFont?trackSoundFont(tr).id:"stock";
+ const rows=allSoundEntries().filter(entry=>{
+  if(filter!=="all"&&!entry.categories.includes(filter))return false;
+  if(!q)return true;
+  return q.split(/\s+/).every(part=>soundEntrySearchText(entry).includes(part));
+ });
+ el.soundPickerList.innerHTML="";
+ if(!rows.length){
+  const empty=document.createElement("div");
+  empty.className="soundChoiceMeta";
+  empty.style.padding="8px";
+  empty.textContent="No sounds match.";
+  el.soundPickerList.appendChild(empty);
+  return;
+ }
+ for(const entry of rows){
+  const btn=document.createElement("button");
+  btn.className="soundChoice";
+  btn.classList.toggle("active",entry.defId===currentSf&&entry.value===tr.sound);
+  const left=document.createElement("div");
+  const name=document.createElement("div");
+  name.className="soundChoiceName";
+  name.textContent=entry.label.replace(/^Internal\s+/,"");
+  const meta=document.createElement("div");
+  meta.className="soundChoiceMeta";
+  meta.textContent=entry.categories.filter(c=>c!=="internal"&&c!=="external").join(" · ")||entry.def.type||"sound";
+  const bank=document.createElement("div");
+  bank.className="soundChoiceBank";
+  bank.textContent=(soundBankKind(entry.def)==="external"?"Ext ":"Int ")+(entry.def.short||entry.def.name);
+  left.appendChild(name);
+  left.appendChild(meta);
+  btn.appendChild(left);
+  btn.appendChild(bank);
+  btn.onclick=()=>selectSoundEntry(entry.defId,entry.value);
+  el.soundPickerList.appendChild(btn);
+ }
+}
 function renderSoundMenu(){
  const track=activeTrack();
  const def=trackSoundFont(track);
@@ -520,6 +650,7 @@ function renderSoundMenu(){
   el.sfSelect.value=soundFontById(currentSf).id;
  }
  const current=track.sound||firstSoundForFont(def);
+ if(!el.soundSelect){renderSoundPicker();return}
  el.soundSelect.innerHTML="";
  const list=state.useSoundFont?(Array.isArray(def.presets)?def.presets:gmPresets.map(p=>["gm:"+p[0],p[1]])):internalPresets;
  for(const [value,label] of list){
@@ -527,6 +658,7 @@ function renderSoundMenu(){
  }
  if([...el.soundSelect.options].some(o=>o.value===current))el.soundSelect.value=current;
  else{el.soundSelect.value=list[0][0];track.sound=list[0][0]}
+ renderSoundPicker();
 }
 function quantizedInputTick(){
  if(state.playing&&state.audioCtx){
@@ -608,6 +740,7 @@ function ensureTrackDefaults(t){
  if(!t)return t;
  if(!t.name)t.name="Track "+(t.id||1);
  if(!t.soundFontId)t.soundFontId=t.sound&&t.sound.startsWith("drum:")?"tr808":"sc55";
+ t.soundFontId=normalizeSoundFontId(t.soundFontId);
  if(!t.sound)t.sound=state.useSoundFont?"gm:0":"sine";
  const def=soundFontById(t.soundFontId);
  if(!soundMatchesFont(t.sound,def))t.sound=firstSoundForFont(def);
@@ -672,6 +805,19 @@ function ensureMasterOutput(){
 function masterOutput(){
  return ensureMasterOutput()||(state.audioCtx&&state.audioCtx.destination);
 }
+function registerGeneratedVoice(c,g,source,endTime){
+ const now=c.currentTime;
+ state.activeGeneratedVoices=state.activeGeneratedVoices.filter(v=>v.end>now+.02);
+ state.activeGeneratedVoices.push({g,source,end:endTime});
+ while(state.activeGeneratedVoices.length>88){
+  const v=state.activeGeneratedVoices.shift();
+  try{
+   v.g.gain.cancelScheduledValues(now);
+   v.g.gain.setTargetAtTime(.0001,now,.008);
+  }catch(e){}
+  try{v.source.stop(now+.045)}catch(e){}
+ }
+}
 function silentUnlock(){
  ensureAudio();
  if(!state.audioCtx)return;
@@ -724,7 +870,7 @@ function updateTrackFxBus(track,bus=state.trackFxBuses.get(track.id)){
  const chorus=clamp(Number(fx.chorus)||0,0,1);
  setAudioParam(bus.hp.frequency,low);
  setAudioParam(bus.lp.frequency,high);
- setAudioParam(bus.dry.gain,clamp(1-reverbMix*.22-delayMix*.18-chorus*.12,.45,1));
+ setAudioParam(bus.dry.gain,clamp(1-reverbMix*.34-delayMix*.18-chorus*.12,.34,1));
  setAudioParam(bus.delay.delayTime,delayTime);
  setAudioParam(bus.delayWet.gain,delayMix*.42);
  setAudioParam(bus.feedback.gain,delayMix*.22);
@@ -733,7 +879,7 @@ function updateTrackFxBus(track,bus=state.trackFxBuses.get(track.id)){
   tap.f.type=fx.reverbType==="Shimmer"?"highpass":"lowpass";
   setAudioParam(tap.f.frequency,fx.reverbType==="Shimmer"?900:clamp(7600-reverbTime*700,2200,8000));
   setAudioParam(tap.d.delayTime,Math.min(1.5,tap.tap*reverbTime*scale));
-  setAudioParam(tap.w.gain,reverbMix*(.12/(i+1)));
+  setAudioParam(tap.w.gain,reverbMix*(.22/(i+1)));
  });
  setAudioParam(bus.chorusDelay.delayTime,.018);
  setAudioParam(bus.chorusWet.gain,chorus*.24);
@@ -748,10 +894,10 @@ function connectTrackOutput(source,tr,c){
  }else updateTrackFxBus(tr,bus);
  source.connect(bus.input);
 }
-function audioStart(c,when=0){return c.currentTime+Math.max(.006,Number(when)||0)}
+function audioStart(c,when=0){return c.currentTime+Math.max(.012,Number(when)||0)}
 function envelope(g,start,peak,attack=.006,hold=.02,release=.12){
  const p=Math.max(.0001,peak);
- const a=Math.max(.001,attack),h=Math.max(0,hold),r=Math.max(.012,release);
+ const a=Math.max(.0035,attack),h=Math.max(0,hold),r=Math.max(.018,release);
  try{
   g.gain.cancelScheduledValues(start);
   g.gain.setValueAtTime(.0001,start);
@@ -784,6 +930,7 @@ function toneVoice(c,tr,start,{type="sine",freq:hz=440,endFreq=null,amp=.12,atta
  const life=dur||envelope(g,start,amp,attack,hold,release);
  if(dur)envelope(g,start,amp,attack,Math.max(0,dur-attack-release),release);
  o.connect(g);connectTrackOutput(g,tr,c);
+ registerGeneratedVoice(c,g,o,start+life+.08);
  o.start(start);o.stop(start+life+.08);
 }
 function noiseVoice(c,tr,start,{amp=.1,attack=.002,hold=.01,release=.08,dur=null,type="highpass",freq:hz=6000,q=.7}={}){
@@ -793,41 +940,50 @@ function noiseVoice(c,tr,start,{amp=.1,attack=.002,hold=.01,release=.08,dur=null
  const life=dur||envelope(g,start,amp,attack,hold,release);
  if(dur)envelope(g,start,amp,attack,Math.max(0,dur-attack-release),release);
  src.connect(filt);filt.connect(g);connectTrackOutput(g,tr,c);
+ registerGeneratedVoice(c,g,src,start+life+.08);
  src.start(start);src.stop(start+life+.08);
 }
 function playSynthDrum(m,d,tr,when=0){
  const c=state.audioCtx,start=audioStart(c,when),vol=trackVolume(tr)/100;
  const kit=String(tr.sound||"kit:analog-tight");
- const analog=kit.includes("analog")||kit.includes("808")||kit.includes("909");
- const chip=kit.includes("chip")||kit.includes("Arcade")||kit.includes("modular");
- const punch=kit.includes("deep")||kit.includes("808")?1.12:(kit.includes("tight") ? .85 : 1);
- const noisy=kit.includes("crunch")||kit.includes("noise")||kit.includes("sampler")||kit.includes("909");
+ const analog=kit.includes("analog")||kit.includes("606")||kit.includes("707")||kit.includes("808")||kit.includes("909");
+ const chip=kit.includes("chip")||kit.includes("arcade")||kit.includes("console")||kit.includes("modular");
+ const fm=kit.includes("fm"), sampler=kit.includes("sampler"), dirty=kit.includes("dirt")||kit.includes("crunch")||kit.includes("industrial");
+ const airy=kit.includes("air")||kit.includes("disco"), deep=kit.includes("deep")||kit.includes("dub")||kit.includes("808");
+ const tight=kit.includes("tight")||kit.includes("minimal")||kit.includes("606"), metal=kit.includes("metal")||kit.includes("909");
+ const punch=deep ? 1.16 : (tight ? .78 : 1);
+ const noisy=dirty||kit.includes("noise")||sampler||metal;
+ const bitRel=kit.includes("click") ? .035 : (kit.includes("dust") ? .06 : (kit.includes("metal") ? .11 : .08));
  const amp=n=>n*vol;
  if([35,36].includes(m)){
-  toneVoice(c,tr,start,{type:chip?"square":"sine",freq:chip?74:82,endFreq:chip?42:(kit.includes("deep")?34:42),amp:amp(chip ? .18 : .34*punch),attack:.002,hold:.018,release:chip ? .09 : .28});
-  noiseVoice(c,tr,start,{amp:amp(noisy ? .045 : .025),attack:.001,hold:.002,release:.028,type:"lowpass",freq:1400});
+  const f0=fm?96:chip?74:kit.includes("606")?92:kit.includes("707")?74:82;
+  const f1=fm?54:chip?42:deep?32:kit.includes("606")?58:42;
+  toneVoice(c,tr,start,{type:chip?"square":fm?"triangle":"sine",freq:f0,endFreq:f1,amp:amp(chip ? .18 : .34*punch),attack:.003,hold:chip ? .012 : .018,release:chip?bitRel:(deep ? .34 : .24)});
+  if(fm)toneVoice(c,tr,start+.006,{type:"sine",freq:f0*2.02,endFreq:f1*1.3,amp:amp(.055),attack:.003,hold:.012,release:.09});
+  noiseVoice(c,tr,start,{amp:amp(noisy ? .055 : .025),attack:.001,hold:.002,release:dirty ? .055 : .028,type:"lowpass",freq:sampler?900:1400});
  }else if([38,40].includes(m)){
-  toneVoice(c,tr,start,{type:chip?"square":"triangle",freq:chip?190:178,endFreq:chip?150:132,amp:amp(chip ? .12 : .13),attack:.002,hold:.018,release:.11});
-  noiseVoice(c,tr,start,{amp:amp(noisy ? .22 : .17),attack:.002,hold:.028,release:kit.includes("air") ? .22 : .13,type:"bandpass",freq:chip?2900:2100,q:1.2});
+  toneVoice(c,tr,start,{type:chip?"square":fm?"sine":"triangle",freq:fm?240:chip?190:178,endFreq:chip?150:132,amp:amp(chip ? .12 : .13),attack:.003,hold:.018,release:chip?bitRel:.11});
+  if(metal)toneVoice(c,tr,start+.004,{type:"square",freq:710,amp:amp(.045),attack:.002,hold:.018,release:.07});
+  noiseVoice(c,tr,start,{amp:amp(noisy ? .24 : .17),attack:.002,hold:airy ? .04 : .026,release:airy ? .28 : (sampler ? .09 : .13),type:fm?"highpass":"bandpass",freq:chip?3200:(metal?3600:2100),q:metal?2.2:1.2});
  }else if(m===39){
-  for(const off of [0,.016,.032])noiseVoice(c,tr,start+off,{amp:amp(.12),attack:.001,hold:.006,release:.07,type:"bandpass",freq:1800+off*16000,q:.9});
+  for(const off of [0,.014,.031])noiseVoice(c,tr,start+off,{amp:amp(dirty ? .15 : .11),attack:.001,hold:.006,release:chip?bitRel:.08,type:"bandpass",freq:(chip?2600:1800)+off*18000,q:chip?1.8:.9});
  }else if([42,44,46].includes(m)){
   const rel=m===46 ? .24 : (m===44 ? .12 : .045);
-  noiseVoice(c,tr,start,{amp:amp(chip ? .09 : .115),attack:.001,hold:.002,release:rel,type:"highpass",freq:chip?5200:7200,q:.5});
-  if(chip)toneVoice(c,tr,start,{type:"square",freq:m===46?940:720,amp:amp(.035),attack:.001,hold:.005,release:rel*.55});
+  noiseVoice(c,tr,start,{amp:amp(chip ? .09 : .115),attack:.001,hold:.002,release:chip?Math.min(rel,bitRel):rel,type:"highpass",freq:chip?5200:(sampler?4200:7600),q:metal?1.7:.5});
+  if(chip||fm)toneVoice(c,tr,start,{type:"square",freq:m===46?940:720,amp:amp(fm ? .05 : .035),attack:.001,hold:.005,release:rel*.55});
  }else if([49,51].includes(m)){
-  noiseVoice(c,tr,start,{amp:amp(.15),attack:.002,hold:.035,release:m===51 ? .55 : .8,type:"highpass",freq:5200,q:.4});
-  if(analog)toneVoice(c,tr,start,{type:"square",freq:m===51?520:410,amp:amp(.035),attack:.003,hold:.025,release:.25});
+  noiseVoice(c,tr,start,{amp:amp(airy ? .18 : .14),attack:.002,hold:airy ? .055 : .03,release:m===51 ? .55 : (chip ? .24 : .8),type:"highpass",freq:chip?4500:5600,q:metal?1.2:.4});
+  if(analog||fm)toneVoice(c,tr,start,{type:fm?"sine":"square",freq:m===51?520:410,amp:amp(.04),attack:.004,hold:.025,release:fm ? .12 : .25});
  }else if(m===56){
-  toneVoice(c,tr,start,{type:"square",freq:560,amp:amp(.08),attack:.002,hold:.055,release:.1});
-  toneVoice(c,tr,start,{type:"square",freq:845,amp:amp(.055),attack:.002,hold:.05,release:.09});
+  toneVoice(c,tr,start,{type:fm?"sine":"square",freq:fm?620:560,amp:amp(.08),attack:.002,hold:.055,release:fm ? .16 : .1});
+  toneVoice(c,tr,start,{type:"square",freq:fm?1240:845,amp:amp(.055),attack:.002,hold:.05,release:.09});
  }else if([41,45,48,50].includes(m)){
   const base={41:112,45:148,48:194,50:230}[m]||150;
-  toneVoice(c,tr,start,{type:chip?"square":"sine",freq:base,endFreq:base*.62,amp:amp(chip ? .13 : .2),attack:.002,hold:.025,release:.16});
+  toneVoice(c,tr,start,{type:chip?"square":fm?"triangle":"sine",freq:base*(fm?1.15:1),endFreq:base*(chip ? .72 : .62),amp:amp(chip ? .13 : .2),attack:.003,hold:.025,release:chip?bitRel:.16});
  }else if(m===54||m===70){
-  noiseVoice(c,tr,start,{amp:amp(.09),attack:.001,hold:.018,release:.07,type:"highpass",freq:4200,q:.8});
+  noiseVoice(c,tr,start,{amp:amp(.09),attack:.001,hold:sampler ? .03 : .018,release:sampler ? .12 : .07,type:"highpass",freq:chip?3600:4200,q:.8});
  }else if(m===75||m===76||m===37){
-  toneVoice(c,tr,start,{type:"square",freq:m===37?690:m===75?1180:860,amp:amp(.08),attack:.001,hold:.018,release:.055});
+  toneVoice(c,tr,start,{type:fm?"sine":"square",freq:m===37?690:m===75?1180:860,amp:amp(.08),attack:.001,hold:.018,release:chip?bitRel:.055});
   noiseVoice(c,tr,start,{amp:amp(.025),attack:.001,hold:.004,release:.035,type:"bandpass",freq:2800,q:1.4});
  }else{
   noiseVoice(c,tr,start,{amp:amp(.08),attack:.001,hold:.02,release:.09,type:"bandpass",freq:2400,q:1});
@@ -844,11 +1000,39 @@ function playRetroSynthNote(m,d,tr,when=0){
  else if(raw==="chip:squarebass")toneVoice(c,tr,start,{type:"square",freq:f*.5,amp:amp(.17),attack:.004,hold:Math.max(.03,dur-.07),release:.07,dur:dur});
  else if(raw==="chip:arp"){toneVoice(c,tr,start,{type:"square",freq:f,amp:amp(.1),attack:.003,hold:dur*.28,release:.045});toneVoice(c,tr,start+dur*.33,{type:"square",freq:f*1.5,amp:amp(.085),attack:.003,hold:dur*.22,release:.045});toneVoice(c,tr,start+dur*.62,{type:"square",freq:f*2,amp:amp(.075),attack:.003,hold:dur*.2,release:.05})}
  else if(raw==="chip:organ"){toneVoice(c,tr,start,{type:"square",freq:f,amp:amp(.09),attack:.006,hold:Math.max(.03,dur-.08),release:.08,dur:dur});toneVoice(c,tr,start,{type:"square",freq:f*2.005,amp:amp(.055),attack:.006,hold:Math.max(.03,dur-.08),release:.08,dur:dur})}
+ else if(raw==="chip:duty12"){toneVoice(c,tr,start,{type:"square",freq:f,amp:amp(.095),attack:.006,hold:Math.max(.03,dur-.07),release:.07,dur:dur});toneVoice(c,tr,start,{type:"sine",freq:f*3,amp:amp(.028),attack:.004,hold:Math.max(.02,dur-.08),release:.06,dur:dur})}
+ else if(raw==="chip:duty25"){toneVoice(c,tr,start,{type:"square",freq:f,amp:amp(.12),attack:.005,hold:Math.max(.03,dur-.07),release:.07,dur:dur});toneVoice(c,tr,start,{type:"triangle",freq:f*2,amp:amp(.028),attack:.005,hold:Math.max(.02,dur-.08),release:.06,dur:dur})}
+ else if(raw==="chip:bitpluck"){toneVoice(c,tr,start,{type:"square",freq:f,amp:amp(.14),attack:.002,hold:.018,release:Math.min(.22,dur*.5)});toneVoice(c,tr,start+.012,{type:"triangle",freq:f*2,amp:amp(.045),attack:.002,hold:.018,release:.14})}
+ else if(raw==="chip:coin"){toneVoice(c,tr,start,{type:"square",freq:f*2,amp:amp(.09),attack:.002,hold:.03,release:.08});toneVoice(c,tr,start+.045,{type:"square",freq:f*2.5,amp:amp(.075),attack:.002,hold:.035,release:.11})}
+ else if(raw==="chip:laser"){toneVoice(c,tr,start,{type:"square",freq:f*2.3,endFreq:Math.max(40,f*.55),amp:amp(.13),attack:.002,hold:.025,release:Math.min(.28,dur*.7)});noiseVoice(c,tr,start,{amp:amp(.025),attack:.002,hold:.006,release:.06,type:"bandpass",freq:3600,q:4})}
+ else if(raw==="chip:underwater"){toneVoice(c,tr,start,{type:"triangle",freq:f*.5,amp:amp(.075),attack:.035,hold:Math.max(.04,dur-.18),release:.16,dur:dur});toneVoice(c,tr,start,{type:"square",freq:f*1.5,amp:amp(.045),attack:.05,hold:Math.max(.04,dur-.2),release:.18,dur:dur})}
+ else if(raw==="chip:thinbass")toneVoice(c,tr,start,{type:"square",freq:f*.5,amp:amp(.12),attack:.006,hold:Math.max(.03,dur-.08),release:.08,dur:dur});
+ else if(raw==="chip:octave"){toneVoice(c,tr,start,{type:"square",freq:f,amp:amp(.095),attack:.005,hold:Math.max(.03,dur-.08),release:.08,dur:dur});toneVoice(c,tr,start,{type:"square",freq:f*2,amp:amp(.065),attack:.005,hold:Math.max(.03,dur-.08),release:.08,dur:dur})}
  else if(raw==="s16:fm-bell"){toneVoice(c,tr,start,{type:"sine",freq:f,amp:amp(.11),attack:.003,hold:.035,release:Math.min(.85,dur*.9)});toneVoice(c,tr,start,{type:"sine",freq:f*2.01,amp:amp(.07),attack:.002,hold:.02,release:Math.min(.65,dur*.7)})}
  else if(raw==="s16:fm-bass")toneVoice(c,tr,start,{type:"sawtooth",freq:f*.5,amp:amp(.14),attack:.005,hold:Math.max(.04,dur-.09),release:.09,dur:dur});
  else if(raw==="s16:saw-pad"){toneVoice(c,tr,start,{type:"sawtooth",freq:f,amp:amp(.055),attack:.035,hold:Math.max(.04,dur-.16),release:.15,dur:dur});toneVoice(c,tr,start,{type:"triangle",freq:f*1.006,amp:amp(.06),attack:.04,hold:Math.max(.04,dur-.18),release:.16,dur:dur})}
  else if(raw==="s16:pluck")toneVoice(c,tr,start,{type:"triangle",freq:f,amp:amp(.15),attack:.002,hold:.025,release:Math.min(.32,dur*.65)});
  else if(raw==="s16:brass"){toneVoice(c,tr,start,{type:"sawtooth",freq:f,amp:amp(.09),attack:.025,hold:Math.max(.03,dur-.12),release:.11,dur:dur});toneVoice(c,tr,start,{type:"square",freq:f*2,amp:amp(.035),attack:.02,hold:Math.max(.03,dur-.12),release:.1,dur:dur})}
+ else if(raw==="s16:glass-ep"){toneVoice(c,tr,start,{type:"sine",freq:f,amp:amp(.09),attack:.009,hold:Math.max(.04,dur-.22),release:.22,dur:dur});toneVoice(c,tr,start,{type:"sine",freq:f*3.01,amp:amp(.045),attack:.006,hold:.08,release:Math.min(.5,dur*.7)})}
+ else if(raw==="s16:halo"){toneVoice(c,tr,start,{type:"triangle",freq:f,amp:amp(.055),attack:.08,hold:Math.max(.03,dur-.28),release:.2,dur:dur});toneVoice(c,tr,start,{type:"sine",freq:f*1.5,amp:amp(.04),attack:.1,hold:Math.max(.03,dur-.32),release:.24,dur:dur})}
+ else if(raw==="s16:sync-lead"){toneVoice(c,tr,start,{type:"sawtooth",freq:f,amp:amp(.1),attack:.008,hold:Math.max(.03,dur-.1),release:.09,dur:dur});toneVoice(c,tr,start,{type:"square",freq:f*2.98,amp:amp(.04),attack:.006,hold:Math.max(.02,dur-.12),release:.08,dur:dur})}
+ else if(raw==="s16:slap"){toneVoice(c,tr,start,{type:"sawtooth",freq:f*.5,endFreq:f*.46,amp:amp(.13),attack:.002,hold:.045,release:Math.min(.25,dur*.55)});toneVoice(c,tr,start,{type:"square",freq:f*2,amp:amp(.04),attack:.001,hold:.015,release:.08})}
+ else if(raw==="s16:choir"){toneVoice(c,tr,start,{type:"triangle",freq:f,amp:amp(.055),attack:.045,hold:Math.max(.03,dur-.18),release:.17,dur:dur});toneVoice(c,tr,start,{type:"sine",freq:f*2.01,amp:amp(.04),attack:.04,hold:Math.max(.03,dur-.18),release:.17,dur:dur})}
+ else if(raw==="s16:marimba"){toneVoice(c,tr,start,{type:"sine",freq:f,amp:amp(.12),attack:.002,hold:.026,release:Math.min(.35,dur*.6)});toneVoice(c,tr,start,{type:"sine",freq:f*4.02,amp:amp(.045),attack:.001,hold:.012,release:.16})}
+ else if(raw==="s16:strings"){toneVoice(c,tr,start,{type:"sawtooth",freq:f,amp:amp(.055),attack:.05,hold:Math.max(.04,dur-.22),release:.2,dur:dur});toneVoice(c,tr,start,{type:"sawtooth",freq:f*1.005,amp:amp(.045),attack:.06,hold:Math.max(.04,dur-.24),release:.22,dur:dur})}
+ else if(raw==="s16:resobass")toneVoice(c,tr,start,{type:"sawtooth",freq:f*.5,endFreq:f*.48,amp:amp(.15),attack:.006,hold:Math.max(.04,dur-.1),release:.1,dur:dur});
+ else if(raw==="ana:mono")toneVoice(c,tr,start,{type:"sawtooth",freq:f,amp:amp(.13),attack:.012,hold:Math.max(.03,dur-.11),release:.1,dur:dur});
+ else if(raw==="ana:round")toneVoice(c,tr,start,{type:"square",freq:f,amp:amp(.115),attack:.015,hold:Math.max(.03,dur-.13),release:.12,dur:dur});
+ else if(raw==="ana:bass")toneVoice(c,tr,start,{type:"sawtooth",freq:f*.5,endFreq:f*.49,amp:amp(.16),attack:.01,hold:Math.max(.04,dur-.12),release:.12,dur:dur});
+ else if(raw==="ana:acid"){toneVoice(c,tr,start,{type:"sawtooth",freq:f*.5,endFreq:f*.62,amp:amp(.14),attack:.006,hold:Math.max(.03,dur-.09),release:.09,dur:dur});toneVoice(c,tr,start,{type:"square",freq:f,amp:amp(.035),attack:.004,hold:.05,release:.08})}
+ else if(raw==="ana:poly"){toneVoice(c,tr,start,{type:"sawtooth",freq:f,amp:amp(.075),attack:.025,hold:Math.max(.03,dur-.16),release:.15,dur:dur});toneVoice(c,tr,start,{type:"square",freq:f*1.002,amp:amp(.055),attack:.025,hold:Math.max(.03,dur-.16),release:.15,dur:dur})}
+ else if(raw==="ana:pad"){toneVoice(c,tr,start,{type:"triangle",freq:f,amp:amp(.06),attack:.09,hold:Math.max(.04,dur-.34),release:.25,dur:dur});toneVoice(c,tr,start,{type:"sawtooth",freq:f*.5,amp:amp(.035),attack:.11,hold:Math.max(.04,dur-.36),release:.28,dur:dur})}
+ else if(raw==="ana:strings"){toneVoice(c,tr,start,{type:"sawtooth",freq:f,amp:amp(.055),attack:.055,hold:Math.max(.04,dur-.24),release:.22,dur:dur});toneVoice(c,tr,start,{type:"triangle",freq:f*2,amp:amp(.04),attack:.06,hold:Math.max(.04,dur-.24),release:.22,dur:dur})}
+ else if(raw==="ana:brass"){toneVoice(c,tr,start,{type:"sawtooth",freq:f,amp:amp(.095),attack:.035,hold:Math.max(.03,dur-.16),release:.13,dur:dur});toneVoice(c,tr,start,{type:"square",freq:f*2,amp:amp(.035),attack:.025,hold:Math.max(.03,dur-.16),release:.12,dur:dur})}
+ else if(raw==="ana:sync"){toneVoice(c,tr,start,{type:"sawtooth",freq:f,endFreq:f*1.12,amp:amp(.1),attack:.008,hold:Math.max(.03,dur-.1),release:.09,dur:dur});toneVoice(c,tr,start,{type:"square",freq:f*3.02,endFreq:f*2.02,amp:amp(.035),attack:.006,hold:Math.max(.02,dur-.1),release:.08,dur:dur})}
+ else if(raw==="ana:pluck")toneVoice(c,tr,start,{type:"sawtooth",freq:f,amp:amp(.13),attack:.003,hold:.03,release:Math.min(.34,dur*.65)});
+ else if(raw==="ana:drone"){toneVoice(c,tr,start,{type:"triangle",freq:f*.5,amp:amp(.075),attack:.08,hold:Math.max(.05,dur-.3),release:.24,dur:dur});toneVoice(c,tr,start,{type:"sine",freq:f,amp:amp(.04),attack:.09,hold:Math.max(.05,dur-.32),release:.26,dur:dur})}
+ else if(raw==="ana:noiselead"){toneVoice(c,tr,start,{type:"sawtooth",freq:f,amp:amp(.095),attack:.012,hold:Math.max(.03,dur-.11),release:.1,dur:dur});noiseVoice(c,tr,start,{amp:amp(.035),attack:.02,hold:Math.max(.02,dur-.16),release:.14,dur:dur,type:"bandpass",freq:clamp(f*6,800,5200),q:2.3})}
  else toneVoice(c,tr,start,{type:"square",freq:f,amp:amp(.14),attack:.003,hold:Math.max(.03,dur-.07),release:.07,dur:dur});
 }
 function playNote(m,d=stepTicks(),tr=activeTrack(),when=0){
@@ -856,7 +1040,7 @@ function playNote(m,d=stepTicks(),tr=activeTrack(),when=0){
  if(state.audioCtx&&state.audioCtx.state==='suspended')state.audioCtx.resume().catch(()=>{});
  const raw=tr.sound||"sine";
  if(raw.startsWith("kit:")){playSynthDrum(m,d,tr,when);return}
- if(raw.startsWith("chip:")||raw.startsWith("s16:")){playRetroSynthNote(m,d,tr,when);return}
+ if(raw.startsWith("chip:")||raw.startsWith("s16:")||raw.startsWith("ana:")){playRetroSynthNote(m,d,tr,when);return}
  const def=trackSoundFont(tr);
  if(state.useSoundFont&&def.engine!=="internal"&&def.engine!=="synthDrum"&&state.sfReady&&tr.sound&&(tr.sound.startsWith('gm:')||tr.sound.startsWith('drum:'))&&playSfNote(m,d,tr,when))return;
  const c=state.audioCtx;
@@ -869,8 +1053,9 @@ function playNote(m,d=stepTicks(),tr=activeTrack(),when=0){
   const releaseEnd=end===null?stopDur:end;
   o.type=type;o.frequency.value=f;
   g.gain.setValueAtTime(.0001,start);
-  g.gain.exponentialRampToValueAtTime(Math.max(.0001,amp*vol),start+Math.max(.001,attack));
-  g.gain.exponentialRampToValueAtTime(.0001,start+Math.max(attack+.012,releaseEnd));
+  const atk=Math.max(.006,attack);
+  g.gain.exponentialRampToValueAtTime(Math.max(.0001,amp*vol),start+atk);
+  g.gain.exponentialRampToValueAtTime(.0001,start+Math.max(atk+.018,releaseEnd));
   o.connect(g);connectTrackOutput(g,tr,c,start+stopDur+2);
   o.start(start);o.stop(start+stopDur+.04);
  }
@@ -2431,6 +2616,7 @@ document.addEventListener("pointerdown",e=>{
  if(!e.target.closest("#localProjectsMenu")&&!e.target.closest("#saveBtn")&&!e.target.closest("#loadBtn"))el.localProjectsMenu.classList.remove("open");
  if(!e.target.closest("#trackMenu")&&!e.target.closest("#trackMenuBtn")&&!e.target.closest("#trackStatusBtn")&&!e.target.closest("#trackColorMenu")&&!e.target.closest("#trackFxMenu"))el.trackMenu.classList.remove("open");
  if(!e.target.closest("#themeMenu")&&!e.target.closest("#themeBtn"))el.themeMenu.classList.remove("open");
+ if(!e.target.closest("#soundPickerMenu")&&!e.target.closest("#soundPickerBtn"))el.soundPickerMenu?.classList.remove("open");
  if(!e.target.closest("#trackColorMenu")&&!e.target.closest(".trackColorBtn")&&!e.target.closest(".colorSwatchBtn"))el.trackColorMenu.classList.remove("open");
  const keepFx=e.target.closest("#trackFxMenu")||e.target.closest(".trackFxBtn")||e.target.closest("#trackMenu")||e.target.closest(".keyboardShell")||e.target.closest(".timelineShell")||e.target.closest(".zoomControls")||e.target.closest(".middleControls")||e.target.closest("#recordBtn");
  if(!keepFx)closeTrackFxMenu();
@@ -2513,8 +2699,12 @@ function setupRecordButton(){
  el.recordBtn.addEventListener("pointercancel",()=>clearTimeout(recordPressTimer));
 }
 el.loopBtn.addEventListener("pointercancel",()=>clearTimeout(loopPressTimer));el.focusBtn.onclick=focusAllNotes;el.chordBtn.onclick=()=>{state.chordMode=!state.chordMode;if(!state.chordMode)state.semitoneMode=false;render()};setupRecordButton();el.deleteBtn.onclick=delSel;el.newProjectBtn.onclick=askNewProject;el.hideFretBtn.onclick=()=>{state.hideFretboard=!state.hideFretboard;render();scheduleStabilize()};el.sfBtn.onclick=()=>{state.useSoundFont=!state.useSoundFont;if(state.useSoundFont)loadDefaultSoundFont();renderFretboard();render()};el.exportProjectBtn.onclick=exportProject;el.importProjectBtn.onclick=()=>el.projectImport.click();el.projectImport.onchange=e=>{const f=e.target.files&&e.target.files[0];if(f)importProjectFile(f);e.target.value=""};el.sfLoadBtn.onclick=loadDefaultSoundFont;el.exportBtn.onclick=exportMidi;el.saveBtn.onclick=saveProject;el.loadBtn.onclick=loadProject;
-if(el.sfSelect)el.sfSelect.onchange=()=>{const tr=activeTrack();pushUndo();tr.soundFontId=el.sfSelect.value;tr.sound=firstSoundForFont(trackSoundFont(tr));state.sfProgramCache={};state.sfChannelPrograms={};renderFretboard();render();if(state.useSoundFont)loadDefaultSoundFont()};
-el.soundSelect.onchange=()=>{pushUndo();activeTrack().sound=el.soundSelect.value;state.sfProgramCache={};state.sfChannelPrograms={};setTrackProgram(activeTrack());if(el.sfStatus&&state.useSoundFont)el.sfStatus.textContent='Preset: '+el.soundSelect.options[el.soundSelect.selectedIndex].textContent;renderFretboard();render()};
+if(el.soundPickerBtn)el.soundPickerBtn.onclick=e=>{e.stopPropagation();el.soundPickerMenu.classList.toggle("open");if(el.soundPickerMenu.classList.contains("open")){renderSoundPicker(true);setTimeout(()=>el.soundSearch?.focus(),0)}else renderSoundPicker()};
+if(el.soundPickerCloseBtn)el.soundPickerCloseBtn.onclick=()=>el.soundPickerMenu.classList.remove("open");
+if(el.soundSearch)el.soundSearch.oninput=()=>{soundPickerState.query=el.soundSearch.value;renderSoundPicker(true)};
+if(el.soundFilterRow)el.soundFilterRow.onclick=e=>{const b=e.target.closest("[data-filter]");if(!b)return;soundPickerState.filter=b.dataset.filter;soundPickerState.query=el.soundSearch?.value||"";renderSoundPicker(true)};
+if(el.sfSelect)el.sfSelect.onchange=()=>{const tr=activeTrack();pushUndo();state.useSoundFont=true;tr.soundFontId=normalizeSoundFontId(el.sfSelect.value);tr.sound=firstSoundForFont(trackSoundFont(tr));state.sfProgramCache={};state.sfChannelPrograms={};state.sfOutputKey="";renderFretboard();render();if(state.useSoundFont)loadDefaultSoundFont()};
+if(el.soundSelect)el.soundSelect.onchange=()=>{pushUndo();activeTrack().sound=el.soundSelect.value;state.sfProgramCache={};state.sfChannelPrograms={};state.sfOutputKey="";setTrackProgram(activeTrack());if(el.sfStatus&&state.useSoundFont)el.sfStatus.textContent='Preset: '+el.soundSelect.options[el.soundSelect.selectedIndex].textContent;renderFretboard();render()};
 if(el.copyBtn)el.copyBtn.onclick=()=>copySelectedNotes();
 if(el.pasteBtn)el.pasteBtn.onclick=()=>pasteClipboardNotes();
 if(el.colorSelect)el.colorSelect.onclick=()=>openTrackColorMenu(activeTrack());
