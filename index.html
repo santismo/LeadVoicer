@@ -184,7 +184,7 @@ const voicingStyleNames=[
  "Celtic Modal","Christmas Classic","Auto Genre Blend","Random Genre"
 ];
 function defaultVoicerSettings(){return{key:0,scale:0,role:"Melody Top",style:"Close Lead",playability:"Piano",rakeMode:"Together",chordSize:4,complexity:.45,voiceLeading:.75,outside:.1,variation:.35,repeatChance:.15,rakeSpeed:0,minNote:36,maxNote:96}}
-const state={armed:true,playing:false,chordMode:false,semitoneMode:false,tempo:120,timeSigNum:4,timeSigDen:4,subdivision:16,metronome:false,lastMetroStep:-1,inputOctave:0,tick:0,zoom:.9,viewAllTracks:false,hideFretboard:false,useSoundFont:true,sfReady:false,sfLoading:false,sfSynth:null,sfNode:null,sfId:null,sfProgramCache:{},loopEnabled:false,loopStart:0,loopEnd:PPQ*4,loopSetMode:0,undoStack:[],redoStack:[],scrollX:0,scrollY:250,selectedIds:new Set(),nextNoteId:1,tracks:[{id:1,name:"Track 1",sound:"gm:0",color:"blue",volume:100,notes:[]},{id:2,name:"Track 2",sound:"gm:33",color:"green",volume:100,notes:[]},{id:3,name:"Track 3",sound:"gm:48",color:"purple",volume:100,notes:[]}],activeTrackId:1,audioCtx:null,playbackStartTime:0,playbackStartTick:0,scheduledNotes:new Set(),scheduleTimer:null,voicerEnabled:true,voicer:defaultVoicerSettings(),voicerMemory:{previousNotes:[],previousName:"",previousRoot:-1}};
+const state={armed:true,playing:false,chordMode:false,semitoneMode:false,tempo:120,timeSigNum:4,timeSigDen:4,subdivision:16,metronome:false,lastMetroStep:-1,inputOctave:0,tick:0,zoom:.9,viewAllTracks:false,hideFretboard:false,useSoundFont:true,sfReady:false,sfLoading:false,sfSynth:null,sfNode:null,sfId:null,sfProgramCache:{},loopEnabled:false,loopStart:0,loopEnd:PPQ*4,loopSetMode:0,undoStack:[],redoStack:[],scrollX:0,scrollY:250,selectedIds:new Set(),nextNoteId:1,tracks:[{id:1,name:"Track 1",sound:"gm:0",color:"blue",volume:100,notes:[]},{id:2,name:"Track 2",sound:"gm:33",color:"green",volume:100,notes:[]},{id:3,name:"Track 3",sound:"gm:48",color:"purple",volume:100,notes:[]}],activeTrackId:1,audioCtx:null,playbackStartTime:0,playbackStartTick:0,scheduledNotes:new Set(),scheduleTimer:null,liveFretLights:[],voicerEnabled:true,voicer:defaultVoicerSettings(),voicerMemory:{previousNotes:[],previousName:"",previousRoot:-1}};
 const $=id=>document.getElementById(id),el={tempo:$("tempo"),tempoSlider:$("tempoSlider"),bpmLabel:$("bpmLabel"),bpmMenu:$("bpmMenu"),bpmCloseBtn:$("bpmCloseBtn"),subdivTop:$("subdivTop"),tsBtn:$("tsBtn"),tsMenu:$("tsMenu"),metroBtn:$("metroBtn"),loopMenu:$("loopMenu"),loopStartInput:$("loopStartInput"),loopEndInput:$("loopEndInput"),loopToggleBtn:$("loopToggleBtn"),loopApplyBtn:$("loopApplyBtn"),loopCloseBtn:$("loopCloseBtn"),settingsBtn:$("settingsBtn"),settingsMenu:$("settingsMenu"),playBtn:$("playBtn"),leftBtn:$("leftBtn"),rightBtn:$("rightBtn"),divDownBtn:$("divDownBtn"),divUpBtn:$("divUpBtn"),octDownBtn:$("octDownBtn"),octUpBtn:$("octUpBtn"),chordBtn:$("chordBtn"),recordBtn:$("recordBtn"),deleteBtn:$("deleteBtn"),newProjectBtn:$("newProjectBtn"),exportProjectBtn:$("exportProjectBtn"),importProjectBtn:$("importProjectBtn"),projectImport:$("projectImport"),trackColorMenu:$("trackColorMenu"),trackColorGrid:$("trackColorGrid"),trackColorCloseBtn:$("trackColorCloseBtn"),themeBtn:$("themeBtn"),themeMenu:$("themeMenu"),themeList:$("themeList"),randomThemeBtn:$("randomThemeBtn"),randomMonoThemeBtn:$("randomMonoThemeBtn"),themeMenuCloseBtn:$("themeMenuCloseBtn"),hideFretBtn:$("hideFretBtn"),sfBtn:$("sfBtn"),sfLoadBtn:$("sfLoadBtn"),sfStatus:$("sfStatus"),exportBtn:$("exportBtn"),saveBtn:$("saveBtn"),loadBtn:$("loadBtn"),localProjectsMenu:$("localProjectsMenu"),projectNameInput:$("projectNameInput"),saveNamedProjectBtn:$("saveNamedProjectBtn"),localProjectsList:$("localProjectsList"),undoBtn:$("undoBtn"),redoBtn:$("redoBtn"),loopBtn:$("loopBtn"),focusBtn:$("focusBtn"),fretboard:$("fretboard"),fretMarkers:$("fretMarkers"),fretChordLabel:$("fretChordLabel"),timelineViewport:$("timelineViewport"),timelineContent:$("timelineContent"),barZoomHeader:$("barZoomHeader"),vZoomStrip:$("vZoomStrip"),vZoomThumb:$("vZoomThumb"),trackMenuBtn:$("trackMenuBtn"),trackStatusBtn:$("trackStatusBtn"),trackMenu:$("trackMenu"),viewAllToggleBtn:$("viewAllToggleBtn"),trackList:$("trackList"),addTrackMenuBtn:$("addTrackMenuBtn"),deleteTrackMenuBtn:$("deleteTrackMenuBtn"),trackMenuCloseBtn:$("trackMenuCloseBtn"),soundSelect:$("soundSelect"),colorSelect:$("colorSelect"),stepReadout:$("stepReadout"),posReadout:$("posReadout"),chordReadout:$("chordReadout")};
 Object.assign(el,{voicerBtn:$("voicerBtn"),voicerMenu:$("voicerMenu"),voicerEnableBtn:$("voicerEnableBtn"),voicerKey:$("voicerKey"),voicerScale:$("voicerScale"),voicerStyle:$("voicerStyle"),voicerRole:$("voicerRole"),voicerPlayability:$("voicerPlayability"),voicerRakeMode:$("voicerRakeMode"),voicerChordSize:$("voicerChordSize"),voicerRakeSpeed:$("voicerRakeSpeed"),voicerComplexity:$("voicerComplexity"),voicerVoiceLeading:$("voicerVoiceLeading"),voicerOutside:$("voicerOutside"),voicerVariation:$("voicerVariation"),voicerRepeat:$("voicerRepeat"),voicerMinNote:$("voicerMinNote"),voicerMaxNote:$("voicerMaxNote"),voicerReadout:$("voicerReadout"),voicerLastChord:$("voicerLastChord"),voicerLastNotes:$("voicerLastNotes"),voicerResetBtn:$("voicerResetBtn"),voicerRandomizeBtn:$("voicerRandomizeBtn"),voicerCloseBtn:$("voicerCloseBtn")});
 
@@ -496,6 +496,52 @@ function playNote(m,d=stepTicks(),tr=activeTrack(),when=0){
  else osc("sine",f,.11,dur);
 }
 
+function fretCandidatesForMidi(midi){
+ const exact=[];
+ const pitchClass=[];
+ for(const s of strings){
+  const exactFret=midi-s.midi;
+  if(exactFret>=0&&exactFret<=12)exact.push({stringName:s.name,fret:exactFret,exact:true});
+  for(let f=0;f<=12;f++){
+   if(mod12(s.midi+f)===mod12(midi))pitchClass.push({stringName:s.name,fret:f,exact:false});
+  }
+ }
+ exact.sort((a,b)=>a.fret-b.fret);
+ pitchClass.sort((a,b)=>Math.abs(a.fret-5)-Math.abs(b.fret-5)||a.fret-b.fret);
+ return [...exact,...pitchClass];
+}
+function mapNotesToFretLights(items){
+ const out=[],perString={};
+ const used=new Set();
+ for(const item of items){
+  let chosen=null;
+  if(item.stringName&&item.fret!=null){
+   const key=item.stringName+":"+item.fret;
+   if((perString[item.stringName]||0)<2&&!used.has(key))chosen={stringName:item.stringName,fret:item.fret};
+  }
+  if(!chosen){
+   for(const candidate of fretCandidatesForMidi(item.midi)){
+    const key=candidate.stringName+":"+candidate.fret;
+    if((perString[candidate.stringName]||0)>=2||used.has(key))continue;
+    chosen=candidate;
+    break;
+   }
+  }
+  if(!chosen)continue;
+  const key=chosen.stringName+":"+chosen.fret;
+  used.add(key);
+  perString[chosen.stringName]=(perString[chosen.stringName]||0)+1;
+  out.push({stringName:chosen.stringName,fret:chosen.fret,color:item.color||"yellow"});
+ }
+ return out;
+}
+function addLiveFretLights(notes,color="yellow",durationMs=450){
+ const expires=Date.now()+durationMs;
+ const items=notes.map(n=>typeof n==="number"?{midi:n,color}:{...n,color:n.color||color});
+ state.liveFretLights.push(...mapNotesToFretLights(items).map(light=>({...light,expires})));
+ if(state.liveFretLights.length>48)state.liveFretLights=state.liveFretLights.slice(-48);
+ updateFretboardStepLights();
+}
 const voicerChordTypes=[
  {suffix:"",intervals:[0,4,7],complexity:0,tags:["major","simple"]},
  {suffix:"m",intervals:[0,3,7],complexity:0,tags:["minor","simple"]},
@@ -734,6 +780,10 @@ function rakeOffsetsFor(count){
  order.forEach((idx,i)=>offsets[idx]=mode==="Together"?0:i*step);
  return offsets;
 }
+function rakeDelaySeconds(offsetTicks,recordToTimeline){
+ const base=ticksToSeconds(offsetTicks);
+ return recordToTimeline?base:base*1.65;
+}
 function setVoicerLastDisplay(name,notes,detail=""){
  const cleanName=name&&name!=="--"?name:"--";
  if(el.voicerLastChord)el.voicerLastChord.textContent=cleanName;
@@ -752,10 +802,11 @@ function insertVoicerChord(baseMidi,stringName,fret,recordToTimeline=true){
  ordered.forEach((m,i)=>{
   const off=offsets[i]||0;
   const dur=Math.max(PPQ/16,stepTicks()-off);
-  playNote(m,dur,tr,ticksToSeconds(off));
+  playNote(m,dur,tr,rakeDelaySeconds(off,recordToTimeline));
   if(recordToTimeline)
    tr.notes.push({id:state.nextNoteId++,trackId:tr.id,start:start+off,duration:dur,midi:m,displayMidi:m===actual?baseMidi:m,stringName:m===actual?stringName:"",fret:m===actual?fret:null,channel:s?s.channel:1,chordGroup:groupId,chordStart:start,chordName:generated.name});
  });
+ addLiveFretLights(ordered.map(m=>({midi:m,color:tr.color||"yellow",stringName:m===actual?stringName:"",fret:m===actual?fret:null})),tr.color||"yellow",Math.max(450,Math.round(ticksToSeconds(stepTicks())*1000)));
  setVoicerLastDisplay(generated.name,ordered,`${recordToTimeline?"Written":"Audition"}${generated.style?` · ${generated.style}`:""}`);
  if(recordToTimeline&&!state.chordMode&&!state.playing)state.tick+=stepTicks();
 }
@@ -881,7 +932,33 @@ function addNote(baseMidi,stringName,fret){
 }
 function flashFret(stringName,fret){const node=[...document.querySelectorAll(".fret")].find(d=>d.dataset.string===stringName&&Number(d.dataset.fret)===fret);if(node){node.classList.add("flash");setTimeout(()=>node.classList.remove("flash"),130)}}
 function renderFretboard(){el.fretboard.innerHTML="";for(const s of strings)for(let f=0;f<=12;f++){const c=document.createElement("div");c.className="fret"+(f===0?" open":"");c.dataset.string=s.name;c.dataset.fret=f;c.addEventListener("pointerdown",e=>{e.preventDefault();silentUnlock();addNote(s.midi+f,s.name,f)});el.fretboard.appendChild(c)}el.fretMarkers.innerHTML="";for(let f=0;f<=12;f++){const c=document.createElement("div");c.className="markerCell";if([3,5,7,9,12].includes(f)){const m=document.createElement("div");m.className="marker";c.appendChild(m)}el.fretMarkers.appendChild(c)}}
-function updateFretboardStepLights(){const t=Math.max(0,state.tick);document.querySelectorAll(".fret.stepLit").forEach(n=>{n.classList.remove("stepLit");n.style.removeProperty("--fretLitColor")});for(const tr of state.tracks)for(const n of tr.notes){if(!(t>=n.start&&t<n.start+n.duration))continue;const node=[...document.querySelectorAll(".fret")].find(d=>d.dataset.string===n.stringName&&Number(d.dataset.fret)===n.fret);if(node){node.style.setProperty("--fretLitColor",solidColors[tr.color||"blue"]);node.classList.add("stepLit")}}}
+function lightFretPad(light,perString){
+ if((perString[light.stringName]||0)>=2)return;
+ const node=[...document.querySelectorAll(".fret")].find(d=>d.dataset.string===light.stringName&&Number(d.dataset.fret)===Number(light.fret));
+ if(!node)return;
+ perString[light.stringName]=(perString[light.stringName]||0)+1;
+ node.style.setProperty("--fretLitColor",solidColors[light.color||"yellow"]||solidColors.yellow);
+ node.classList.add("stepLit");
+}
+function queueFretLightsForNotes(notes,color="yellow",when=0,durationMs=450){
+ const run=()=>addLiveFretLights(notes,color,durationMs);
+ if(when>0.02)setTimeout(run,Math.max(0,when*1000));
+ else run();
+}
+function updateFretboardStepLights(){
+ const t=Math.max(0,state.tick);
+ document.querySelectorAll(".fret.stepLit").forEach(n=>{n.classList.remove("stepLit");n.style.removeProperty("--fretLitColor")});
+ const active=[];
+ for(const tr of state.tracks)for(const n of tr.notes){
+  if(!(t>=n.start&&t<n.start+n.duration))continue;
+  active.push({midi:n.midi,stringName:n.stringName,fret:n.fret,color:tr.color||"blue"});
+ }
+ const perString={};
+ for(const light of mapNotesToFretLights(active))lightFretPad(light,perString);
+ const now=Date.now();
+ state.liveFretLights=state.liveFretLights.filter(light=>light.expires>now);
+ for(const light of state.liveFretLights)lightFretPad(light,perString);
+}
 
 function presetDisplayName(sound){
  if(!sound)return "Sound";
@@ -1121,8 +1198,9 @@ function schedulePlaybackNotes(){
    const key=n.id+"-"+state.playbackStartTime;
    if(state.scheduledNotes.has(key))continue;
    if((!state.loopEnabled||n.start<state.loopEnd)&&n.start>=state.playbackStartTick&&n.start>=currentTick-2&&n.start<=futureTick){
-    const when=Math.max(0,state.playbackStartTime+((n.start-state.playbackStartTick)/PPQ)*(60/state.tempo)-now);
+   const when=Math.max(0,state.playbackStartTime+((n.start-state.playbackStartTick)/PPQ)*(60/state.tempo)-now);
     playNote(n.midi,n.duration,tr,when);
+    queueFretLightsForNotes([{midi:n.midi,stringName:n.stringName,fret:n.fret,color:tr.color||"blue"}],tr.color||"blue",when,Math.max(260,Math.min(900,Math.round(ticksToSeconds(n.duration)*1000))));
     state.scheduledNotes.add(key);
    }
   }
@@ -1148,6 +1226,7 @@ function startPlayback(){
   if(state.loopEnabled&&state.tick>=state.loopEnd){
    state.playbackStartTick=state.loopStart;
    state.tick=state.loopStart;
+   state.scrollX=Math.max(0,(state.loopStart/stepTicks())*baseStepPx*state.zoom-10);
    state.playbackStartTime=state.audioCtx.currentTime+0.015;
    state.scheduledNotes=new Set();
    state.lastMetroStep=-1;
