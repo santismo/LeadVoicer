@@ -1598,7 +1598,7 @@ function setVoicerLastDisplay(name,notes,detail=""){
 }
 function insertVoicerChord(baseMidi,stringName,fret,recordToTimeline=true){
  const s=strings.find(x=>x.name===stringName),actual=baseMidi+state.inputOctave*12,tr=activeTrack();
- if(!recordToTimeline)clearVoicerAuditionTimers();
+ clearVoicerAuditionTimers();
  const generated=generateVoicerChord(actual);
  const start=quantizedInputTick();
  const groupId="v"+Date.now().toString(36)+Math.random().toString(36).slice(2,7);
@@ -1608,12 +1608,11 @@ function insertVoicerChord(baseMidi,stringName,fret,recordToTimeline=true){
   const off=offsets[i]||0;
   const dur=Math.max(PPQ/16,stepTicks()-off);
   const delay=rakeDelaySeconds(off,recordToTimeline);
-  if(recordToTimeline)playNote(m,dur,tr,delay);
-  else playVoicerAuditionNote(m,dur,tr,delay);
+  if(!recordToTimeline)playVoicerAuditionNote(m,dur,tr,delay);
   if(recordToTimeline)
    tr.notes.push({id:state.nextNoteId++,trackId:tr.id,start:start+off,duration:dur,midi:m,displayMidi:m===actual?baseMidi:m,stringName:m===actual?stringName:"",fret:m===actual?fret:null,channel:s?s.channel:1,chordGroup:groupId,chordStart:start,chordName:generated.name});
  });
- addLiveFretLights(ordered.map(m=>({midi:m,color:tr.color||"yellow",stringName:m===actual?stringName:"",fret:m===actual?fret:null})),tr.color||"yellow",Math.max(450,Math.round(ticksToSeconds(stepTicks())*1000)),true);
+ if(!recordToTimeline)addLiveFretLights(ordered.map(m=>({midi:m,color:tr.color||"yellow",stringName:m===actual?stringName:"",fret:m===actual?fret:null})),tr.color||"yellow",Math.max(450,Math.round(ticksToSeconds(stepTicks())*1000)),true);
  setVoicerLastDisplay(generated.name,ordered,`${recordToTimeline?"Written":"Audition"}${generated.style?` · ${generated.style}`:""}`);
  if(recordToTimeline&&!state.chordMode&&!state.playing)state.tick+=stepTicks();
 }
