@@ -10,23 +10,12 @@ class SoliVoicerLookAndFeel final : public juce::LookAndFeel_V4
 {
 public:
     SoliVoicerLookAndFeel();
+    void setSkin (int skinIndex);
     void drawLinearSlider (juce::Graphics&, int, int, int, int, float, float, float,
                            const juce::Slider::SliderStyle, juce::Slider&) override;
     void drawComboBox (juce::Graphics&, int, int, bool, int, int, int, int, juce::ComboBox&) override;
-};
-
-class SoliVoicerMidiDragButton final : public juce::TextButton
-{
-public:
-    using juce::TextButton::TextButton;
-    std::function<void()> onDragStart;
-
-    void mouseDown (const juce::MouseEvent& event) override;
-    void mouseDrag (const juce::MouseEvent& event) override;
-    void mouseUp (const juce::MouseEvent& event) override;
-
-private:
-    bool dragStarted = false;
+    void drawButtonBackground (juce::Graphics&, juce::Button&, const juce::Colour&, bool, bool) override;
+    void drawToggleButton (juce::Graphics&, juce::ToggleButton&, bool, bool) override;
 };
 
 class SoliVoicerAudioProcessorEditor final : public juce::AudioProcessorEditor,
@@ -38,9 +27,6 @@ public:
 
     void paint (juce::Graphics&) override;
     void resized() override;
-    void mouseDown (const juce::MouseEvent&) override;
-    void mouseDrag (const juce::MouseEvent&) override;
-    void mouseUp (const juce::MouseEvent&) override;
 
 private:
     using SliderAttachment = juce::AudioProcessorValueTreeState::SliderAttachment;
@@ -59,7 +45,7 @@ private:
     void setParameterValue (const juce::String&, float);
     void updateModeVisibility();
     void updatePerformanceSubStyleChoices();
-    void updateRecorderControls();
+    void applySkin (int skinIndex);
     void randomizeAllSettings();
     void randomizeVoicingSettings();
     void randomizeKeyScaleSettings();
@@ -67,18 +53,13 @@ private:
     void resetDefaults();
     void paintChordizerTimeline (juce::Graphics&);
     void paintGroupFrame (juce::Graphics&, juce::Rectangle<int>, const juce::String&);
-    void paintRecordedMidi (juce::Graphics&);
-    void beginRecordedMidiDrag();
     void layoutSliderGrid (juce::Rectangle<int>, const std::vector<std::pair<juce::Slider*, juce::Label*>>&);
 
     SoliVoicerAudioProcessor& processorRef;
     SoliVoicerLookAndFeel lookAndFeel;
     std::unique_ptr<juce::TooltipWindow> tooltipWindow;
     Soli::ChordizerSnapshot chordizerSnapshot;
-    SoliVoicerAudioProcessor::RecordedMidiSnapshot recordedMidi;
     juce::Rectangle<int> timelineBounds;
-    juce::Rectangle<int> midiRecordBounds;
-    juce::Rectangle<int> midiShapeBounds;
     juce::Rectangle<int> voicingGroupBounds;
     juce::Rectangle<int> performanceGroupBounds;
     double timelineScrollPpq = 0.0;
@@ -87,16 +68,12 @@ private:
     juce::Label titleLabel;
     juce::Label chordLabel;
     juce::Label linkStatusLabel;
-    juce::Label midiRecordLabel;
-    juce::Label midiRecordStatusLabel;
     juce::TextButton randomButton { "Randomize All" };
     juce::TextButton randomVoicingButton { "Randomize Voicing" };
     juce::TextButton randomKeyScaleButton { "Random Keys/Scales" };
     juce::TextButton resetButton { "Reset" };
     juce::TextButton randomPerformanceButton { "Randomize Performance" };
-    juce::TextButton recordMidiButton { "Record MIDI" };
-    SoliVoicerMidiDragButton dragMidiButton { "Drag MIDI" };
-    juce::TextButton clearMidiButton { "Clear MIDI" };
+    juce::ComboBox skinBox;
 
     juce::ComboBox sourceModeBox;
     juce::ComboBox outputModeBox;
@@ -118,6 +95,7 @@ private:
     juce::Label strumModeLabel;
     juce::Label performanceStyleLabel;
     juce::Label performanceSubStyleLabel;
+    juce::Label skinLabel;
     juce::Label keyLabel;
     juce::Label scaleLabel;
 
@@ -167,6 +145,7 @@ private:
     std::unique_ptr<ComboAttachment> strumModeAttachment;
     std::unique_ptr<ComboAttachment> performanceStyleAttachment;
     std::unique_ptr<ComboAttachment> performanceSubStyleAttachment;
+    std::unique_ptr<ComboAttachment> skinAttachment;
     std::unique_ptr<SliderAttachment> chordSizeAttachment;
     std::unique_ptr<SliderAttachment> complexityAttachment;
     std::unique_ptr<SliderAttachment> voiceLeadingAttachment;
@@ -190,7 +169,7 @@ private:
     int lastSourceMode = -1;
     int lastOutputMode = -1;
     int lastPerformanceStyle = -1;
-    bool midiShapeDragArmed = false;
+    int lastSkinIndex = -1;
     juce::File lastMidiExportFile;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (SoliVoicerAudioProcessorEditor)

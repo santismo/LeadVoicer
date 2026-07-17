@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.22)
 
-project(VoicizerMidiFx VERSION 1.0.0 LANGUAGES C CXX)
+project(VoicizerMidiFx VERSION 1.1.0 LANGUAGES C CXX)
 
 set(JUCE_DIR "/Users/santiagotrejo/Desktop/JUCE" CACHE PATH "Path to a JUCE checkout or extracted JUCE folder")
 option(VOICIZER_COPY_PLUGIN_AFTER_BUILD "Copy the built Audio Unit to the user plug-in folder" ON)
@@ -17,7 +17,7 @@ juce_add_plugin(VoicizerMidiFx
     BUNDLE_ID "com.santismo.voicizer"
     PLUGIN_MANUFACTURER_CODE "StSm"
     PLUGIN_CODE "Vocz"
-    FORMATS AU
+    FORMATS AU Standalone
     PRODUCT_NAME "Voicizer"
     IS_SYNTH FALSE
     IS_MIDI_EFFECT TRUE
@@ -142,5 +142,14 @@ if (VOICIZER_BUILD_TESTS)
     target_compile_features(GroovizerTests PRIVATE cxx_std_17)
     target_compile_definitions(GroovizerTests PRIVATE JUCE_WEB_BROWSER=0 JUCE_USE_CURL=0)
     target_link_libraries(GroovizerTests PRIVATE juce::juce_audio_utils
+        juce::juce_recommended_config_flags juce::juce_recommended_warning_flags)
+
+    juce_add_console_app(VoicizerEditorScreenshot PRODUCT_NAME "Voicizer Editor Screenshot")
+    juce_generate_juce_header(VoicizerEditorScreenshot)
+    target_sources(VoicizerEditorScreenshot PRIVATE Tests/EditorScreenshot.cpp)
+    target_include_directories(VoicizerEditorScreenshot PRIVATE Source)
+    target_compile_features(VoicizerEditorScreenshot PRIVATE cxx_std_17)
+    target_compile_definitions(VoicizerEditorScreenshot PRIVATE JUCE_WEB_BROWSER=0 JUCE_USE_CURL=0)
+    target_link_libraries(VoicizerEditorScreenshot PRIVATE VoicizerMidiFx juce::juce_audio_utils
         juce::juce_recommended_config_flags juce::juce_recommended_warning_flags)
 endif()

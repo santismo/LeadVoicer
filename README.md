@@ -6,6 +6,20 @@ Groovizer is a Logic Pro AU MIDI FX that turns GM drum input into generated groo
 
 The default behavior is melody-first: the input note is treated as the top note of a voice-led chord. Other roles are available for root, bass, guide-tone, inner-voice, random, and weighted auto behavior.
 
+## Download and install Voicizer (macOS)
+
+1. Download **`Voicizer-1.1.0-macos.zip`** from the [latest release](https://github.com/santismo/LeadVoicer/releases/latest).
+2. Double-click the download to unpack `Voicizer.component`.
+3. In Finder, choose **Go > Go to Folder…**, enter `~/Library/Audio/Plug-Ins/Components`, then move `Voicizer.component` into that folder. Replace an older Voicizer component if Finder asks.
+4. Restart Logic Pro. In **Logic Pro > Settings > Plug-in Manager**, find **Santismo: Voicizer** and enable it if needed.
+5. Add it from **MIDI FX > Audio Units > Santismo > Voicizer**.
+
+The release build is ad-hoc signed. If macOS blocks the component, move it to the folder above, run the following command in Terminal, and restart Logic Pro:
+
+```sh
+xattr -dr com.apple.quarantine ~/Library/Audio/Plug-Ins/Components/Voicizer.component
+```
+
 ## Build
 
 ```sh

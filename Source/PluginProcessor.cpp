@@ -81,6 +81,12 @@ juce::StringArray SoliVoicerAudioProcessor::outputModeNames()
     return { "Held Voicing", "Performance" };
 }
 
+juce::StringArray SoliVoicerAudioProcessor::skinNames()
+{
+    return { "Graphite Plex", "Citrus Volt", "Aqua Chrome", "Copper Tape", "Arctic Pixel",
+             "Violet CRT", "Flame Amp", "Forest EQ", "Rose Neon", "Mono Dot" };
+}
+
 juce::StringArray SoliVoicerAudioProcessor::performanceStyleNames()
 {
     return { "Contrapuntal Arpeggio", "Classical Broken Chords", "Chamber Waltz", "Counterline",
@@ -818,81 +824,6 @@ void SoliVoicerAudioProcessor::clearPerformance (juce::MidiBuffer* output, int s
     pendingMidi.clear();
 }
 
-void SoliVoicerAudioProcessor::closeRecordedNotesLocked (double closePpq) const
-{
-    if (! midiRecordHasOrigin)
-        return;
-
-    closePpq = juce::jmax (midiRecordOriginPpq, closePpq);
-    for (int channel = 1; channel <= 16; ++channel)
-    {
-        for (int note = 0; note < 128; ++note)
-        {
-            auto& refs = recordedNoteRefs[static_cast<std::size_t> (refIndex (channel, note))];
-            if (refs <= 0)
-                continue;
-
-            auto off = juce::MidiMessage::noteOff (channel, note);
-            off.setTimeStamp (closePpq);
-            recordedMidiEvents.push_back ({ closePpq, off });
-            refs = 0;
-        }
-    }
-    midiRecordEndPpq = juce::jmax (midiRecordEndPpq, closePpq);
-}
-
-void SoliVoicerAudioProcessor::recordOutputMidi (const juce::MidiBuffer& output,
-                                                 const Transport& transport,
-                                                 int blockSamples)
-{
-    const std::lock_guard<std::mutex> lock (recordingMutex);
-    if (! midiRecording || getSampleRate() <= 0.0)
-        return;
-
-    const auto bpm = transport.valid ? transport.bpm : midiRecordBpm;
-    const auto ppqPerSample = bpm / (60.0 * getSampleRate());
-    if (! midiRecordHasOrigin)
-    {
-        midiRecordOriginSample = processedSamples;
-        midiRecordOriginPpq = transport.valid ? transport.ppq : 0.0;
-        midiRecordEndPpq = midiRecordOriginPpq;
-        midiRecordBpm = bpm;
-        midiRecordNumerator = transport.valid ? transport.numerator : 4;
-        midiRecordDenominator = transport.valid ? transport.denominator : 4;
-        midiRecordHasOrigin = true;
-    }
-
-    const auto blockStartPpq = transport.valid
-                             ? transport.ppq
-                             : midiRecordOriginPpq
-                                + static_cast<double> (processedSamples - midiRecordOriginSample) * ppqPerSample;
-    midiRecordEndPpq = juce::jmax (midiRecordEndPpq,
-                                   blockStartPpq + static_cast<double> (juce::jmax (0, blockSamples)) * ppqPerSample);
-
-    for (const auto metadata : output)
-    {
-        auto message = metadata.getMessage();
-        const auto ppq = blockStartPpq + static_cast<double> (metadata.samplePosition) * ppqPerSample;
-        if (message.isNoteOn())
-        {
-            message.setTimeStamp (ppq);
-            recordedMidiEvents.push_back ({ ppq, message });
-            ++recordedNoteRefs[static_cast<std::size_t> (refIndex (message.getChannel(), message.getNoteNumber()))];
-        }
-        else if (message.isNoteOff())
-        {
-            message.setTimeStamp (ppq);
-            recordedMidiEvents.push_back ({ ppq, message });
-            auto& refs = recordedNoteRefs[static_cast<std::size_t> (refIndex (message.getChannel(), message.getNoteNumber()))];
-            refs = juce::jmax (0, refs - 1);
-        }
-        else if (message.isAllNotesOff() || message.isAllSoundOff())
-        {
-            closeRecordedNotesLocked (ppq);
-        }
-    }
-}
-
 void SoliVoicerAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
 {
     buffer.clear();
@@ -1012,7 +943,6 @@ void SoliVoicerAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
     if (performanceMode)
         renderPerformance (transport, renderedUntilSample, blockSamples, blockSamples, output);
 
-    recordOutputMidi (output, transport, blockSamples);
     midiMessages.swapWith (output);
     processedSamples += blockSamples;
     if (transport.valid)
@@ -1049,149 +979,6 @@ juce::String SoliVoicerAudioProcessor::getLastChordName() const
 Soli::ChordizerSnapshot SoliVoicerAudioProcessor::getChordizerSnapshot() const
 {
     return chordizerLink.snapshot (false);
-}
-
-void SoliVoicerAudioProcessor::setMidiRecordingEnabled (bool shouldRecord)
-{
-    const std::lock_guard<std::mutex> lock (recordingMutex);
-    if (midiRecording == shouldRecord)
-        return;
-
-    if (shouldRecord)
-    {
-        recordedMidiEvents.clear();
-        recordedMidiEvents.reserve (4096);
-        recordedNoteRefs.fill (0);
-        midiRecordHasOrigin = false;
-        midiRecordOriginPpq = 0.0;
-        midiRecordEndPpq = 0.0;
-        midiRecordBpm = 120.0;
-        midiRecordNumerator = 4;
-        midiRecordDenominator = 4;
-        midiRecordOriginSample = processedSamples;
-        midiRecording = true;
-    }
-    else
-    {
-        closeRecordedNotesLocked (midiRecordEndPpq);
-        midiRecording = false;
-    }
-}
-
-bool SoliVoicerAudioProcessor::isMidiRecording() const
-{
-    const std::lock_guard<std::mutex> lock (recordingMutex);
-    return midiRecording;
-}
-
-void SoliVoicerAudioProcessor::clearRecordedMidi()
-{
-    const std::lock_guard<std::mutex> lock (recordingMutex);
-    recordedMidiEvents.clear();
-    recordedNoteRefs.fill (0);
-    midiRecordHasOrigin = false;
-    midiRecordOriginPpq = 0.0;
-    midiRecordEndPpq = 0.0;
-    midiRecordOriginSample = processedSamples;
-}
-
-SoliVoicerAudioProcessor::RecordedMidiSnapshot SoliVoicerAudioProcessor::recordedMidiSnapshot() const
-{
-    const std::lock_guard<std::mutex> lock (recordingMutex);
-    RecordedMidiSnapshot result;
-    result.recording = midiRecording;
-    result.hasOrigin = midiRecordHasOrigin;
-    result.originPpq = midiRecordOriginPpq;
-    result.endPpq = midiRecordEndPpq;
-    result.bpm = midiRecordBpm;
-    result.numerator = midiRecordNumerator;
-    result.denominator = midiRecordDenominator;
-    result.events = recordedMidiEvents;
-    return result;
-}
-
-bool SoliVoicerAudioProcessor::writeRecordedMidiFile (const juce::File& destination) const
-{
-    constexpr int ticksPerQuarter = 960;
-    std::vector<RecordedMidiEvent> events;
-    double originPpq = 0.0;
-    double endPpq = 0.0;
-    double bpm = 120.0;
-    int numerator = 4;
-    int denominator = 4;
-
-    {
-        const std::lock_guard<std::mutex> lock (recordingMutex);
-        if (! midiRecordHasOrigin || recordedMidiEvents.empty())
-            return false;
-
-        events = recordedMidiEvents;
-        auto openNotes = recordedNoteRefs;
-        originPpq = midiRecordOriginPpq;
-        endPpq = midiRecordEndPpq;
-        bpm = midiRecordBpm;
-        numerator = midiRecordNumerator;
-        denominator = midiRecordDenominator;
-
-        for (int channel = 1; channel <= 16; ++channel)
-        {
-            for (int note = 0; note < 128; ++note)
-            {
-                if (openNotes[static_cast<std::size_t> (refIndex (channel, note))] <= 0)
-                    continue;
-
-                auto off = juce::MidiMessage::noteOff (channel, note);
-                off.setTimeStamp (endPpq);
-                events.push_back ({ endPpq, off });
-            }
-        }
-    }
-
-    std::sort (events.begin(), events.end(), [] (const auto& a, const auto& b)
-    {
-        if (std::abs (a.ppq - b.ppq) > 0.0000001)
-            return a.ppq < b.ppq;
-        return a.message.isNoteOff() && b.message.isNoteOn();
-    });
-
-    juce::MidiFile file;
-    file.setTicksPerQuarterNote (ticksPerQuarter);
-    juce::MidiMessageSequence track;
-
-    auto name = juce::MidiMessage::textMetaEvent (3, "Voicizer MIDI Capture");
-    name.setTimeStamp (0.0);
-    track.addEvent (name);
-    auto tempo = juce::MidiMessage::tempoMetaEvent (static_cast<int> (std::llround (60000000.0 / juce::jlimit (1.0, 999.0, bpm))));
-    tempo.setTimeStamp (0.0);
-    track.addEvent (tempo);
-    auto signature = juce::MidiMessage::timeSignatureMetaEvent (juce::jmax (1, numerator), juce::jmax (1, denominator));
-    signature.setTimeStamp (0.0);
-    track.addEvent (signature);
-
-    auto lastTick = 0.0;
-    for (const auto& event : events)
-    {
-        auto message = event.message;
-        const auto tick = juce::jmax (0.0, static_cast<double> (std::llround ((event.ppq - originPpq) * ticksPerQuarter)));
-        message.setTimeStamp (tick);
-        track.addEvent (message);
-        lastTick = juce::jmax (lastTick, tick);
-    }
-
-    const auto endTick = juce::jmax (lastTick + 1.0,
-                                     static_cast<double> (std::llround ((endPpq - originPpq) * ticksPerQuarter)));
-    auto end = juce::MidiMessage::endOfTrack();
-    end.setTimeStamp (endTick);
-    track.addEvent (end);
-    track.sort();
-    file.addTrack (track);
-
-    if (! destination.getParentDirectory().createDirectory())
-        return false;
-
-    destination.deleteFile();
-    juce::FileOutputStream output (destination);
-    return output.openedOk() && file.writeTo (output, 1);
 }
 
 void SoliVoicerAudioProcessor::panic()
@@ -1235,6 +1022,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout SoliVoicerAudioProcessor::cr
     params.push_back (std::make_unique<juce::AudioParameterInt> (juce::ParameterID { ParameterIDs::maxNote, 1 }, "Max Note", 1, 127, 96));
     addChoice (ParameterIDs::sourceMode, "Harmony Source", sourceModeNames(), 0);
     addChoice (ParameterIDs::outputMode, "Output Mode", outputModeNames(), 0);
+    addChoice (ParameterIDs::skin, "Skin", skinNames(), 0);
     addChoice (ParameterIDs::contextMode, "Chord Relationship", Soli::ChordEngine::contextModeNames(), 3);
     params.push_back (std::make_unique<juce::AudioParameterFloat> (juce::ParameterID { ParameterIDs::substitutionDepth, 1 }, "Substitution Depth", juce::NormalisableRange<float> (0.0f, 1.0f, 0.01f), 0.35f));
     addChoice (ParameterIDs::performanceStyle, "Performance Style", performanceStyleNames(), 0);

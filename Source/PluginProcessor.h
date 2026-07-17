@@ -39,6 +39,7 @@ namespace ParameterIDs
     static constexpr auto humanize = "humanize";
     static constexpr auto gate = "gate";
     static constexpr auto doubleTime = "doubleTime";
+    static constexpr auto skin = "skin";
 }
 
 class SoliVoicerAudioProcessor final : public juce::AudioProcessor
@@ -75,32 +76,9 @@ public:
     Soli::ChordizerSnapshot getChordizerSnapshot() const;
     void panic();
 
-    struct RecordedMidiEvent
-    {
-        double ppq = 0.0;
-        juce::MidiMessage message;
-    };
-
-    struct RecordedMidiSnapshot
-    {
-        bool recording = false;
-        bool hasOrigin = false;
-        double originPpq = 0.0;
-        double endPpq = 0.0;
-        double bpm = 120.0;
-        int numerator = 4;
-        int denominator = 4;
-        std::vector<RecordedMidiEvent> events;
-    };
-
-    void setMidiRecordingEnabled (bool shouldRecord);
-    bool isMidiRecording() const;
-    void clearRecordedMidi();
-    RecordedMidiSnapshot recordedMidiSnapshot() const;
-    bool writeRecordedMidiFile (const juce::File& destination) const;
-
     static juce::StringArray sourceModeNames();
     static juce::StringArray outputModeNames();
+    static juce::StringArray skinNames();
     static juce::StringArray performanceStyleNames();
     static juce::StringArray performanceSubStyleNames (int styleIndex);
     static juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
@@ -173,8 +151,6 @@ private:
                                        int beatsPerBar,
                                        float sophistication) const;
     void clearPerformance (juce::MidiBuffer* output = nullptr, int samplePosition = 0);
-    void recordOutputMidi (const juce::MidiBuffer& output, const Transport& transport, int blockSamples);
-    void closeRecordedNotesLocked (double closePpq) const;
 
     juce::AudioProcessorValueTreeState parameters;
     Soli::ChordEngine engine;
@@ -191,17 +167,5 @@ private:
     std::mt19937 performanceRandom { std::random_device{}() };
     mutable std::mutex nameMutex;
     juce::String lastChordName = "--";
-    mutable std::mutex recordingMutex;
-    mutable std::vector<RecordedMidiEvent> recordedMidiEvents;
-    mutable std::array<int, 16 * 128> recordedNoteRefs {};
-    mutable bool midiRecording = false;
-    mutable bool midiRecordHasOrigin = false;
-    mutable double midiRecordOriginPpq = 0.0;
-    mutable double midiRecordEndPpq = 0.0;
-    mutable double midiRecordBpm = 120.0;
-    mutable int midiRecordNumerator = 4;
-    mutable int midiRecordDenominator = 4;
-    mutable juce::int64 midiRecordOriginSample = 0;
-
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (SoliVoicerAudioProcessor)
 };
