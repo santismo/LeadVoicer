@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.22)
 
-project(VoicizerMidiFx VERSION 1.1.0 LANGUAGES C CXX)
+project(VoicizerMidiFx VERSION 2.0.0 LANGUAGES C CXX)
 
 set(JUCE_DIR "/Users/santiagotrejo/Desktop/JUCE" CACHE PATH "Path to a JUCE checkout or extracted JUCE folder")
 option(VOICIZER_COPY_PLUGIN_AFTER_BUILD "Copy the built Audio Unit to the user plug-in folder" ON)
@@ -151,5 +151,14 @@ if (VOICIZER_BUILD_TESTS)
     target_compile_features(VoicizerEditorScreenshot PRIVATE cxx_std_17)
     target_compile_definitions(VoicizerEditorScreenshot PRIVATE JUCE_WEB_BROWSER=0 JUCE_USE_CURL=0)
     target_link_libraries(VoicizerEditorScreenshot PRIVATE VoicizerMidiFx juce::juce_audio_utils
+        juce::juce_recommended_config_flags juce::juce_recommended_warning_flags)
+
+    juce_add_console_app(VoicizerChordBankTests PRODUCT_NAME "Voicizer Chord Bank Tests")
+    juce_generate_juce_header(VoicizerChordBankTests)
+    target_sources(VoicizerChordBankTests PRIVATE Tests/ChordBankProcessorTests.cpp)
+    target_include_directories(VoicizerChordBankTests PRIVATE Source)
+    target_compile_features(VoicizerChordBankTests PRIVATE cxx_std_17)
+    target_compile_definitions(VoicizerChordBankTests PRIVATE JUCE_WEB_BROWSER=0 JUCE_USE_CURL=0)
+    target_link_libraries(VoicizerChordBankTests PRIVATE VoicizerMidiFx juce::juce_audio_utils
         juce::juce_recommended_config_flags juce::juce_recommended_warning_flags)
 endif()
