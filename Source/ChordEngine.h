@@ -111,8 +111,7 @@ struct Settings
     float complexity = 0.45f;
     float voiceLeading = 0.75f;
     float outside = 0.1f;
-    float variation = 0.35f;
-    float repeatChance = 0.15f;
+    float repeatChance = 0.0f;
     float strumSpeed = 0.0f;
     ContextMode contextMode = ContextMode::adaptive;
     float substitutionDepth = 0.35f;
@@ -178,6 +177,8 @@ private:
     int choosePrimaryKey (const Settings& settings, int inputNote);
     ScaleType choosePrimaryScale (const Settings& settings);
     int chooseWeightedIndex (const std::vector<Candidate>& candidates, const Settings& settings);
+    float repeatAvoidancePenalty (int inputNote, const juce::String& candidateName,
+                                  const Settings& settings) const;
     int nearestChordToneIndex (const std::vector<int>& intervals, int pitchClassFromRoot) const;
     bool chordMostlyInScale (int root, const ChordType& type, const Settings& settings) const;
     juce::String chordName (int root, const ChordType& type) const;

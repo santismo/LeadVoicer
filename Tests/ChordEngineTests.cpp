@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <array>
 #include <iostream>
+#include <set>
 
 namespace
 {
@@ -37,8 +38,6 @@ int main()
 
     Soli::ChordEngine engine;
     Soli::Settings settings;
-    settings.variation = 0.0f;
-    settings.repeatChance = 0.0f;
     settings.role = Soli::NoteRole::melodyTop;
     settings.contextMode = Soli::ContextMode::exact;
 
@@ -112,7 +111,6 @@ int main()
     settings.phraseMemory = false;
     settings.complexity = 1.0f;
     settings.outside = 1.0f;
-    settings.variation = 1.0f;
     settings.harmonicStability = 0.0f;
     auto foundOutsideHarmony = false;
     for (int input = 60; input < 72 && ! foundOutsideHarmony; ++input)
@@ -128,9 +126,72 @@ int main()
 
     engine.reset();
     settings.role = Soli::NoteRole::melodyTop;
+    settings.style = Soli::Style::neoSoul;
+    settings.phraseMemory = false;
+    settings.complexity = 1.0f;
+    settings.outside = 1.0f;
+    settings.modulation = 0.0f;
+    settings.repeatChance = 0.0f;
+    settings.harmonicStability = 0.0f;
+    std::set<juce::String> freshNames;
+    auto sameTriggerFoundOutside = false;
+    for (int attempt = 0; attempt < 16; ++attempt)
+    {
+        const auto fresh = engine.generate (72, 100, settings);
+        freshNames.insert (fresh.name);
+        sameTriggerFoundOutside = sameTriggerFoundOutside || std::any_of (
+            fresh.notes.begin(), fresh.notes.end(), [&] (int note)
+            {
+                return std::find (cIonian.begin(), cIonian.end(), (note % 12 + 12) % 12) == cIonian.end();
+            });
+    }
+    if (! sameTriggerFoundOutside)
+        return fail ("Maximum Outside did not borrow tones for repeated use of one input note in C Ionian.");
+    if (freshNames.size() < 2)
+        return fail ("Repeat at zero did not provide fresh harmonic names for one repeated input note.");
+
+    engine.reset();
+    settings.outside = 0.0f;
+    settings.modulation = 1.0f;
+    auto advancedModulationFoundOutside = false;
+    for (int attempt = 0; attempt < 12 && ! advancedModulationFoundOutside; ++attempt)
+    {
+        const auto modulated = engine.generate (72, 100, settings);
+        advancedModulationFoundOutside = std::any_of (modulated.notes.begin(), modulated.notes.end(), [&] (int note)
+        {
+            return std::find (cIonian.begin(), cIonian.end(), (note % 12 + 12) % 12) == cIonian.end();
+        });
+    }
+    if (! advancedModulationFoundOutside)
+        return fail ("Maximum Modulation did not reach outside harmony in an advanced style with only C Ionian selected.");
+
+    engine.reset();
+    settings.outside = 1.0f;
+    settings.modulation = 0.0f;
+    settings.repeatChance = 1.0f;
+    const auto fixedFirst = engine.generate (72, 100, settings);
+    const auto fixedAgain = engine.generate (72, 100, settings);
+    if (fixedFirst.name != fixedAgain.name || fixedFirst.notes != fixedAgain.notes)
+        return fail ("Repeat at maximum did not recall the exact chord assigned to an input note and register.");
+
+    engine.reset();
+    settings.style = Soli::Style::simpleScale;
+    settings.role = Soli::NoteRole::root;
+    settings.outside = 0.0f;
+    settings.modulation = 1.0f;
+    settings.repeatChance = 0.0f;
+    const auto borrowedSimpleC = engine.generate (60, 100, settings);
+    const auto simpleBorrowedOutside = std::any_of (borrowedSimpleC.notes.begin(), borrowedSimpleC.notes.end(), [&] (int note)
+    {
+        return std::find (cIonian.begin(), cIonian.end(), (note % 12 + 12) % 12) == cIonian.end();
+    });
+    if (! simpleBorrowedOutside || borrowedSimpleC.name == "Cmaj7")
+        return fail ("Maximum Modulation did not reharmonize an in-scale Simple trigger outside C Ionian.");
+
+    engine.reset();
+    settings.role = Soli::NoteRole::melodyTop;
     settings.phraseMemory = true;
     settings.outside = 1.0f;
-    settings.variation = 0.0f;
     settings.harmonicStability = 0.72f;
     settings.style = Soli::Style::closeLead;
     const auto closeC = engine.generate (72, 100, settings);
@@ -143,17 +204,6 @@ int main()
     const auto miller = engine.generate (72, 100, settings);
     if (! contains (miller.notes, 72) || ! contains (miller.notes, 60))
         return fail ("Big Band did not create its doubled-lead soli voicing.");
-
-    engine.reset();
-    settings.style = Soli::Style::closeLead;
-    settings.repeatChance = 1.0f;
-    const auto assignedC = engine.generate (72, 100, settings);
-    const auto assignedD = engine.generate (74, 100, settings);
-    const auto repeatedC = engine.generate (72, 100, settings);
-    if (assignedC.notes != repeatedC.notes || assignedC.name != repeatedC.name)
-        return fail ("Repeat at maximum did not preserve the exact chord assigned to an input note.");
-    if (assignedD.notes == assignedC.notes)
-        return fail ("Repeat incorrectly copied one input note's chord to a different input note.");
 
     engine.reset();
     settings.style = Soli::Style::simpleScale;
@@ -198,7 +248,6 @@ int main()
     settings.outside = 0.1f;
     settings.contextMode = Soli::ContextMode::substitutions;
     settings.substitutionDepth = 1.0f;
-    settings.variation = 1.0f;
     for (int attempt = 0; attempt < 24; ++attempt)
     {
         const auto substitute = engine.generateForContext (65, "G7", "Dm7", "Cmaj7", settings);

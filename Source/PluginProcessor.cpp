@@ -273,23 +273,18 @@ Soli::Settings SoliVoicerAudioProcessor::readSettings() const
     settings.playability = static_cast<Soli::Playability> (static_cast<int> (*parameters.getRawParameterValue (ParameterIDs::playability)));
     settings.strumMode = static_cast<Soli::StrumMode> (static_cast<int> (*parameters.getRawParameterValue (ParameterIDs::strumMode)));
     settings.chordSize = static_cast<int> (*parameters.getRawParameterValue (ParameterIDs::chordSize));
-    settings.complexity = parameters.getRawParameterValue (ParameterIDs::complexityEnabled)->load() > 0.5f
-                        ? parameters.getRawParameterValue (ParameterIDs::complexity)->load() : 0.0f;
-    settings.voiceLeading = parameters.getRawParameterValue (ParameterIDs::voiceLeadingEnabled)->load() > 0.5f
-                          ? parameters.getRawParameterValue (ParameterIDs::voiceLeading)->load() : 0.0f;
-    settings.outside = parameters.getRawParameterValue (ParameterIDs::outsideEnabled)->load() > 0.5f
-                     ? parameters.getRawParameterValue (ParameterIDs::outside)->load() : 0.0f;
-    settings.variation = *parameters.getRawParameterValue (ParameterIDs::variation);
-    settings.repeatChance = *parameters.getRawParameterValue (ParameterIDs::repeatChance);
+    settings.complexity = parameters.getRawParameterValue (ParameterIDs::complexity)->load();
+    settings.voiceLeading = parameters.getRawParameterValue (ParameterIDs::voiceLeading)->load();
+    settings.outside = parameters.getRawParameterValue (ParameterIDs::outside)->load();
+    settings.repeatChance = parameters.getRawParameterValue (ParameterIDs::repeatChance)->load();
     settings.strumSpeed = *parameters.getRawParameterValue (ParameterIDs::strumSpeed);
     settings.contextMode = static_cast<Soli::ContextMode> (static_cast<int> (*parameters.getRawParameterValue (ParameterIDs::contextMode)));
     settings.substitutionDepth = *parameters.getRawParameterValue (ParameterIDs::substitutionDepth);
-    settings.harmonicStability = parameters.getRawParameterValue (ParameterIDs::stabilityEnabled)->load() > 0.5f
-                               ? parameters.getRawParameterValue (ParameterIDs::harmonicStability)->load() : 0.0f;
+    settings.harmonicStability = parameters.getRawParameterValue (ParameterIDs::harmonicStability)->load();
     settings.melodyImportance = *parameters.getRawParameterValue (ParameterIDs::melodyImportance);
     settings.modulation = parameters.getRawParameterValue (ParameterIDs::modulation)->load();
     settings.phraseMemory = parameters.getRawParameterValue (ParameterIDs::phraseMemory)->load() > 0.5f;
-    settings.melodyLogicEnabled = parameters.getRawParameterValue (ParameterIDs::melodyEnabled)->load() > 0.5f;
+    settings.melodyLogicEnabled = settings.melodyImportance > 0.001f;
     settings.minNote = static_cast<int> (*parameters.getRawParameterValue (ParameterIDs::minNote));
     settings.maxNote = static_cast<int> (*parameters.getRawParameterValue (ParameterIDs::maxNote));
     return settings;
@@ -1670,8 +1665,11 @@ juce::AudioProcessorValueTreeState::ParameterLayout SoliVoicerAudioProcessor::cr
     params.push_back (std::make_unique<juce::AudioParameterFloat> (juce::ParameterID { ParameterIDs::complexity, 1 }, "Complexity", juce::NormalisableRange<float> (0.0f, 1.0f, 0.01f), 0.45f));
     params.push_back (std::make_unique<juce::AudioParameterFloat> (juce::ParameterID { ParameterIDs::voiceLeading, 1 }, "Voice Leading", juce::NormalisableRange<float> (0.0f, 1.0f, 0.01f), 0.75f));
     params.push_back (std::make_unique<juce::AudioParameterFloat> (juce::ParameterID { ParameterIDs::outside, 1 }, "Outside Harmony", juce::NormalisableRange<float> (0.0f, 1.0f, 0.01f), 0.05f));
-    params.push_back (std::make_unique<juce::AudioParameterFloat> (juce::ParameterID { ParameterIDs::variation, 1 }, "Variation", juce::NormalisableRange<float> (0.0f, 1.0f, 0.01f), 0.35f));
-    params.push_back (std::make_unique<juce::AudioParameterFloat> (juce::ParameterID { ParameterIDs::repeatChance, 1 }, "Repeat Chance", juce::NormalisableRange<float> (0.0f, 1.0f, 0.01f), 0.15f));
+    // Variation remains dormant so existing Logic sessions and automation maps
+    // deserialize without changing the AU parameter tree. Repeat is active again
+    // with zero meaning fresh choices and one meaning exact per-note recall.
+    params.push_back (std::make_unique<juce::AudioParameterFloat> (juce::ParameterID { ParameterIDs::variation, 1 }, "Legacy Variation (Unused)", juce::NormalisableRange<float> (0.0f, 1.0f, 0.01f), 0.35f));
+    params.push_back (std::make_unique<juce::AudioParameterFloat> (juce::ParameterID { ParameterIDs::repeatChance, 1 }, "Repeat", juce::NormalisableRange<float> (0.0f, 1.0f, 0.01f), 0.0f));
     params.push_back (std::make_unique<juce::AudioParameterFloat> (juce::ParameterID { ParameterIDs::strumSpeed, 1 }, "Strum Speed", juce::NormalisableRange<float> (0.0f, 1.0f, 0.01f), 0.0f));
     params.push_back (std::make_unique<juce::AudioParameterInt> (juce::ParameterID { ParameterIDs::minNote, 1 }, "Min Note", 0, 126, 36));
     params.push_back (std::make_unique<juce::AudioParameterInt> (juce::ParameterID { ParameterIDs::maxNote, 1 }, "Max Note", 1, 127, 96));
@@ -1683,11 +1681,13 @@ juce::AudioProcessorValueTreeState::ParameterLayout SoliVoicerAudioProcessor::cr
     params.push_back (std::make_unique<juce::AudioParameterFloat> (juce::ParameterID { ParameterIDs::melodyImportance, 1 }, "Melody Importance", juce::NormalisableRange<float> (0.0f, 1.0f, 0.01f), 0.88f));
     params.push_back (std::make_unique<juce::AudioParameterFloat> (juce::ParameterID { ParameterIDs::modulation, 1 }, "Modulation", juce::NormalisableRange<float> (0.0f, 1.0f, 0.01f), 0.0f));
     params.push_back (std::make_unique<juce::AudioParameterBool> (juce::ParameterID { ParameterIDs::phraseMemory, 1 }, "Phrase Memory", true));
-    params.push_back (std::make_unique<juce::AudioParameterBool> (juce::ParameterID { ParameterIDs::complexityEnabled, 1 }, "Use Color Logic", true));
-    params.push_back (std::make_unique<juce::AudioParameterBool> (juce::ParameterID { ParameterIDs::voiceLeadingEnabled, 1 }, "Use Lead Logic", true));
-    params.push_back (std::make_unique<juce::AudioParameterBool> (juce::ParameterID { ParameterIDs::outsideEnabled, 1 }, "Use Outside Logic", true));
-    params.push_back (std::make_unique<juce::AudioParameterBool> (juce::ParameterID { ParameterIDs::stabilityEnabled, 1 }, "Use Stability Logic", true));
-    params.push_back (std::make_unique<juce::AudioParameterBool> (juce::ParameterID { ParameterIDs::melodyEnabled, 1 }, "Use Melody Logic", true));
+    // Dormant compatibility switches preserve the parameter layout of saved
+    // projects. Their associated sliders now bypass naturally at zero.
+    params.push_back (std::make_unique<juce::AudioParameterBool> (juce::ParameterID { ParameterIDs::complexityEnabled, 1 }, "Legacy Color Bypass (Unused)", true));
+    params.push_back (std::make_unique<juce::AudioParameterBool> (juce::ParameterID { ParameterIDs::voiceLeadingEnabled, 1 }, "Legacy Lead Bypass (Unused)", true));
+    params.push_back (std::make_unique<juce::AudioParameterBool> (juce::ParameterID { ParameterIDs::outsideEnabled, 1 }, "Legacy Outside Bypass (Unused)", true));
+    params.push_back (std::make_unique<juce::AudioParameterBool> (juce::ParameterID { ParameterIDs::stabilityEnabled, 1 }, "Legacy Stability Bypass (Unused)", true));
+    params.push_back (std::make_unique<juce::AudioParameterBool> (juce::ParameterID { ParameterIDs::melodyEnabled, 1 }, "Legacy Melody Bypass (Unused)", true));
     addChoice (ParameterIDs::performanceStyle, "Performance Style", performanceStyleNames(), 0);
     addChoice (ParameterIDs::performanceSubStyle, "Performance Sub Style", { "Sub Style 1", "Sub Style 2", "Sub Style 3", "Sub Style 4", "Sub Style 5", "Sub Style 6" }, 0);
     params.push_back (std::make_unique<juce::AudioParameterFloat> (juce::ParameterID { ParameterIDs::performanceComplexity, 1 }, "Performance Sophistication", juce::NormalisableRange<float> (0.0f, 1.0f, 0.01f), 0.45f));

@@ -142,6 +142,25 @@ void addCapturedChord (SoliVoicerAudioProcessor& processor, std::initializer_lis
     processSilence (processor, 2);
 }
 
+void testDetailedQualityRecognition()
+{
+    SoliVoicerAudioProcessor processor;
+    processor.setRateAndBufferSizeDetails (1000.0, 64);
+    processor.prepareToPlay (1000.0, 64);
+    selectChordBankMode (processor);
+
+    addCapturedChord (processor, { 60, 64, 67, 71, 74, 78 }); // Cmaj9#11
+    const auto cards = processor.getChordBankCards();
+    expect (cards.size() == 1, "An extended chord creates one detailed quality card");
+    if (! cards.empty())
+    {
+        expect (cards.front().name == "maj9#11",
+                "Chord detection distinguishes maj9#11 from a generic major or maj7 quality");
+        expect (cards.front().intervals == std::vector<int> ({ 0, 4, 7, 11, 14, 18 }),
+                "Detailed recognition preserves the compound 9 and #11 formula");
+    }
+}
+
 std::vector<int> noteOns (const juce::MidiBuffer& midi)
 {
     std::vector<int> notes;
@@ -314,6 +333,7 @@ int main()
     testAudibleRakedCapture();
     testLastHeldNoteControlsFinalization();
     testSeparateSingleNotesAreIgnored();
+    testDetailedQualityRecognition();
     testRootIndependentQualityAndRoleAnchors();
     testProbabilityPersistenceAndDeletion();
     testExactInputLocksAndPersistence();
