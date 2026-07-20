@@ -437,18 +437,6 @@ SoliVoicerAudioProcessorEditor::SoliVoicerAudioProcessorEditor (SoliVoicerAudioP
 
     addAndMakeVisible (phraseMemoryButton);
     phraseMemoryButton.setTooltip ("When enabled, Voicizer follows the phrase's previous harmony and voice movement. Turn it off for independent choices from the selected key, scale, and style.");
-    for (auto* toggle : { &complexityEnabledButton, &voiceLeadingEnabledButton, &outsideEnabledButton,
-                          &stabilityEnabledButton, &melodyEnabledButton })
-    {
-        addAndMakeVisible (*toggle);
-        toggle->setColour (juce::ToggleButton::textColourId, text());
-        toggle->setColour (juce::ToggleButton::tickColourId, green());
-    }
-    complexityEnabledButton.setTooltip ("Bypass or enable Color logic without losing the slider value.");
-    voiceLeadingEnabledButton.setTooltip ("Bypass or enable smooth voice-leading logic without losing the slider value.");
-    outsideEnabledButton.setTooltip ("Bypass or enable outside-harmony choices without losing the slider value.");
-    stabilityEnabledButton.setTooltip ("Bypass or enable cadence and harmonic-stability logic without losing the slider value.");
-    melodyEnabledButton.setTooltip ("Bypass or enable automatic melody-role logic; when off, Input Note Role is used directly.");
 
     addAndMakeVisible (lockLastChordButton);
     addAndMakeVisible (unlockSelectedButton);
@@ -482,11 +470,10 @@ SoliVoicerAudioProcessorEditor::SoliVoicerAudioProcessorEditor (SoliVoicerAudioP
     setLabelStyle (linkStatusLabel, 12.0f, muted(), true);
 
     addSlider (chordSizeSlider, chordSizeLabel, "Voices", "Number of generated voices.");
-    addSlider (complexitySlider, complexityLabel, "Color", "Controls extensions and richer chord colors.");
-    addSlider (voiceLeadingSlider, voiceLeadingLabel, "Lead", "Prioritizes smooth movement from the previous voicing.");
-    addSlider (outsideSlider, outsideLabel, "Outside", "Allows notes and chord choices outside the immediate scale.");
-    addSlider (variationSlider, variationLabel, "Variation", "Widens the pool of valid generated alternatives.");
-    addSlider (repeatSlider, repeatLabel, "Repeat", "At maximum, each exact input note/register reuses one assigned chord until New Phrase. It never copies another note's chord.");
+    addSlider (complexitySlider, complexityLabel, "Color", "Controls extensions and richer chord colors. Zero bypasses added color logic.");
+    addSlider (voiceLeadingSlider, voiceLeadingLabel, "Lead", "Prioritizes smooth movement from the previous voicing. Zero bypasses voice-leading preference.");
+    addSlider (outsideSlider, outsideLabel, "Outside", "Allows notes and chord choices outside the selected key and scale. Zero keeps harmony inside.");
+    addSlider (repeatSlider, repeatLabel, "Repeat", "Zero asks for fresh alternatives when available. At 100%, each exact input note and register recalls its assigned chord until New Phrase.");
     addSlider (strumSpeedSlider, strumSpeedLabel, "Rake", "Controls the onset spread for raked held chords.");
     addSlider (minNoteSlider, minNoteLabel, "Low", "Lowest generated MIDI note.");
     addSlider (maxNoteSlider, maxNoteLabel, "High", "Highest generated MIDI note.");
@@ -515,7 +502,6 @@ SoliVoicerAudioProcessorEditor::SoliVoicerAudioProcessorEditor (SoliVoicerAudioP
     complexityAttachment = std::make_unique<SliderAttachment> (state, ParameterIDs::complexity, complexitySlider);
     voiceLeadingAttachment = std::make_unique<SliderAttachment> (state, ParameterIDs::voiceLeading, voiceLeadingSlider);
     outsideAttachment = std::make_unique<SliderAttachment> (state, ParameterIDs::outside, outsideSlider);
-    variationAttachment = std::make_unique<SliderAttachment> (state, ParameterIDs::variation, variationSlider);
     repeatAttachment = std::make_unique<SliderAttachment> (state, ParameterIDs::repeatChance, repeatSlider);
     strumSpeedAttachment = std::make_unique<SliderAttachment> (state, ParameterIDs::strumSpeed, strumSpeedSlider);
     minNoteAttachment = std::make_unique<SliderAttachment> (state, ParameterIDs::minNote, minNoteSlider);
@@ -532,11 +518,6 @@ SoliVoicerAudioProcessorEditor::SoliVoicerAudioProcessorEditor (SoliVoicerAudioP
     gateAttachment = std::make_unique<SliderAttachment> (state, ParameterIDs::gate, gateSlider);
     doubleTimeAttachment = std::make_unique<ButtonAttachment> (state, ParameterIDs::doubleTime, doubleTimeButton);
     phraseMemoryAttachment = std::make_unique<ButtonAttachment> (state, ParameterIDs::phraseMemory, phraseMemoryButton);
-    complexityEnabledAttachment = std::make_unique<ButtonAttachment> (state, ParameterIDs::complexityEnabled, complexityEnabledButton);
-    voiceLeadingEnabledAttachment = std::make_unique<ButtonAttachment> (state, ParameterIDs::voiceLeadingEnabled, voiceLeadingEnabledButton);
-    outsideEnabledAttachment = std::make_unique<ButtonAttachment> (state, ParameterIDs::outsideEnabled, outsideEnabledButton);
-    stabilityEnabledAttachment = std::make_unique<ButtonAttachment> (state, ParameterIDs::stabilityEnabled, stabilityEnabledButton);
-    melodyEnabledAttachment = std::make_unique<ButtonAttachment> (state, ParameterIDs::melodyEnabled, melodyEnabledButton);
 
     updatePerformanceSubStyleChoices();
     applySkin (0);
@@ -621,7 +602,7 @@ void SoliVoicerAudioProcessorEditor::applySkin (int skinIndex)
                          &styleLabel, &playabilityLabel, &strumModeLabel, &performanceStyleLabel,
                          &performanceSubStyleLabel, &keyLabel, &scaleLabel,
                          &chordSizeLabel, &complexityLabel, &voiceLeadingLabel, &outsideLabel,
-                         &variationLabel, &repeatLabel, &strumSpeedLabel, &minNoteLabel,
+                         &repeatLabel, &strumSpeedLabel, &minNoteLabel,
                          &maxNoteLabel, &substitutionLabel, &harmonicStabilityLabel,
                          &melodyImportanceLabel, &modulationLabel, &performanceComplexityLabel,
                          &densityLabel, &syncopationLabel, &swingLabel, &humanizeLabel, &gateLabel })
@@ -636,7 +617,7 @@ void SoliVoicerAudioProcessorEditor::applySkin (int skinIndex)
     }
 
     for (auto* slider : { &chordSizeSlider, &complexitySlider, &voiceLeadingSlider, &outsideSlider,
-                          &variationSlider, &repeatSlider, &strumSpeedSlider, &minNoteSlider,
+                          &repeatSlider, &strumSpeedSlider, &minNoteSlider,
                           &maxNoteSlider, &substitutionSlider, &harmonicStabilitySlider,
                           &melodyImportanceSlider, &modulationSlider, &performanceComplexitySlider,
                           &densitySlider, &syncopationSlider, &swingSlider, &humanizeSlider, &gateSlider })
@@ -681,11 +662,6 @@ void SoliVoicerAudioProcessorEditor::timerCallback()
         chordBankListenButton.setButtonText (listening ? "Listening" : "Listen");
         refreshChordBankCards();
     }
-    complexitySlider.setEnabled (complexityEnabledButton.getToggleState());
-    voiceLeadingSlider.setEnabled (voiceLeadingEnabledButton.getToggleState());
-    outsideSlider.setEnabled (outsideEnabledButton.getToggleState());
-    harmonicStabilitySlider.setEnabled (stabilityEnabledButton.getToggleState());
-    melodyImportanceSlider.setEnabled (melodyEnabledButton.getToggleState());
     refreshLockedChordCards();
     repaint (getLocalBounds().withHeight (124));
 }
@@ -1091,7 +1067,8 @@ void SoliVoicerAudioProcessorEditor::resized()
         phraseArea.removeFromTop (4);
         layoutSliderGrid (phraseArea,
         {
-            { &modulationSlider, &modulationLabel }
+            { &modulationSlider, &modulationLabel },
+            { &repeatSlider, &repeatLabel }
         });
     }
     else if (chordBankMode)
@@ -1107,8 +1084,8 @@ void SoliVoicerAudioProcessorEditor::resized()
     else
     {
         const auto gap = 8;
-        const auto shapeWidth = static_cast<int> (bounds.getWidth() * 0.35f);
-        const auto rangeWidth = static_cast<int> (bounds.getWidth() * 0.39f);
+        const auto shapeWidth = static_cast<int> (bounds.getWidth() * 0.34f);
+        const auto rangeWidth = static_cast<int> (bounds.getWidth() * 0.30f);
         voiceShapeGroupBounds = bounds.removeFromLeft (shapeWidth);
         bounds.removeFromLeft (gap);
         rangeGestureGroupBounds = bounds.removeFromLeft (rangeWidth);
@@ -1126,7 +1103,6 @@ void SoliVoicerAudioProcessorEditor::resized()
             { &complexitySlider, &complexityLabel },
             { &voiceLeadingSlider, &voiceLeadingLabel },
             { &outsideSlider, &outsideLabel },
-            { &variationSlider, &variationLabel },
             { &repeatSlider, &repeatLabel }
         });
         auto phraseArea = phraseLogicGroupBounds.reduced (12, 24);
@@ -1142,15 +1118,6 @@ void SoliVoicerAudioProcessorEditor::resized()
             { &melodyImportanceSlider, &melodyImportanceLabel }
         });
 
-        const auto placeBypass = [] (juce::ToggleButton& button, juce::Label& label)
-        {
-            button.setBounds (label.getBounds().removeFromRight (24));
-        };
-        placeBypass (complexityEnabledButton, complexityLabel);
-        placeBypass (voiceLeadingEnabledButton, voiceLeadingLabel);
-        placeBypass (outsideEnabledButton, outsideLabel);
-        placeBypass (stabilityEnabledButton, harmonicStabilityLabel);
-        placeBypass (melodyEnabledButton, melodyImportanceLabel);
     }
     performanceGroupBounds = {};
 }
@@ -1160,7 +1127,8 @@ void SoliVoicerAudioProcessorEditor::layoutSliderGrid (
     const std::vector<std::pair<juce::Slider*, juce::Label*>>& controls)
 {
     const auto controlCount = static_cast<int> (controls.size());
-    const auto columns = bounds.getWidth() >= 760 && controlCount <= 12 ? controlCount
+    const auto columns = controlCount == 4 && bounds.getWidth() < 430 ? 2
+                       : bounds.getWidth() >= 760 && controlCount <= 12 ? controlCount
                        : (bounds.getWidth() < 430 ? 3 : (bounds.getWidth() < 620 ? 4 : 5));
     const auto rows = juce::jmax (1, (static_cast<int> (controls.size()) + columns - 1) / columns);
     const auto cellWidth = bounds.getWidth() / columns;
@@ -1208,8 +1176,6 @@ void SoliVoicerAudioProcessorEditor::updateModeVisibility()
 
     strumModeBox.setVisible (true);
     strumModeLabel.setVisible (true);
-    repeatSlider.setVisible (! chordBankMode && ! simpleMode);
-    repeatLabel.setVisible (! chordBankMode && ! simpleMode);
     strumSpeedSlider.setVisible (true);
     strumSpeedLabel.setVisible (true);
     styleBox.setVisible (! chordBankMode);
@@ -1220,11 +1186,10 @@ void SoliVoicerAudioProcessorEditor::updateModeVisibility()
     roleBox.setVisible (! simpleMode);
     roleLabel.setVisible (! simpleMode);
 
-    const std::array<juce::Component*, 16> manualVoicingOnly
+    const std::array<juce::Component*, 12> manualVoicingOnly
     {{
         &chordSizeSlider, &chordSizeLabel, &complexitySlider, &complexityLabel,
         &voiceLeadingSlider, &voiceLeadingLabel, &outsideSlider, &outsideLabel,
-        &variationSlider, &variationLabel, &repeatSlider, &repeatLabel,
         &harmonicStabilitySlider, &harmonicStabilityLabel, &melodyImportanceSlider, &melodyImportanceLabel
     }};
     for (auto* component : manualVoicingOnly)
@@ -1239,14 +1204,13 @@ void SoliVoicerAudioProcessorEditor::updateModeVisibility()
     newPhraseButton.setVisible (! chordBankMode);
     modulationSlider.setVisible (! chordBankMode);
     modulationLabel.setVisible (! chordBankMode);
+    repeatSlider.setVisible (! chordBankMode);
+    repeatLabel.setVisible (! chordBankMode);
     lockLastChordButton.setVisible (true);
     unlockSelectedButton.setVisible (true);
     unlockAllButton.setVisible (true);
     lockedChordViewport.setVisible (true);
 
-    for (auto* toggle : { &complexityEnabledButton, &voiceLeadingEnabledButton, &outsideEnabledButton,
-                          &stabilityEnabledButton, &melodyEnabledButton })
-        toggle->setVisible (! chordBankMode && ! simpleMode);
     const std::array<juce::Component*, 16> performanceComponents
     {{
         &performanceComplexitySlider, &performanceComplexityLabel,
@@ -1365,11 +1329,10 @@ void SoliVoicerAudioProcessorEditor::randomizeVoicingSettings()
     setParameterValue (ParameterIDs::complexity, random.nextFloat());
     setParameterValue (ParameterIDs::voiceLeading, 0.45f + random.nextFloat() * 0.55f);
     setParameterValue (ParameterIDs::outside, random.nextFloat() * 0.25f);
-    setParameterValue (ParameterIDs::variation, random.nextFloat() * 0.8f);
+    setParameterValue (ParameterIDs::repeatChance, random.nextFloat() * 0.55f);
     setParameterValue (ParameterIDs::harmonicStability, 0.35f + random.nextFloat() * 0.65f);
     setParameterValue (ParameterIDs::melodyImportance, 0.55f + random.nextFloat() * 0.45f);
     setParameterValue (ParameterIDs::modulation, random.nextFloat() * 0.65f);
-    setParameterValue (ParameterIDs::repeatChance, random.nextFloat() * 0.45f);
     setParameterValue (ParameterIDs::strumSpeed, random.nextFloat() * 0.65f);
     setParameterValue (ParameterIDs::minNote, static_cast<float> (minNote));
     setParameterValue (ParameterIDs::maxNote, static_cast<float> (maxNote));
@@ -1417,8 +1380,7 @@ void SoliVoicerAudioProcessorEditor::resetDefaults()
     setParameterValue (ParameterIDs::complexity, 0.45f);
     setParameterValue (ParameterIDs::voiceLeading, 0.75f);
     setParameterValue (ParameterIDs::outside, 0.05f);
-    setParameterValue (ParameterIDs::variation, 0.35f);
-    setParameterValue (ParameterIDs::repeatChance, 0.15f);
+    setParameterValue (ParameterIDs::repeatChance, 0.0f);
     setParameterValue (ParameterIDs::strumSpeed, 0.0f);
     setParameterValue (ParameterIDs::minNote, 36.0f);
     setParameterValue (ParameterIDs::maxNote, 96.0f);
@@ -1428,11 +1390,6 @@ void SoliVoicerAudioProcessorEditor::resetDefaults()
     setParameterValue (ParameterIDs::melodyImportance, 0.88f);
     setParameterValue (ParameterIDs::modulation, 0.0f);
     setParameterValue (ParameterIDs::phraseMemory, 1.0f);
-    setParameterValue (ParameterIDs::complexityEnabled, 1.0f);
-    setParameterValue (ParameterIDs::voiceLeadingEnabled, 1.0f);
-    setParameterValue (ParameterIDs::outsideEnabled, 1.0f);
-    setParameterValue (ParameterIDs::stabilityEnabled, 1.0f);
-    setParameterValue (ParameterIDs::melodyEnabled, 1.0f);
     setParameterValue (ParameterIDs::performanceStyle, 0.0f);
     setParameterValue (ParameterIDs::performanceSubStyle, 0.0f);
     setParameterValue (ParameterIDs::performanceComplexity, 0.45f);

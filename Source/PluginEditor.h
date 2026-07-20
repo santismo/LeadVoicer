@@ -97,11 +97,6 @@ private:
     std::vector<std::unique_ptr<juce::TextButton>> chordBankCardButtons;
     std::vector<std::unique_ptr<juce::Slider>> chordBankProbabilityDials;
     juce::ToggleButton phraseMemoryButton { "Phrase Memory" };
-    juce::ToggleButton complexityEnabledButton;
-    juce::ToggleButton voiceLeadingEnabledButton;
-    juce::ToggleButton outsideEnabledButton;
-    juce::ToggleButton stabilityEnabledButton;
-    juce::ToggleButton melodyEnabledButton;
     juce::TextButton lockLastChordButton { "Lock Last Chord" };
     juce::TextButton unlockSelectedButton { "Unlock Selected" };
     juce::TextButton unlockAllButton { "Unlock All" };
@@ -139,7 +134,6 @@ private:
     juce::Slider complexitySlider;
     juce::Slider voiceLeadingSlider;
     juce::Slider outsideSlider;
-    juce::Slider variationSlider;
     juce::Slider repeatSlider;
     juce::Slider strumSpeedSlider;
     juce::Slider minNoteSlider;
@@ -159,7 +153,6 @@ private:
     juce::Label complexityLabel;
     juce::Label voiceLeadingLabel;
     juce::Label outsideLabel;
-    juce::Label variationLabel;
     juce::Label repeatLabel;
     juce::Label strumSpeedLabel;
     juce::Label minNoteLabel;
@@ -188,7 +181,6 @@ private:
     std::unique_ptr<SliderAttachment> complexityAttachment;
     std::unique_ptr<SliderAttachment> voiceLeadingAttachment;
     std::unique_ptr<SliderAttachment> outsideAttachment;
-    std::unique_ptr<SliderAttachment> variationAttachment;
     std::unique_ptr<SliderAttachment> repeatAttachment;
     std::unique_ptr<SliderAttachment> strumSpeedAttachment;
     std::unique_ptr<SliderAttachment> minNoteAttachment;
@@ -205,11 +197,6 @@ private:
     std::unique_ptr<SliderAttachment> gateAttachment;
     std::unique_ptr<ButtonAttachment> doubleTimeAttachment;
     std::unique_ptr<ButtonAttachment> phraseMemoryAttachment;
-    std::unique_ptr<ButtonAttachment> complexityEnabledAttachment;
-    std::unique_ptr<ButtonAttachment> voiceLeadingEnabledAttachment;
-    std::unique_ptr<ButtonAttachment> outsideEnabledAttachment;
-    std::unique_ptr<ButtonAttachment> stabilityEnabledAttachment;
-    std::unique_ptr<ButtonAttachment> melodyEnabledAttachment;
 
     bool syncingMasks = false;
     bool updatingSubStyleChoices = false;

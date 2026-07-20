@@ -12,6 +12,54 @@ namespace
 constexpr auto keyCount = 12;
 constexpr auto scaleCount = 12;
 
+// Each arranging style owns its useful amount of harmonic choice. This keeps
+// conservative styles dependable and gives colour-focused styles room to
+// explore without asking the player to manage a separate Variation control.
+float styleVariation (Style style) noexcept
+{
+    switch (style)
+    {
+        case Style::simpleScale:          return 0.00f;
+        case Style::closeLead:            return 0.16f;
+        case Style::bigBand:              return 0.20f;
+        case Style::quartalColor:         return 0.38f;
+        case Style::classical:            return 0.12f;
+        case Style::gospel:               return 0.30f;
+        case Style::modernOutside:        return 0.62f;
+        case Style::modalFilm:            return 0.42f;
+        case Style::chromaticMediant:     return 0.52f;
+        case Style::baroqueCounterpoint:  return 0.18f;
+        case Style::neoSoul:              return 0.48f;
+        case Style::progressiveRock:      return 0.44f;
+        case Style::openFifths:           return 0.10f;
+        case Style::dropTwo:              return 0.20f;
+        case Style::ambientSpread:        return 0.42f;
+        case Style::latinShells:          return 0.20f;
+        case Style::openTriads:           return 0.14f;
+        case Style::powerStack:           return 0.12f;
+        case Style::dropThree:            return 0.22f;
+        case Style::spreadTenths:         return 0.20f;
+        case Style::clusterCloud:         return 0.58f;
+        case Style::pedalPoint:           return 0.18f;
+        case Style::gospelShout:          return 0.34f;
+        case Style::jazzShells:           return 0.24f;
+        case Style::orchestralLush:       return 0.36f;
+        case Style::guitarOpen:           return 0.16f;
+        case Style::hornSoli:             return 0.20f;
+        case Style::wholeToneDream:       return 0.60f;
+    }
+
+    return 0.25f;
+}
+
+float harmonicReach (const Settings& settings) noexcept
+{
+    // Outside is the direct chromatic-harmony control. Modulation reaches into
+    // the same borrowed pool so it remains meaningful in every harmony style,
+    // including a project with only one key and one scale selected.
+    return juce::jlimit (0.0f, 1.0f, juce::jmax (settings.outside, settings.modulation * 0.90f));
+}
+
 int mod12 (int value) noexcept
 {
     return (value % 12 + 12) % 12;
@@ -191,6 +239,95 @@ int parsePitchClass (juce::String text)
     if (text.length() > 1 && (text[1] == '#' || text[1] == 'b'))
         pitch += text[1] == '#' ? 1 : -1;
     return mod12 (pitch);
+}
+
+juce::String detailedChordName (const juce::String& fallbackName, const std::vector<int>& notes)
+{
+    if (fallbackName.isEmpty() || notes.empty())
+        return fallbackName;
+
+    const auto rootLength = fallbackName.length() > 1
+                         && (fallbackName[1] == '#' || fallbackName[1] == 'b') ? 2 : 1;
+    const auto root = parsePitchClass (fallbackName.substring (0, rootLength));
+    if (root < 0)
+        return fallbackName;
+
+    std::vector<int> actual;
+    actual.reserve (notes.size());
+    for (const auto note : notes)
+        actual.push_back (mod12 (note - root));
+    std::sort (actual.begin(), actual.end());
+    actual.erase (std::unique (actual.begin(), actual.end()), actual.end());
+
+    struct Quality
+    {
+        const char* suffix;
+        std::initializer_list<int> pitchClasses;
+    };
+    static const std::array<Quality, 45> qualities
+    {{
+        { "maj13",   { 0, 2, 4, 5, 7, 9, 11 } },
+        { "13",      { 0, 2, 4, 5, 7, 9, 10 } },
+        { "m13",     { 0, 2, 3, 5, 7, 9, 10 } },
+        { "maj9#11", { 0, 2, 4, 6, 7, 11 } },
+        { "9#11",    { 0, 2, 4, 6, 7, 10 } },
+        { "m11",     { 0, 2, 3, 5, 7, 10 } },
+        { "maj11",   { 0, 2, 4, 5, 7, 11 } },
+        { "11",      { 0, 2, 4, 5, 7, 10 } },
+        { "7b9b13",  { 0, 1, 4, 7, 8, 10 } },
+        { "7#9b13",  { 0, 3, 4, 7, 8, 10 } },
+        { "mMaj9",   { 0, 2, 3, 7, 11 } },
+        { "maj9",    { 0, 2, 4, 7, 11 } },
+        { "9",       { 0, 2, 4, 7, 10 } },
+        { "m9",      { 0, 2, 3, 7, 10 } },
+        { "m9b5",    { 0, 2, 3, 6, 10 } },
+        { "7b9",     { 0, 1, 4, 7, 10 } },
+        { "7#9",     { 0, 3, 4, 7, 10 } },
+        { "7b13",    { 0, 4, 7, 8, 10 } },
+        { "6/9",     { 0, 2, 4, 7, 9 } },
+        { "m6/9",    { 0, 2, 3, 7, 9 } },
+        { "maj7#11", { 0, 4, 6, 7, 11 } },
+        { "7#11",    { 0, 4, 6, 7, 10 } },
+        { "maj7#5",  { 0, 4, 8, 11 } },
+        { "maj7b5",  { 0, 4, 6, 11 } },
+        { "7#5",     { 0, 4, 8, 10 } },
+        { "7b5",     { 0, 4, 6, 10 } },
+        { "mMaj7",   { 0, 3, 7, 11 } },
+        { "m7b5",    { 0, 3, 6, 10 } },
+        { "dim7",    { 0, 3, 6, 9 } },
+        { "maj7",    { 0, 4, 7, 11 } },
+        { "7",       { 0, 4, 7, 10 } },
+        { "m7",      { 0, 3, 7, 10 } },
+        { "add9",    { 0, 2, 4, 7 } },
+        { "madd9",   { 0, 2, 3, 7 } },
+        { "6",       { 0, 4, 7, 9 } },
+        { "m6",      { 0, 3, 7, 9 } },
+        { "7sus4",   { 0, 5, 7, 10 } },
+        { "cluster", { 0, 1, 2, 7 } },
+        { "",        { 0, 4, 7 } },
+        { "m",       { 0, 3, 7 } },
+        { "dim",     { 0, 3, 6 } },
+        { "aug",     { 0, 4, 8 } },
+        { "sus2",    { 0, 2, 7 } },
+        { "sus4",    { 0, 5, 7 } },
+        { "5",       { 0, 7 } }
+    }};
+
+    auto name = fallbackName;
+    for (const auto& quality : qualities)
+    {
+        std::vector<int> recognized (quality.pitchClasses);
+        if (recognized == actual)
+        {
+            name = pcName (root) + quality.suffix;
+            break;
+        }
+    }
+
+    const auto bass = mod12 (notes.front());
+    if (bass != root)
+        name += "/" + pcName (bass);
+    return name;
 }
 
 ParsedContextChord parseContextChord (juce::String name)
@@ -481,15 +618,13 @@ GeneratedChord ChordEngine::generate (int inputNote, int, const Settings& settin
                                  ^ static_cast<juce::uint32> (inputNote) * 0xc2b2ae35u;
     rng.seed (deterministicSeed);
 
-    // Repeat is a per-key assignment, not a command to echo the last chord
-    // chosen for some other note. At 100%, every exact MIDI note/register gets
-    // one dependable chord until New Phrase; lower values allow fresh takes.
-    if (hasPerInputChord[static_cast<std::size_t> (inputNote)])
+    const auto noteIndex = static_cast<std::size_t> (inputNote);
+    if (hasPerInputChord[noteIndex] && settings.repeatChance > 0.0f)
     {
-        std::uniform_real_distribution<float> chance (0.0f, 1.0f);
-        if (chance (rng) < settings.repeatChance)
+        std::uniform_real_distribution<float> repeat (0.0f, 1.0f);
+        if (settings.repeatChance >= 0.999f || repeat (rng) < settings.repeatChance)
         {
-            const auto cached = perInputChords[static_cast<std::size_t> (inputNote)];
+            const auto cached = perInputChords[noteIndex];
             previousVoicing = cached.notes;
             previousChord = cached;
             previousInputNote = inputNote;
@@ -513,8 +648,8 @@ GeneratedChord ChordEngine::generate (int inputNote, int, const Settings& settin
         fallback.name = pcName (inputNote);
         previousVoicing = fallback.notes;
         previousChord = fallback;
-        perInputChords[static_cast<std::size_t> (inputNote)] = fallback;
-        hasPerInputChord[static_cast<std::size_t> (inputNote)] = true;
+        perInputChords[noteIndex] = fallback;
+        hasPerInputChord[noteIndex] = true;
         return fallback;
     }
 
@@ -602,7 +737,7 @@ GeneratedChord ChordEngine::generateSimpleScaleChord (int inputNote, const Setti
                     if (index == rotatingFlavor)
                         score += settings.modulation * 14.0f;
                     std::uniform_real_distribution<float> noise (0.0f,
-                        settings.variation * settings.modulation * 12.0f);
+                        styleVariation (settings.style) * settings.modulation * 12.0f);
                     score += noise (rng);
                     if (score > bestScore)
                     {
@@ -642,10 +777,51 @@ GeneratedChord ChordEngine::generateSimpleScaleChord (int inputNote, const Setti
         const auto suffix = juce::String (chord.suffix);
         if (suffix == "maj7" || suffix == "m7" || suffix == "7" || suffix == "dim7")
             score += 14.0f;
+        score -= repeatAvoidancePenalty (inputNote, pcName (chord.root) + chord.suffix, settings);
         choices.push_back ({ degree, chord, std::move (notes), score });
     };
 
     addDegree (scaleDegree);
+
+    // Modulation can deliberately reharmonize an in-scale trigger too. At high
+    // values the borrowed quality is required to contain at least one tone
+    // outside the selected scale, while the played note remains its root.
+    if (settings.modulation > 0.0f)
+    {
+        std::uniform_real_distribution<float> borrowChance (0.0f, 1.0f);
+        if (borrowChance (rng) < settings.modulation)
+        {
+            const std::array<ChordType, 5> borrowedTypes
+            {{
+                { "maj7", { 0, 4, 7, 11 }, 1, 1 },
+                { "m7",   { 0, 3, 7, 10 }, 1, 1 },
+                { "7",    { 0, 4, 7, 10 }, 1, 1 },
+                { "m7b5", { 0, 3, 6, 10 }, 1, 2 },
+                { "dim7", { 0, 3, 6, 9 },  1, 2 }
+            }};
+            for (const auto& borrowedType : borrowedTypes)
+            {
+                if (juce::String (borrowedType.suffix) == choices.front().chord.suffix)
+                    continue;
+                auto outsideTones = 0;
+                for (const auto interval : borrowedType.intervals)
+                    if (! pitchInSelectedKeyScale (inputPitchClass + interval, settings))
+                        ++outsideTones;
+                if (outsideTones == 0)
+                    continue;
+
+                auto notes = voiceCandidate (inputNote, inputPitchClass, borrowedType, settings, NoteRole::root);
+                auto score = 82.0f + settings.modulation * (42.0f + outsideTones * 24.0f);
+                if (settings.phraseMemory)
+                    score -= averageMotion (notes, previousVoicing) * settings.voiceLeading * 0.55f;
+                score -= repeatAvoidancePenalty (inputNote,
+                    pcName (inputPitchClass) + borrowedType.suffix, settings);
+                choices.push_back ({ scaleDegree,
+                    { inputPitchClass, borrowedType.suffix, borrowedType.intervals },
+                    std::move (notes), score });
+            }
+        }
+    }
 
     if (choices.empty())
     {
@@ -719,7 +895,7 @@ GeneratedChord ChordEngine::generateLeadSoliChord (int inputNote, const Settings
                 score += (settings.fastInput ? 82.0f : 52.0f) * settings.harmonicStability;
             if (settings.phraseMemory && previousScaleDegree == 4 && degree == 0)
                 score += 18.0f * settings.harmonicStability;
-            score -= settings.outside * 4.0f;
+            score += harmonicReach (settings) * 18.0f;
         }
         if (degree == 0 || degree == 3 || degree == 4)
             score += 8.0f + settings.harmonicStability * 12.0f;
@@ -730,7 +906,50 @@ GeneratedChord ChordEngine::generateLeadSoliChord (int inputNote, const Settings
             score += 34.0f * settings.harmonicStability;
         if (settings.phraseMemory && previousScaleDegree == 1 && degree == 4)
             score += 24.0f * settings.harmonicStability;
+        score -= repeatAvoidancePenalty (inputNote, pcName (chord.root) + chord.suffix, settings);
         choices.push_back ({ degree, chord, std::move (notes), score });
+    }
+
+    // Close-lead and big-band lines may use a chromatic root as a real borrowed
+    // seventh chord when Outside or Modulation is high, instead of merely
+    // relabelling another diatonic chord while adding the input as a tension.
+    const auto reach = harmonicReach (settings);
+    if (reach > 0.35f)
+    {
+        std::uniform_real_distribution<float> borrowChance (0.0f, 1.0f);
+        if (reach >= 0.95f || borrowChance (rng) < reach)
+        {
+            const std::array<ChordType, 5> borrowedTypes
+            {{
+                { "maj7", { 0, 4, 7, 11 }, 1, 1 },
+                { "m7",   { 0, 3, 7, 10 }, 1, 1 },
+                { "7",    { 0, 4, 7, 10 }, 1, 1 },
+                { "m7b5", { 0, 3, 6, 10 }, 1, 2 },
+                { "dim7", { 0, 3, 6, 9 },  1, 2 }
+            }};
+            for (const auto& borrowedType : borrowedTypes)
+            {
+                auto outsideTones = 0;
+                for (const auto interval : borrowedType.intervals)
+                    if (! pitchInSelectedKeyScale (inputPitchClass + interval, settings))
+                        ++outsideTones;
+                if (outsideTones == 0)
+                    continue;
+
+                auto soliSettings = settings;
+                soliSettings.chordSize = 4;
+                auto notes = voiceCandidate (inputNote, inputPitchClass, borrowedType,
+                                             soliSettings, NoteRole::melodyTop);
+                auto score = 105.0f + reach * (54.0f + outsideTones * 20.0f);
+                if (settings.phraseMemory)
+                    score -= averageMotion (notes, previousVoicing) * settings.voiceLeading * 0.65f;
+                score -= repeatAvoidancePenalty (inputNote,
+                    pcName (inputPitchClass) + borrowedType.suffix, settings);
+                choices.push_back ({ -1,
+                    { inputPitchClass, borrowedType.suffix, borrowedType.intervals },
+                    std::move (notes), score });
+            }
+        }
     }
 
     if (choices.empty())
@@ -903,6 +1122,7 @@ GeneratedChord ChordEngine::finishGeneratedChord (GeneratedChord result,
     }
 
     previousVoicing = notes;
+    result.name = detailedChordName (result.name, notes);
     previousChord = result;
     perInputChords[static_cast<std::size_t> (juce::jlimit (0, 127, inputNote))] = result;
     hasPerInputChord[static_cast<std::size_t> (juce::jlimit (0, 127, inputNote))] = true;
@@ -1019,7 +1239,7 @@ GeneratedChord ChordEngine::generateForContext (int inputNote,
         else if (inputInContextScale)
             score += 15.0f + settings.complexity * 8.0f;
         else
-            score += settings.outside * 20.0f - 16.0f;
+            score += harmonicReach (settings) * 20.0f - 16.0f;
         score -= averageMotion (notes, previousVoicing) * settings.voiceLeading * 0.85f;
         score -= std::abs (static_cast<int> (notes.size()) - settings.chordSize) * 2.5f;
         if (candidate.chord.root == current.root && candidate.chord.suffix == current.suffix)
@@ -1030,7 +1250,7 @@ GeneratedChord ChordEngine::generateForContext (int inputNote,
 
     std::sort (scored.begin(), scored.end(), [] (const auto& a, const auto& b) { return a.score > b.score; });
     const auto pool = juce::jlimit (1, static_cast<int> (scored.size()),
-                                    1 + static_cast<int> (std::round (settings.variation * 4.0f
+                                    1 + static_cast<int> (std::round (styleVariation (settings.style) * 4.0f
                                                                     + settings.substitutionDepth * 3.0f)));
     auto chosen = 0;
     if (pool > 1)
@@ -1085,7 +1305,8 @@ int ChordEngine::choosePrimaryKey (const Settings& settings, int inputNote)
         if (settings.phraseMemory && ! previousVoicing.empty())
             score -= static_cast<float> (std::abs (mod12 (key - mod12 (previousVoicing.front())))) * 0.12f;
 
-        std::uniform_real_distribution<float> noise (0.0f, settings.variation * 4.0f + settings.outside * 3.0f);
+        std::uniform_real_distribution<float> noise (0.0f, styleVariation (settings.style) * 4.0f
+                                                           + harmonicReach (settings) * 3.0f);
         score += noise (rng);
 
         if (score > bestScore)
@@ -1124,7 +1345,7 @@ ScaleType ChordEngine::choosePrimaryScale (const Settings& settings)
         if (settings.style == Style::progressiveRock)
             weight += (i == 3 || i == 7 || i == 8 || i == 10) ? 2.0 : 0.0;
         if (settings.style == Style::modernOutside)
-            weight += static_cast<double> (settings.outside) * 3.0;
+            weight += static_cast<double> (harmonicReach (settings)) * 3.0;
         if (settings.style == Style::simpleScale)
             weight += (i == 0 || i == 1 || i == 4 || i == 5) ? 1.5 : 0.0;
         if (settings.style == Style::ambientSpread)
@@ -1147,27 +1368,19 @@ std::vector<ChordEngine::Candidate> ChordEngine::buildCandidates (int inputNote,
 {
     std::vector<Candidate> candidates;
     candidates.reserve (96);
-    const auto keyMask = clampMask (settings.keyMask, keyCount);
     const auto simpleScale = settings.style == Style::simpleScale;
+    const auto reach = harmonicReach (settings);
 
     for (int root = 0; root < 12; ++root)
     {
         if (simpleScale && ! pitchInSelectedKeyScale (root, settings))
             continue;
 
-        if (! maskContains (keyMask, root) && (simpleScale || settings.outside < 0.2f))
-        {
-            const auto relatedToSelectedKey = [&]
-            {
-                for (int key = 0; key < 12; ++key)
-                    if (maskContains (keyMask, key) && (mod12 (root - key) == 0 || mod12 (root - key) == 5 || mod12 (root - key) == 7 || mod12 (root - key) == 9))
-                        return true;
-                return false;
-            }();
-
-            if (! relatedToSelectedKey)
-                continue;
-        }
+        // A selected key is a tonality, not a single allowed chord root. At
+        // zero reach, all diatonic roots remain available; chromatic roots enter
+        // progressively through Outside or Modulation.
+        if (! pitchInSelectedKeyScale (root, settings) && (simpleScale || reach < 0.2f))
+            continue;
 
         for (const auto& type : chordTypes())
         {
@@ -1197,10 +1410,10 @@ std::vector<ChordEngine::Candidate> ChordEngine::buildCandidates (int inputNote,
             if (! containsInput && role != NoteRole::bass)
                 continue;
 
-            if (static_cast<float> (type.complexity) / 5.0f > settings.complexity + settings.outside * 0.45f + 0.12f)
+            if (static_cast<float> (type.complexity) / 5.0f > settings.complexity + reach * 0.45f + 0.12f)
                 continue;
 
-            if (! chordMostlyInScale (root, type, settings) && (simpleScale || settings.outside < 0.35f))
+            if (! chordMostlyInScale (root, type, settings) && (simpleScale || reach < 0.35f))
                 continue;
 
             auto voiced = voiceCandidate (inputNote, root, type, settings, role);
@@ -1453,11 +1666,12 @@ float ChordEngine::scoreCandidate (const Candidate& candidate, int inputNote, co
 {
     auto score = 100.0f;
     const auto keyMask = clampMask (settings.keyMask, keyCount);
+    const auto reach = harmonicReach (settings);
 
     if (chordMostlyInScale (candidate.root, *candidate.type, settings))
-        score += 40.0f - settings.outside * 14.0f;
+        score += 40.0f - reach * 18.0f;
     else
-        score += settings.outside * 120.0f - 45.0f;
+        score += reach * 126.0f - 45.0f;
 
     auto keyDistance = 6;
     for (int key = 0; key < 12; ++key)
@@ -1469,12 +1683,12 @@ float ChordEngine::scoreCandidate (const Candidate& candidate, int inputNote, co
     }
 
     score -= static_cast<float> (keyDistance) * 0.8f;
-    if (maskContains (keyMask, candidate.root))
-        score += 9.0f * (1.0f - settings.outside);
+    if (pitchInSelectedKeyScale (candidate.root, settings))
+        score += 9.0f * (1.0f - reach);
     else
-        score += settings.outside * 12.0f;
+        score += reach * 16.0f;
     if (keyDistance == 3 || keyDistance == 4)
-        score += settings.outside * 8.0f;
+        score += reach * 10.0f;
 
     score -= std::abs (static_cast<int> (candidate.voiced.size()) - settings.chordSize) * 7.0f;
     if (settings.phraseMemory)
@@ -1488,7 +1702,7 @@ float ChordEngine::scoreCandidate (const Candidate& candidate, int inputNote, co
     const auto alteredDominant = suffix == "7alt" || suffix == "7b9#11";
     if (alteredDominant && settings.style != Style::modernOutside
         && settings.style != Style::progressiveRock && settings.style != Style::wholeToneDream)
-        score -= (1.0f - settings.outside) * 42.0f + settings.harmonicStability * 38.0f;
+        score -= (1.0f - reach) * 42.0f + settings.harmonicStability * 38.0f;
 
     if (settings.style == Style::quartalColor && suffix == "sus11")
         score += 28.0f;
@@ -1497,7 +1711,7 @@ float ChordEngine::scoreCandidate (const Candidate& candidate, int inputNote, co
     if (settings.style == Style::gospel && (suffix == "6" || suffix == "13"))
         score += 18.0f;
     if (settings.style == Style::modernOutside)
-        score += static_cast<float> (candidate.type->colour) * 8.0f + settings.outside * 30.0f;
+        score += static_cast<float> (candidate.type->colour) * 8.0f + reach * 30.0f;
     if (settings.style == Style::modalFilm)
         score += (suffix == "maj9" || suffix == "m9" || suffix == "sus11") ? 18.0f : 0.0f;
     if (settings.style == Style::chromaticMediant)
@@ -1549,12 +1763,28 @@ float ChordEngine::scoreCandidate (const Candidate& candidate, int inputNote, co
     if (settings.style == Style::wholeToneDream)
         score += (suffix == "aug" || suffix == "7b9#11" || suffix == "maj13#11") ? 40.0f : 0.0f;
 
+    score -= repeatAvoidancePenalty (inputNote, chordName (candidate.root, *candidate.type), settings);
+
     return score;
+}
+
+float ChordEngine::repeatAvoidancePenalty (int inputNote, const juce::String& candidateName,
+                                           const Settings& settings) const
+{
+    const auto index = static_cast<std::size_t> (juce::jlimit (0, 127, inputNote));
+    if (! hasPerInputChord[index] || settings.repeatChance >= 0.999f)
+        return 0.0f;
+
+    const auto& previousName = perInputChords[index].name;
+    const auto sameHarmony = previousName == candidateName
+                          || previousName.startsWith (candidateName + "/");
+    return sameHarmony ? (1.0f - settings.repeatChance) * 72.0f : 0.0f;
 }
 
 int ChordEngine::chooseWeightedIndex (const std::vector<Candidate>& candidates, const Settings& settings)
 {
-    const auto effectiveVariation = settings.variation * (1.0f - settings.harmonicStability * 0.82f);
+    const auto effectiveVariation = styleVariation (settings.style)
+                                  * (1.0f - settings.harmonicStability * 0.82f);
     const auto poolSize = juce::jlimit (1, static_cast<int> (candidates.size()), 1 + static_cast<int> (std::round (effectiveVariation * 10.0f)));
     std::vector<double> weights;
     weights.reserve (static_cast<size_t> (poolSize));
