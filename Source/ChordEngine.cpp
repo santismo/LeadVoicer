@@ -74,10 +74,38 @@ bool maskContains (int mask, int index) noexcept
     return (mask & (1 << index)) != 0;
 }
 
+bool pitchInSelectedKeyScale (int pitchClass, const Settings& settings)
+{
+    const auto keyMask = clampMask (settings.keyMask, keyCount);
+    const auto scaleMask = clampMask (settings.scaleMask, scaleCount);
+    for (int key = 0; key < keyCount; ++key)
+    {
+        if (! maskContains (keyMask, key))
+            continue;
+        for (int scale = 0; scale < scaleCount; ++scale)
+        {
+            if (! maskContains (scaleMask, scale))
+                continue;
+            const auto& intervals = scaleIntervals (static_cast<ScaleType> (scale));
+            if (std::find (intervals.begin(), intervals.end(), mod12 (pitchClass - key)) != intervals.end())
+                return true;
+        }
+    }
+    return false;
+}
+
 const std::vector<ChordEngine::ChordType>& chordTypes()
 {
     static const std::vector<ChordEngine::ChordType> types
     {
+        { "",         { 0, 4, 7 },                0, 0 },
+        { "m",        { 0, 3, 7 },                0, 0 },
+        { "dim",      { 0, 3, 6 },                0, 1 },
+        { "sus2",     { 0, 2, 7 },                0, 1 },
+        { "sus4",     { 0, 5, 7 },                0, 1 },
+        { "5",        { 0, 7 },                   0, 0 },
+        { "aug",      { 0, 4, 8 },                1, 2 },
+        { "cluster",  { 0, 1, 2, 7 },             2, 4 },
         { "6",        { 0, 4, 7, 9 },             1, 1 },
         { "m6",       { 0, 3, 7, 9 },             1, 1 },
         { "maj7",     { 0, 4, 7, 11 },            1, 1 },
@@ -325,6 +353,69 @@ ParsedContextChord makeContextChord (int root,
     result.quality = quality;
     return result;
 }
+
+struct DiatonicChord
+{
+    int root = 0;
+    const char* suffix = "";
+    std::vector<int> intervals;
+};
+
+DiatonicChord makeDiatonicChord (int key, ScaleType scale, int degree, bool useSeventh)
+{
+    const auto& scaleNotes = scaleIntervals (scale);
+    degree = juce::jlimit (0, static_cast<int> (scaleNotes.size()) - 1, degree);
+    const auto rootAbsolute = key + scaleNotes[static_cast<std::size_t> (degree)];
+    const auto voiceCount = useSeventh ? 4 : 3;
+
+    DiatonicChord result;
+    result.root = mod12 (rootAbsolute);
+    result.intervals.reserve (static_cast<std::size_t> (voiceCount));
+    for (int voice = 0; voice < voiceCount; ++voice)
+    {
+        const auto scaleIndex = degree + voice * 2;
+        const auto octave = scaleIndex / static_cast<int> (scaleNotes.size());
+        const auto pitch = key + scaleNotes[static_cast<std::size_t> (scaleIndex % static_cast<int> (scaleNotes.size()))]
+                         + octave * 12;
+        result.intervals.push_back (pitch - rootAbsolute);
+    }
+
+    const auto pitchClassAt = [&] (std::size_t index) { return mod12 (result.intervals[index]); };
+    const auto third = pitchClassAt (1);
+    const auto fifth = pitchClassAt (2);
+    if (! useSeventh)
+        result.suffix = third == 3 && fifth == 6 ? "dim"
+                      : third == 3 && fifth == 7 ? "m"
+                      : third == 4 && fifth == 8 ? "aug" : "";
+    else
+    {
+        const auto seventh = pitchClassAt (3);
+        result.suffix = third == 4 && fifth == 7 && seventh == 11 ? "maj7"
+                      : third == 3 && fifth == 7 && seventh == 10 ? "m7"
+                      : third == 4 && fifth == 7 && seventh == 10 ? "7"
+                      : third == 3 && fifth == 6 && seventh == 10 ? "m7b5"
+                      : third == 3 && fifth == 6 && seventh == 9 ? "dim7"
+                      : third == 3 && fifth == 7 && seventh == 11 ? "mMaj7" : "7";
+    }
+
+    // The requested Simple major-scale leading-tone chord is a fully
+    // diminished seventh rather than the usual half-diminished seventh.
+    if (useSeventh && scale == ScaleType::ionian
+        && degree == static_cast<int> (scaleNotes.size()) - 1)
+    {
+        result.intervals = { 0, 3, 6, 9 };
+        result.suffix = "dim7";
+    }
+    return result;
+}
+
+bool chordContainsPitchClass (const DiatonicChord& chord, int pitchClass)
+{
+    return std::any_of (chord.intervals.begin(), chord.intervals.end(), [&] (int interval)
+    {
+        return mod12 (chord.root + interval) == mod12 (pitchClass);
+    });
+}
 }
 
 juce::StringArray ChordEngine::keyNames()
@@ -344,12 +435,14 @@ juce::StringArray ChordEngine::roleNames()
 
 juce::StringArray ChordEngine::styleNames()
 {
-    return { "Close Lead", "Big Band", "Quartal Color", "Classical", "Gospel", "Modern Outside", "Modal Film", "Chromatic Mediant", "Baroque Counterpoint", "Neo-Soul", "Progressive Rock" };
+    return { "Simple Scale Chords", "Close Lead", "Big Band", "Quartal Color", "Classical", "Gospel", "Modern Outside", "Modal Film", "Chromatic Mediant", "Baroque Counterpoint", "Neo-Soul", "Progressive Rock", "Open Fifths", "Drop 2", "Ambient Spread", "Latin Shells", "Open Triads", "Power Stack", "Drop 3", "Spread Tenths", "Cluster Cloud", "Pedal Point", "Gospel Shout", "Jazz Shells", "Orchestral Lush", "Guitar Open", "Horn Soli", "Whole-Tone Dream" };
 }
 
 juce::StringArray ChordEngine::playabilityNames()
 {
-    return { "Piano", "Guitar", "Horn Section", "Orchestra", "Unrestricted" };
+    return { "Piano", "Guitar", "Horn Section", "Orchestra", "Unrestricted",
+             "Sax Soli", "Brass Section", "SATB Voices", "Strings", "Piano Hands",
+             "Low Reeds", "Synth Stack" };
 }
 
 juce::StringArray ChordEngine::strumModeNames()
@@ -366,10 +459,28 @@ void ChordEngine::reset()
 {
     previousVoicing.clear();
     previousChord = {};
+    previousScaleDegree = -1;
+    previousInputNote = -1;
+    phrasePosition = 0;
+    phraseKey = -1;
+    phraseScale = -1;
+    registerCentre = 66.0f;
+    recentInputNotes.clear();
+    recentScaleDegrees.clear();
 }
 
 GeneratedChord ChordEngine::generate (int inputNote, int, const Settings& settings)
 {
+    const auto deterministicSeed = static_cast<juce::uint32> (0x5a17c0deu)
+                                 ^ static_cast<juce::uint32> (phrasePosition) * 0x85ebca6bu
+                                 ^ static_cast<juce::uint32> (inputNote) * 0xc2b2ae35u;
+    rng.seed (deterministicSeed);
+
+    if (settings.style == Style::simpleScale)
+        return generateSimpleScaleChord (inputNote, settings);
+    if (settings.style == Style::closeLead || settings.style == Style::bigBand)
+        return generateLeadSoliChord (inputNote, settings, settings.style == Style::bigBand);
+
     if (! previousChord.notes.empty())
     {
         std::uniform_real_distribution<float> chance (0.0f, 1.0f);
@@ -400,8 +511,336 @@ GeneratedChord ChordEngine::generate (int inputNote, int, const Settings& settin
     GeneratedChord result;
     result.notes = chosen.voiced;
     result.name = chordName (chosen.root, *chosen.type);
-    previousVoicing = result.notes;
+    return finishGeneratedChord (std::move (result), inputNote, settings, false, -1, false);
+}
+
+GeneratedChord ChordEngine::generateSimpleScaleChord (int inputNote, const Settings& settings)
+{
+    const auto key = choosePrimaryKey (settings, inputNote);
+    const auto scale = choosePrimaryScale (settings);
+    const auto& scaleNotes = scaleIntervals (scale);
+    const auto inputPitchClass = mod12 (inputNote);
+    const auto scaleDegree = [&]
+    {
+        const auto relative = mod12 (inputPitchClass - key);
+        const auto found = std::find (scaleNotes.begin(), scaleNotes.end(), relative);
+        return found == scaleNotes.end() ? -1 : static_cast<int> (std::distance (scaleNotes.begin(), found));
+    }();
+    const auto role = resolveRole (settings);
+    const auto useSeventh = settings.chordSize >= 4;
+
+    struct Choice
+    {
+        int degree = 0;
+        DiatonicChord chord;
+        std::vector<int> notes;
+        float score = std::numeric_limits<float>::lowest();
+    };
+    std::vector<Choice> choices;
+
+    const auto addDegree = [&] (int degree)
+    {
+        const auto chord = makeDiatonicChord (key, scale, degree, useSeventh);
+        const auto chromaticTrigger = scaleDegree < 0;
+        if (! chromaticTrigger && role != NoteRole::root && role != NoteRole::bass
+            && ! chordContainsPitchClass (chord, inputPitchClass))
+            return;
+
+        ChordType type { chord.suffix, chord.intervals, useSeventh ? 1 : 0, 0 };
+        const auto voicingInput = chromaticTrigger ? octaveNear (chord.root, inputNote) : inputNote;
+        const auto voicingRole = chromaticTrigger ? NoteRole::root : role;
+        auto notes = voiceCandidate (voicingInput, chord.root, type, settings, voicingRole);
+        auto score = 100.0f - averageMotion (notes, previousVoicing) * settings.voiceLeading;
+        if (degree == 0 || degree == 3 || degree == 4)
+            score += 7.0f;
+        const auto suffix = juce::String (chord.suffix);
+        if (suffix == "maj7" || suffix == "m7" || suffix == "7" || suffix == "dim7")
+            score += 14.0f;
+        choices.push_back ({ degree, chord, std::move (notes), score });
+    };
+
+    if (scaleDegree < 0)
+    {
+        static const std::array<int, 7> majorFunctionNext { 3, 4, 5, 4, 0, 1, 0 };
+        const auto nextDegree = previousScaleDegree < 0 ? 0
+                              : scaleNotes.size() == majorFunctionNext.size()
+                                  ? majorFunctionNext[static_cast<std::size_t> (juce::jlimit (0, 6, previousScaleDegree))]
+                                  : (previousScaleDegree + 3) % static_cast<int> (scaleNotes.size());
+        addDegree (nextDegree);
+    }
+    else if (role == NoteRole::root || role == NoteRole::bass)
+        addDegree (scaleDegree);
+    else
+        for (int degree = 0; degree < static_cast<int> (scaleNotes.size()); ++degree)
+            addDegree (degree);
+
+    if (choices.empty())
+    {
+        const auto fallbackDegree = scaleDegree >= 0 ? scaleDegree : 0;
+        const auto chord = makeDiatonicChord (key, scale, fallbackDegree, useSeventh);
+        ChordType type { chord.suffix, chord.intervals, useSeventh ? 1 : 0, 0 };
+        const auto voicingInput = scaleDegree < 0 ? octaveNear (chord.root, inputNote) : inputNote;
+        const auto voicingRole = scaleDegree < 0 ? NoteRole::root : role;
+        choices.push_back ({ fallbackDegree, chord,
+                             voiceCandidate (voicingInput, chord.root, type, settings, voicingRole), 0.0f });
+    }
+
+    const auto chosen = std::max_element (choices.begin(), choices.end(), [] (const auto& left, const auto& right)
+    {
+        return left.score < right.score;
+    });
+    GeneratedChord result { chosen->notes, pcName (chosen->chord.root) + chosen->chord.suffix };
+    return finishGeneratedChord (std::move (result), inputNote, settings, false,
+                                 chosen->degree, scaleDegree < 0);
+}
+
+GeneratedChord ChordEngine::generateLeadSoliChord (int inputNote, const Settings& settings, bool bigBand)
+{
+    const auto key = choosePrimaryKey (settings, inputNote);
+    const auto scale = choosePrimaryScale (settings);
+    const auto& scaleNotes = scaleIntervals (scale);
+    const auto inputPitchClass = mod12 (inputNote);
+    const auto inputIsInScale = std::find (scaleNotes.begin(), scaleNotes.end(),
+                                           mod12 (inputPitchClass - key)) != scaleNotes.end();
+
+    struct SoliChoice
+    {
+        int degree = 0;
+        DiatonicChord chord;
+        std::vector<int> notes;
+        float score = std::numeric_limits<float>::lowest();
+    };
+    std::vector<SoliChoice> choices;
+    for (int degree = 0; degree < static_cast<int> (scaleNotes.size()); ++degree)
+    {
+        const auto chord = makeDiatonicChord (key, scale, degree, true);
+        const auto containsMelody = chordContainsPitchClass (chord, inputPitchClass);
+        if (inputIsInScale && ! containsMelody)
+            continue;
+
+        auto soliSettings = settings;
+        soliSettings.chordSize = 4;
+        ChordType type { chord.suffix, chord.intervals, 1, 0 };
+        const auto leadRole = settings.melodyImportance >= 0.66f ? NoteRole::melodyTop
+                            : settings.melodyImportance >= 0.33f ? NoteRole::innerVoice
+                                                                : NoteRole::guideTone;
+        auto notes = voiceCandidate (inputNote, chord.root, type, soliSettings, leadRole);
+        notes.erase (std::remove_if (notes.begin(), notes.end(), [inputNote] (int note) { return note > inputNote; }), notes.end());
+        if (std::find (notes.begin(), notes.end(), inputNote) == notes.end())
+            notes.push_back (inputNote);
+        std::sort (notes.begin(), notes.end());
+        while (notes.size() > 4)
+            notes.erase (notes.begin());
+
+        auto score = 140.0f - averageMotion (notes, previousVoicing)
+                                  * (0.8f + settings.voiceLeading * 1.6f + settings.harmonicStability);
+        if (! inputIsInScale)
+        {
+            auto nearestChordTone = 6;
+            for (const auto interval : chord.intervals)
+            {
+                const auto distance = mod12 (inputPitchClass - mod12 (chord.root + interval));
+                nearestChordTone = std::min (nearestChordTone, std::min (distance, 12 - distance));
+            }
+            score -= static_cast<float> (nearestChordTone) * 15.0f;
+            if (degree == previousScaleDegree)
+                score += (settings.fastInput ? 82.0f : 52.0f) * settings.harmonicStability;
+            if (previousScaleDegree == 4 && degree == 0)
+                score += 18.0f * settings.harmonicStability;
+            score -= settings.outside * 4.0f;
+        }
+        if (degree == 0 || degree == 3 || degree == 4)
+            score += 8.0f + settings.harmonicStability * 12.0f;
+        const auto cadencePoint = phrasePosition >= 3 && phrasePosition % 4 == 3;
+        if (cadencePoint && degree == 0)
+            score += 30.0f * settings.harmonicStability;
+        if (previousScaleDegree == 4 && degree == 0)
+            score += 34.0f * settings.harmonicStability;
+        if (previousScaleDegree == 1 && degree == 4)
+            score += 24.0f * settings.harmonicStability;
+        choices.push_back ({ degree, chord, std::move (notes), score });
+    }
+
+    if (choices.empty())
+    {
+        const auto relative = mod12 (inputPitchClass - key);
+        auto nearestDegree = 0;
+        auto nearestDistance = 12;
+        for (int degree = 0; degree < static_cast<int> (scaleNotes.size()); ++degree)
+        {
+            const auto distance = std::min (mod12 (relative - scaleNotes[static_cast<std::size_t> (degree)]),
+                                            mod12 (scaleNotes[static_cast<std::size_t> (degree)] - relative));
+            if (distance < nearestDistance)
+            {
+                nearestDistance = distance;
+                nearestDegree = degree;
+            }
+        }
+        const auto chord = makeDiatonicChord (key, scale, nearestDegree, true);
+        ChordType type { chord.suffix, chord.intervals, 1, 0 };
+        auto soliSettings = settings;
+        soliSettings.chordSize = 4;
+        choices.push_back ({ nearestDegree, chord,
+                             voiceCandidate (inputNote, chord.root, type, soliSettings,
+                                             settings.melodyImportance >= 0.66f ? NoteRole::melodyTop
+                                           : settings.melodyImportance >= 0.33f ? NoteRole::innerVoice
+                                                                               : NoteRole::guideTone), 0.0f });
+    }
+
+    const auto chosen = std::max_element (choices.begin(), choices.end(), [] (const auto& left, const auto& right)
+    {
+        return left.score < right.score;
+    });
+    auto notes = chosen->notes;
+    if (bigBand)
+    {
+        std::sort (notes.begin(), notes.end());
+        if (notes.size() >= 3)
+        {
+            const auto dropIndex = notes.size() - 2;
+            if (notes[dropIndex] != inputNote && notes[dropIndex] - 12 >= settings.minNote)
+                notes[dropIndex] -= 12;
+        }
+        if (inputNote - 12 >= settings.minNote)
+            notes.push_back (inputNote - 12); // Miller-style doubled lead.
+        std::sort (notes.begin(), notes.end());
+        notes.erase (std::unique (notes.begin(), notes.end()), notes.end());
+    }
+
+    GeneratedChord result { notes, pcName (chosen->chord.root) + chosen->chord.suffix };
+    return finishGeneratedChord (std::move (result), inputNote, settings, true,
+                                 chosen->degree, false);
+}
+
+GeneratedChord ChordEngine::finishGeneratedChord (GeneratedChord result,
+                                                   int inputNote,
+                                                   const Settings& settings,
+                                                   bool melodyDriven,
+                                                   int scaleDegree,
+                                                   bool chromatic)
+{
+    auto rangeMin = juce::jlimit (0, 126, settings.minNote);
+    auto rangeMax = juce::jlimit (rangeMin + 1, 127, settings.maxNote);
+    auto maxVoices = 12;
+    auto preferredCentre = 66.0f;
+    const auto applyPreset = [&] (int low, int high, int voices, float centre)
+    {
+        rangeMin = juce::jmax (rangeMin, low);
+        rangeMax = juce::jmin (rangeMax, high);
+        if (rangeMax <= rangeMin)
+        {
+            rangeMin = juce::jlimit (0, 126, low);
+            rangeMax = juce::jlimit (rangeMin + 1, 127, high);
+        }
+        maxVoices = voices;
+        preferredCentre = centre;
+    };
+
+    switch (settings.playability)
+    {
+        case Playability::piano: applyPreset (36, 96, 10, 64.0f); break;
+        case Playability::guitar: applyPreset (40, 88, 6, 62.0f); break;
+        case Playability::hornSection: applyPreset (46, 84, 8, 65.0f); break;
+        case Playability::orchestra: applyPreset (24, 108, 24, 64.0f); break;
+        case Playability::saxSoli: applyPreset (46, 82, 5, 64.0f); break;
+        case Playability::brassSection: applyPreset (40, 86, 6, 62.0f); break;
+        case Playability::vocalSATB: applyPreset (40, 81, 4, 61.0f); break;
+        case Playability::strings: applyPreset (36, 100, 8, 66.0f); break;
+        case Playability::pianoHands: applyPreset (36, 96, 8, 64.0f); break;
+        case Playability::lowReeds: applyPreset (28, 67, 5, 48.0f); break;
+        case Playability::synthStack: applyPreset (24, 108, 12, 66.0f); break;
+        case Playability::unrestricted: break;
+    }
+
+    auto& notes = result.notes;
+    std::sort (notes.begin(), notes.end());
+    notes.erase (std::unique (notes.begin(), notes.end()), notes.end());
+    const auto sourceNotes = notes;
+
+    for (std::size_t index = 0; index < notes.size(); ++index)
+    {
+        const auto target = index < previousVoicing.size() ? previousVoicing[index]
+                          : registerCentre + (static_cast<float> (index) - static_cast<float> (notes.size() - 1) * 0.5f) * 5.0f;
+        auto voiced = octaveNear (mod12 (notes[index]), static_cast<int> (std::round (target)));
+        while (voiced < rangeMin)
+            voiced += 12;
+        while (voiced > rangeMax)
+            voiced -= 12;
+        notes[index] = voiced;
+    }
+
+    // Preserve exact common tones whenever the new harmony contains them.
+    for (const auto prior : previousVoicing)
+    {
+        const auto match = std::find_if (notes.begin(), notes.end(), [prior] (int note)
+        {
+            return mod12 (note) == mod12 (prior);
+        });
+        if (match != notes.end() && prior >= rangeMin && prior <= rangeMax)
+            *match = prior;
+    }
+
+    if (melodyDriven && settings.melodyImportance >= 0.66f)
+    {
+        for (auto& note : notes)
+            if (note != inputNote)
+                while (note >= inputNote && note - 12 >= rangeMin)
+                    note -= 12;
+        notes.erase (std::remove_if (notes.begin(), notes.end(), [inputNote] (int note) { return note > inputNote; }), notes.end());
+        if (inputNote >= rangeMin && inputNote <= rangeMax
+            && std::find (notes.begin(), notes.end(), inputNote) == notes.end())
+            notes.push_back (inputNote);
+    }
+    else if (melodyDriven && settings.melodyImportance >= 0.33f
+             && inputNote >= rangeMin && inputNote <= rangeMax
+             && std::find (notes.begin(), notes.end(), inputNote) == notes.end())
+    {
+        notes.push_back (inputNote);
+    }
+
+    // A melodic trigger should never be left exposed merely because register
+    // correction moved its supporting voices above the lead note.
+    if (melodyDriven && settings.melodyImportance >= 0.66f && notes.size() < 4)
+    {
+        for (const auto sourceNote : sourceNotes)
+        {
+            auto support = octaveNear (mod12 (sourceNote), inputNote - 5);
+            while (support >= inputNote)
+                support -= 12;
+            while (support < rangeMin)
+                support += 12;
+            if (support >= rangeMin && support <= rangeMax && support < inputNote
+                && std::find (notes.begin(), notes.end(), support) == notes.end())
+                notes.push_back (support);
+            if (notes.size() >= 4)
+                break;
+        }
+    }
+
+    std::sort (notes.begin(), notes.end());
+    notes.erase (std::unique (notes.begin(), notes.end()), notes.end());
+    while (static_cast<int> (notes.size()) > maxVoices)
+        notes.erase (notes.begin() + (melodyDriven ? 0 : static_cast<int> (notes.size() / 2)));
+
+    if (! notes.empty())
+    {
+        const auto mean = std::accumulate (notes.begin(), notes.end(), 0.0f)
+                        / static_cast<float> (notes.size());
+        registerCentre = registerCentre * 0.72f + mean * 0.22f + preferredCentre * 0.06f;
+    }
+
+    previousVoicing = notes;
     previousChord = result;
+    previousInputNote = inputNote;
+    if (scaleDegree >= 0)
+        previousScaleDegree = scaleDegree;
+    ++phrasePosition;
+    recentInputNotes.push_back (inputNote);
+    recentScaleDegrees.push_back (chromatic ? -1 : scaleDegree);
+    if (recentInputNotes.size() > 8)
+        recentInputNotes.erase (recentInputNotes.begin());
+    if (recentScaleDegrees.size() > 8)
+        recentScaleDegrees.erase (recentScaleDegrees.begin());
     return result;
 }
 
@@ -552,6 +991,9 @@ NoteRole ChordEngine::resolveRole (const Settings& settings)
 int ChordEngine::choosePrimaryKey (const Settings& settings, int inputNote)
 {
     const auto keyMask = clampMask (settings.keyMask, keyCount);
+    if (phraseKey >= 0 && maskContains (keyMask, phraseKey))
+        return phraseKey;
+
     auto bestKey = 0;
     auto bestScore = std::numeric_limits<float>::lowest();
 
@@ -578,12 +1020,16 @@ int ChordEngine::choosePrimaryKey (const Settings& settings, int inputNote)
         }
     }
 
+    phraseKey = bestKey;
     return bestKey;
 }
 
 ScaleType ChordEngine::choosePrimaryScale (const Settings& settings)
 {
     const auto scaleMask = clampMask (settings.scaleMask, scaleCount);
+    if (phraseScale >= 0 && maskContains (scaleMask, phraseScale))
+        return static_cast<ScaleType> (phraseScale);
+
     std::vector<double> weights;
     std::vector<int> indexes;
     weights.reserve (scaleCount);
@@ -603,13 +1049,20 @@ ScaleType ChordEngine::choosePrimaryScale (const Settings& settings)
             weight += (i == 3 || i == 7 || i == 8 || i == 10) ? 2.0 : 0.0;
         if (settings.style == Style::modernOutside)
             weight += static_cast<double> (settings.outside) * 3.0;
+        if (settings.style == Style::simpleScale)
+            weight += (i == 0 || i == 1 || i == 4 || i == 5) ? 1.5 : 0.0;
+        if (settings.style == Style::ambientSpread)
+            weight += (i == 1 || i == 3 || i == 8) ? 2.0 : 0.0;
+        if (settings.style == Style::latinShells)
+            weight += (i == 0 || i == 4 || i == 5) ? 1.5 : 0.0;
 
         indexes.push_back (i);
         weights.push_back (weight);
     }
 
     std::discrete_distribution<int> pick (weights.begin(), weights.end());
-    return static_cast<ScaleType> (indexes[static_cast<size_t> (pick (rng))]);
+    phraseScale = indexes[static_cast<size_t> (pick (rng))];
+    return static_cast<ScaleType> (phraseScale);
 }
 
 std::vector<ChordEngine::Candidate> ChordEngine::buildCandidates (int inputNote, const Settings& settings, NoteRole role) const
@@ -617,10 +1070,14 @@ std::vector<ChordEngine::Candidate> ChordEngine::buildCandidates (int inputNote,
     std::vector<Candidate> candidates;
     candidates.reserve (96);
     const auto keyMask = clampMask (settings.keyMask, keyCount);
+    const auto simpleScale = settings.style == Style::simpleScale;
 
     for (int root = 0; root < 12; ++root)
     {
-        if (! maskContains (keyMask, root) && settings.outside < 0.2f)
+        if (simpleScale && ! pitchInSelectedKeyScale (root, settings))
+            continue;
+
+        if (! maskContains (keyMask, root) && (simpleScale || settings.outside < 0.2f))
         {
             const auto relatedToSelectedKey = [&]
             {
@@ -636,6 +1093,23 @@ std::vector<ChordEngine::Candidate> ChordEngine::buildCandidates (int inputNote,
 
         for (const auto& type : chordTypes())
         {
+            if (simpleScale)
+            {
+                const auto suffix = juce::String (type.suffix);
+                const auto basicChord = suffix.isEmpty() || suffix == "m" || suffix == "dim"
+                                     || suffix == "6" || suffix == "m6" || suffix == "maj7"
+                                     || suffix == "m7" || suffix == "7" || suffix == "m7b5"
+                                     || suffix == "dim7";
+                if (! basicChord || type.intervals.size() > 4)
+                    continue;
+            }
+
+            if (simpleScale && ! std::all_of (type.intervals.begin(), type.intervals.end(), [&] (int interval)
+            {
+                return pitchInSelectedKeyScale (root + interval, settings);
+            }))
+                continue;
+
             const auto noteInterval = mod12 (inputNote - root);
             const auto containsInput = std::any_of (type.intervals.begin(), type.intervals.end(), [&] (int interval)
             {
@@ -648,7 +1122,7 @@ std::vector<ChordEngine::Candidate> ChordEngine::buildCandidates (int inputNote,
             if (static_cast<float> (type.complexity) / 5.0f > settings.complexity + settings.outside * 0.45f + 0.12f)
                 continue;
 
-            if (! chordMostlyInScale (root, type, settings) && settings.outside < 0.35f)
+            if (! chordMostlyInScale (root, type, settings) && (simpleScale || settings.outside < 0.35f))
                 continue;
 
             auto voiced = voiceCandidate (inputNote, root, type, settings, role);
@@ -665,17 +1139,34 @@ std::vector<ChordEngine::Candidate> ChordEngine::buildCandidates (int inputNote,
 std::vector<int> ChordEngine::voiceCandidate (int inputNote, int root, const ChordType& type, const Settings& settings, NoteRole role) const
 {
     auto maxChordSize = 10;
-    if (settings.playability == Playability::guitar)
-        maxChordSize = 6;
-    else if (settings.playability == Playability::hornSection)
-        maxChordSize = 8;
-    else if (settings.playability == Playability::orchestra || settings.playability == Playability::unrestricted)
-        maxChordSize = 24;
+    switch (settings.playability)
+    {
+        case Playability::guitar: maxChordSize = 6; break;
+        case Playability::hornSection: maxChordSize = 8; break;
+        case Playability::saxSoli: maxChordSize = 5; break;
+        case Playability::brassSection: maxChordSize = 6; break;
+        case Playability::vocalSATB: maxChordSize = 4; break;
+        case Playability::strings: maxChordSize = 8; break;
+        case Playability::pianoHands: maxChordSize = 8; break;
+        case Playability::lowReeds: maxChordSize = 5; break;
+        case Playability::synthStack: maxChordSize = 12; break;
+        case Playability::orchestra:
+        case Playability::unrestricted: maxChordSize = 24; break;
+        case Playability::piano: break;
+    }
 
     auto requestedSize = juce::jlimit (2, maxChordSize, settings.chordSize);
     if (settings.playability == Playability::guitar)
         requestedSize = juce::jmin (requestedSize, 6);
     else if (settings.playability == Playability::hornSection)
+        requestedSize = juce::jlimit (3, 5, requestedSize);
+    else if (settings.playability == Playability::saxSoli)
+        requestedSize = juce::jlimit (3, 5, requestedSize);
+    else if (settings.playability == Playability::brassSection)
+        requestedSize = juce::jlimit (3, 6, requestedSize);
+    else if (settings.playability == Playability::vocalSATB)
+        requestedSize = 4;
+    else if (settings.playability == Playability::lowReeds)
         requestedSize = juce::jlimit (3, 5, requestedSize);
 
     std::vector<int> intervals = type.intervals;
@@ -707,7 +1198,7 @@ std::vector<int> ChordEngine::voiceCandidate (int inputNote, int root, const Cho
     notes.reserve (24);
     const auto rootNearInput = octaveNear (root, inputNote - intervals[static_cast<size_t> (anchorIndex)]);
     const auto anchorAbsolute = rootNearInput + intervals[static_cast<size_t> (anchorIndex)];
-    const auto shift = inputNote - anchorAbsolute;
+    const auto shift = role == NoteRole::melodyTop ? 0 : inputNote - anchorAbsolute;
 
     for (const auto interval : intervals)
     {
@@ -767,8 +1258,8 @@ std::vector<int> ChordEngine::voiceCandidate (int inputNote, int root, const Cho
 
     if (requestedSize > static_cast<int> (notes.size()) && (settings.playability == Playability::orchestra || settings.playability == Playability::unrestricted || settings.playability == Playability::piano))
     {
-        const auto minNote = juce::jlimit (0, 127, settings.minNote);
-        const auto maxNote = juce::jlimit (minNote + 1, 127, settings.maxNote);
+        const auto expansionMinNote = juce::jlimit (0, 127, settings.minNote);
+        const auto expansionMaxNote = juce::jlimit (expansionMinNote + 1, 127, settings.maxNote);
         auto expanded = notes;
         expanded.reserve (24);
 
@@ -777,7 +1268,7 @@ std::vector<int> ChordEngine::voiceCandidate (int inputNote, int root, const Cho
             for (int octave = -3; octave <= 4; ++octave)
             {
                 const auto candidate = baseNote + octave * 12;
-                if (candidate < minNote || candidate > maxNote)
+                if (candidate < expansionMinNote || candidate > expansionMaxNote)
                     continue;
 
                 if (std::find (expanded.begin(), expanded.end(), candidate) == expanded.end())
@@ -810,6 +1301,72 @@ std::vector<int> ChordEngine::voiceCandidate (int inputNote, int root, const Cho
                 notes[i] -= 12;
         std::sort (notes.begin(), notes.end());
     }
+
+    const auto dropVoiceFromTop = [&] (int rank)
+    {
+        if (static_cast<int> (notes.size()) <= rank)
+            return;
+        for (int index = static_cast<int> (notes.size()) - rank; index >= 0; --index)
+        {
+            if (notes[static_cast<std::size_t> (index)] == inputNote)
+                continue;
+            if (notes[static_cast<std::size_t> (index)] - 12 >= minNote)
+                notes[static_cast<std::size_t> (index)] -= 12;
+            return;
+        }
+    };
+
+    if (settings.style == Style::openTriads || settings.style == Style::dropTwo)
+        dropVoiceFromTop (2);
+    else if (settings.style == Style::dropThree)
+        dropVoiceFromTop (3);
+    else if (settings.style == Style::spreadTenths)
+    {
+        if (! notes.empty() && notes.front() != inputNote && notes.front() - 12 >= minNote)
+            notes.front() -= 12;
+        if (notes.size() > 2 && notes.back() != inputNote && notes.back() + 12 <= maxNote)
+            notes.back() += 12;
+    }
+    else if (settings.style == Style::clusterCloud || settings.style == Style::hornSoli)
+    {
+        const auto radius = settings.style == Style::clusterCloud ? 6 : 10;
+        for (auto& note : notes)
+        {
+            if (note == inputNote)
+                continue;
+            while (note < inputNote - radius && note + 12 <= maxNote)
+                note += 12;
+            while (note > inputNote + radius && note - 12 >= minNote)
+                note -= 12;
+        }
+    }
+
+    if (settings.style == Style::pedalPoint || settings.style == Style::powerStack
+        || settings.style == Style::orchestralLush)
+    {
+        auto pedal = minNote + mod12 (root - minNote);
+        if (pedal <= maxNote)
+            notes.push_back (pedal);
+        if (settings.style == Style::orchestralLush)
+        {
+            while (pedal + 12 <= maxNote)
+                pedal += 12;
+            notes.push_back (pedal);
+        }
+    }
+
+    for (auto& note : notes)
+    {
+        while (note < minNote)
+            note += 12;
+        while (note > maxNote)
+            note -= 12;
+    }
+    if (inputNote >= minNote && inputNote <= maxNote
+        && std::find (notes.begin(), notes.end(), inputNote) == notes.end())
+        notes.push_back (inputNote);
+    std::sort (notes.begin(), notes.end());
+    notes.erase (std::unique (notes.begin(), notes.end()), notes.end());
 
     return notes;
 }
@@ -847,6 +1404,11 @@ float ChordEngine::scoreCandidate (const Candidate& candidate, int inputNote, co
         score += 20.0f;
     const auto suffix = juce::String (candidate.type->suffix);
 
+    const auto alteredDominant = suffix == "7alt" || suffix == "7b9#11";
+    if (alteredDominant && settings.style != Style::modernOutside
+        && settings.style != Style::progressiveRock && settings.style != Style::wholeToneDream)
+        score -= (1.0f - settings.outside) * 42.0f + settings.harmonicStability * 38.0f;
+
     if (settings.style == Style::quartalColor && suffix == "sus11")
         score += 28.0f;
     if (settings.style == Style::classical && candidate.type->complexity <= 2)
@@ -865,13 +1427,54 @@ float ChordEngine::scoreCandidate (const Candidate& candidate, int inputNote, co
         score += (suffix == "m9" || suffix == "maj9" || suffix == "13" || suffix == "m11") ? 24.0f : 0.0f;
     if (settings.style == Style::progressiveRock)
         score += (suffix == "sus11" || suffix == "7b9#11" || suffix == "maj13#11") ? 22.0f : 0.0f;
+    if (settings.style == Style::simpleScale)
+    {
+        const auto basicSeventh = suffix == "maj7" || suffix == "m7" || suffix == "7"
+                               || suffix == "m7b5" || suffix == "dim7";
+        score += basicSeventh ? 72.0f
+               : (suffix == "6" || suffix == "m6") ? 28.0f
+               : candidate.type->complexity == 0 ? 18.0f : -40.0f;
+    }
+    if (settings.style == Style::openFifths)
+        score += (suffix == "sus2" || suffix == "sus4" || suffix == "") ? 25.0f : 0.0f;
+    if (settings.style == Style::dropTwo)
+        score += (suffix == "maj7" || suffix == "m7" || suffix == "7" || suffix == "6") ? 24.0f : 0.0f;
+    if (settings.style == Style::ambientSpread)
+        score += (suffix == "maj9" || suffix == "m9" || suffix == "sus11" || suffix == "maj13#11") ? 27.0f : 0.0f;
+    if (settings.style == Style::latinShells)
+        score += (suffix == "6" || suffix == "m6" || suffix == "7" || suffix == "m7") ? 25.0f : 0.0f;
+    if (settings.style == Style::openTriads)
+        score += (suffix.isEmpty() || suffix == "m" || suffix == "dim" || suffix == "sus2" || suffix == "sus4") ? 34.0f : -8.0f;
+    if (settings.style == Style::powerStack)
+        score += (suffix == "5" || suffix == "sus2" || suffix == "sus4") ? 40.0f : 0.0f;
+    if (settings.style == Style::dropThree)
+        score += (suffix == "maj7" || suffix == "m7" || suffix == "7" || suffix == "m7b5") ? 30.0f : 0.0f;
+    if (settings.style == Style::spreadTenths)
+        score += (suffix.isEmpty() || suffix == "m" || suffix == "6" || suffix == "m6" || suffix == "maj7" || suffix == "m7") ? 28.0f : 0.0f;
+    if (settings.style == Style::clusterCloud)
+        score += (suffix == "cluster" || suffix == "maj9" || suffix == "m9" || suffix == "sus11") ? 38.0f : 0.0f;
+    if (settings.style == Style::pedalPoint)
+        score += maskContains (keyMask, candidate.root) ? 32.0f : 0.0f;
+    if (settings.style == Style::gospelShout)
+        score += (suffix == "6" || suffix == "13" || suffix == "7" || suffix == "dim7") ? 34.0f : 0.0f;
+    if (settings.style == Style::jazzShells)
+        score += (suffix == "maj7" || suffix == "m7" || suffix == "7" || suffix == "m7b5") ? 36.0f : 0.0f;
+    if (settings.style == Style::orchestralLush)
+        score += (suffix == "maj9" || suffix == "m9" || suffix == "m11" || suffix == "maj13#11") ? 35.0f : 0.0f;
+    if (settings.style == Style::guitarOpen)
+        score += (suffix.isEmpty() || suffix == "m" || suffix == "6" || suffix == "m6" || suffix == "sus2" || suffix == "sus4") ? 33.0f : 0.0f;
+    if (settings.style == Style::hornSoli)
+        score += (suffix == "6" || suffix == "m6" || suffix == "maj7" || suffix == "m7" || suffix == "7") ? 32.0f : 0.0f;
+    if (settings.style == Style::wholeToneDream)
+        score += (suffix == "aug" || suffix == "7b9#11" || suffix == "maj13#11") ? 40.0f : 0.0f;
 
     return score;
 }
 
 int ChordEngine::chooseWeightedIndex (const std::vector<Candidate>& candidates, const Settings& settings)
 {
-    const auto poolSize = juce::jlimit (1, static_cast<int> (candidates.size()), 1 + static_cast<int> (std::round (settings.variation * 10.0f)));
+    const auto effectiveVariation = settings.variation * (1.0f - settings.harmonicStability * 0.82f);
+    const auto poolSize = juce::jlimit (1, static_cast<int> (candidates.size()), 1 + static_cast<int> (std::round (effectiveVariation * 10.0f)));
     std::vector<double> weights;
     weights.reserve (static_cast<size_t> (poolSize));
 
@@ -879,7 +1482,7 @@ int ChordEngine::chooseWeightedIndex (const std::vector<Candidate>& candidates, 
     for (int i = 0; i < poolSize; ++i)
     {
         const auto scoreDelta = best - candidates[static_cast<size_t> (i)].score;
-        weights.push_back (std::exp (-scoreDelta / juce::jmax (2.0f, 8.0f + settings.variation * 35.0f)));
+        weights.push_back (std::exp (-scoreDelta / juce::jmax (2.0f, 8.0f + effectiveVariation * 35.0f)));
     }
 
     std::discrete_distribution<int> pick (weights.begin(), weights.end());

@@ -5,6 +5,7 @@
 #include "ChordizerLink.h"
 
 #include <array>
+#include <atomic>
 #include <mutex>
 #include <random>
 #include <vector>
@@ -30,6 +31,8 @@ namespace ParameterIDs
     static constexpr auto outputMode = "outputMode";
     static constexpr auto contextMode = "contextMode";
     static constexpr auto substitutionDepth = "substitutionDepth";
+    static constexpr auto harmonicStability = "harmonicStability";
+    static constexpr auto melodyImportance = "melodyImportance";
     static constexpr auto performanceStyle = "performanceStyle";
     static constexpr auto performanceSubStyle = "performanceSubStyle";
     static constexpr auto performanceComplexity = "performanceComplexity";
@@ -45,6 +48,18 @@ namespace ParameterIDs
 class SoliVoicerAudioProcessor final : public juce::AudioProcessor
 {
 public:
+    struct ChordBankCard
+    {
+        // A root-independent symbol such as m9 or maj7#11. The two pitch-class
+        // fields remain only so pre-1.2.2 project state can be decoded.
+        juce::String name;
+        int rootPitchClass = 0;
+        int bassPitchClass = 0;
+        // Canonical formula intervals; compound extensions retain 9/11/13 roles.
+        std::vector<int> intervals;
+        float probability = 1.0f;
+    };
+
     SoliVoicerAudioProcessor();
     ~SoliVoicerAudioProcessor() override = default;
 
@@ -74,11 +89,19 @@ public:
     juce::AudioProcessorValueTreeState& getValueTreeState() noexcept { return parameters; }
     juce::String getLastChordName() const;
     Soli::ChordizerSnapshot getChordizerSnapshot() const;
+    std::array<juce::uint64, 2> getVisualVoicedNoteMasks() const noexcept;
+    std::array<juce::uint64, 2> getVisualInputNoteMasks() const noexcept;
     void panic();
+    void startNewPhrase();
+    void setChordBankListening (bool shouldListen) noexcept;
+    bool isChordBankListening() const noexcept { return chordBankListening.load (std::memory_order_acquire); }
+    std::vector<ChordBankCard> getChordBankCards() const;
+    void setChordBankCardProbability (int index, float probability);
+    void removeChordBankCard (int index);
+    void clearChordBank();
 
     static juce::StringArray sourceModeNames();
     static juce::StringArray outputModeNames();
-    static juce::StringArray skinNames();
     static juce::StringArray performanceStyleNames();
     static juce::StringArray performanceSubStyleNames (int styleIndex);
     static juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
@@ -151,12 +174,29 @@ private:
                                        int beatsPerBar,
                                        float sophistication) const;
     void clearPerformance (juce::MidiBuffer* output = nullptr, int samplePosition = 0);
+    void refreshVisualVoicing() noexcept;
+    void captureChordBankNoteOn (int channel, int note);
+    void captureChordBankNoteOff (int channel, int note, juce::int64 absoluteSample);
+    void captureChordBankAllNotesOff (int channel, juce::int64 absoluteSample);
+    void finalizeExpiredChordBankCaptures (juce::int64 absoluteSample);
+    bool anyChordBankNoteHeldLocked() const noexcept;
+    juce::String finalizeChordBankCaptureLocked();
+    Soli::GeneratedChord generateChordBankVoicing (int inputNote, const Soli::Settings& settings);
 
     juce::AudioProcessorValueTreeState parameters;
     Soli::ChordEngine engine;
     Soli::ChordizerLink chordizerLink;
     std::array<ActiveChord, 16 * 128> activeChords;
     std::array<int, 16 * 128> generatedNoteRefs {};
+    std::array<std::atomic<juce::uint64>, 2> visualVoicedNoteMasks {};
+    std::array<std::atomic<juce::uint64>, 2> visualInputNoteMasks {};
+    std::atomic<bool> pendingNewPhrase { false };
+    std::atomic<bool> chordBankListening { true };
+    mutable juce::SpinLock chordBankLock;
+    std::vector<ChordBankCard> chordBank;
+    std::array<std::array<bool, 128>, 16> chordBankHeld {};
+    std::vector<int> chordBankCapture;
+    juce::int64 chordBankFinalizeAfterSample = -1;
     std::array<juce::int64, 16> lastLeadNoteSample {};
     juce::int64 processedSamples = 0;
     std::vector<PendingMidi> pendingMidi;

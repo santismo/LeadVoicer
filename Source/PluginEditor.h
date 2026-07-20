@@ -2,11 +2,12 @@
 
 #include <JuceHeader.h>
 #include "PluginProcessor.h"
+#include "../SongizerLogicLookAndFeel.h"
 
 #include <array>
 #include <memory>
 
-class SoliVoicerLookAndFeel final : public juce::LookAndFeel_V4
+class SoliVoicerLookAndFeel final : public SongizerLogicLookAndFeel
 {
 public:
     SoliVoicerLookAndFeel();
@@ -27,6 +28,7 @@ public:
 
     void paint (juce::Graphics&) override;
     void resized() override;
+    bool keyPressed (const juce::KeyPress&) override;
 
 private:
     using SliderAttachment = juce::AudioProcessorValueTreeState::SliderAttachment;
@@ -44,6 +46,10 @@ private:
     void commitMask (const juce::String&, const std::array<juce::ToggleButton, 12>&, int);
     void setParameterValue (const juce::String&, float);
     void updateModeVisibility();
+    void refreshChordBankCards();
+    void layoutChordBankCards();
+    void selectChordBankCard (int index);
+    void deleteSelectedChordBankCard();
     void updatePerformanceSubStyleChoices();
     void applySkin (int skinIndex);
     void randomizeAllSettings();
@@ -63,7 +69,6 @@ private:
     juce::Rectangle<int> voicingGroupBounds;
     juce::Rectangle<int> performanceGroupBounds;
     double timelineScrollPpq = 0.0;
-    double lastTimelinePlayheadPpq = -1.0;
 
     juce::Label titleLabel;
     juce::Label chordLabel;
@@ -72,9 +77,17 @@ private:
     juce::TextButton randomVoicingButton { "Randomize Voicing" };
     juce::TextButton randomKeyScaleButton { "Random Keys/Scales" };
     juce::TextButton resetButton { "Reset" };
+    juce::TextButton newPhraseButton { "New Phrase" };
     juce::TextButton randomPerformanceButton { "Randomize Performance" };
-    juce::ComboBox skinBox;
-
+    juce::TextButton chordBankListenButton { "Listen" };
+    juce::TextButton chordBankPerformButton { "Perform" };
+    juce::TextButton chordBankDeleteButton { "Delete" };
+    juce::TextButton chordBankClearButton { "Clear Bank" };
+    juce::Component chordBankContent;
+    juce::Viewport chordBankViewport;
+    juce::Label chordBankCardsLabel;
+    std::vector<std::unique_ptr<juce::TextButton>> chordBankCardButtons;
+    std::vector<std::unique_ptr<juce::Slider>> chordBankProbabilityDials;
     juce::ComboBox sourceModeBox;
     juce::ComboBox outputModeBox;
     juce::ComboBox contextModeBox;
@@ -95,7 +108,6 @@ private:
     juce::Label strumModeLabel;
     juce::Label performanceStyleLabel;
     juce::Label performanceSubStyleLabel;
-    juce::Label skinLabel;
     juce::Label keyLabel;
     juce::Label scaleLabel;
 
@@ -112,6 +124,8 @@ private:
     juce::Slider minNoteSlider;
     juce::Slider maxNoteSlider;
     juce::Slider substitutionSlider;
+    juce::Slider harmonicStabilitySlider;
+    juce::Slider melodyImportanceSlider;
     juce::Slider performanceComplexitySlider;
     juce::Slider densitySlider;
     juce::Slider syncopationSlider;
@@ -129,6 +143,8 @@ private:
     juce::Label minNoteLabel;
     juce::Label maxNoteLabel;
     juce::Label substitutionLabel;
+    juce::Label harmonicStabilityLabel;
+    juce::Label melodyImportanceLabel;
     juce::Label performanceComplexityLabel;
     juce::Label densityLabel;
     juce::Label syncopationLabel;
@@ -145,7 +161,6 @@ private:
     std::unique_ptr<ComboAttachment> strumModeAttachment;
     std::unique_ptr<ComboAttachment> performanceStyleAttachment;
     std::unique_ptr<ComboAttachment> performanceSubStyleAttachment;
-    std::unique_ptr<ComboAttachment> skinAttachment;
     std::unique_ptr<SliderAttachment> chordSizeAttachment;
     std::unique_ptr<SliderAttachment> complexityAttachment;
     std::unique_ptr<SliderAttachment> voiceLeadingAttachment;
@@ -156,6 +171,8 @@ private:
     std::unique_ptr<SliderAttachment> minNoteAttachment;
     std::unique_ptr<SliderAttachment> maxNoteAttachment;
     std::unique_ptr<SliderAttachment> substitutionAttachment;
+    std::unique_ptr<SliderAttachment> harmonicStabilityAttachment;
+    std::unique_ptr<SliderAttachment> melodyImportanceAttachment;
     std::unique_ptr<SliderAttachment> performanceComplexityAttachment;
     std::unique_ptr<SliderAttachment> densityAttachment;
     std::unique_ptr<SliderAttachment> syncopationAttachment;
@@ -166,10 +183,10 @@ private:
 
     bool syncingMasks = false;
     bool updatingSubStyleChoices = false;
-    int lastSourceMode = -1;
-    int lastOutputMode = -1;
     int lastPerformanceStyle = -1;
-    int lastSkinIndex = -1;
+    bool lastChordBankMode = false;
+    int selectedChordBankCard = -1;
+    int lastChordBankCardCount = 0;
     juce::File lastMidiExportFile;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (SoliVoicerAudioProcessorEditor)

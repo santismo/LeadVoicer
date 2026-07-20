@@ -14,6 +14,174 @@ juce::StringArray withIndexOneIds (const juce::StringArray& names)
         ids.add (name);
     return ids;
 }
+
+int positiveMod12 (int value)
+{
+    value %= 12;
+    return value < 0 ? value + 12 : value;
+}
+
+struct ChordQualityDefinition
+{
+    const char* symbol;
+    std::vector<int> pitchClasses;
+    std::vector<int> formulaIntervals;
+};
+
+const std::vector<ChordQualityDefinition>& chordQualityDefinitions()
+{
+    // pitchClasses are used for recognition. formulaIntervals retain compound
+    // extensions so an incoming Melody Top note can actually represent the 9th,
+    // 11th, or 13th instead of an arbitrary captured root.
+    static const std::vector<ChordQualityDefinition> definitions
+    {
+        { "maj13",     { 0, 2, 4, 5, 7, 9, 11 }, { 0, 4, 7, 11, 14, 17, 21 } },
+        { "13",        { 0, 2, 4, 5, 7, 9, 10 }, { 0, 4, 7, 10, 14, 17, 21 } },
+        { "m13",       { 0, 2, 3, 5, 7, 9, 10 }, { 0, 3, 7, 10, 14, 17, 21 } },
+        { "maj9#11",   { 0, 2, 4, 6, 7, 11 },    { 0, 4, 7, 11, 14, 18 } },
+        { "9#11",      { 0, 2, 4, 6, 7, 10 },    { 0, 4, 7, 10, 14, 18 } },
+        { "m11",       { 0, 2, 3, 5, 7, 10 },    { 0, 3, 7, 10, 14, 17 } },
+        { "maj11",     { 0, 2, 4, 5, 7, 11 },    { 0, 4, 7, 11, 14, 17 } },
+        { "11",        { 0, 2, 4, 5, 7, 10 },    { 0, 4, 7, 10, 14, 17 } },
+        { "7b9b13",    { 0, 1, 4, 7, 8, 10 },    { 0, 4, 7, 10, 13, 20 } },
+        { "7#9b13",    { 0, 3, 4, 7, 8, 10 },    { 0, 4, 7, 10, 15, 20 } },
+        { "mMaj9",     { 0, 2, 3, 7, 11 },       { 0, 3, 7, 11, 14 } },
+        { "maj9",      { 0, 2, 4, 7, 11 },       { 0, 4, 7, 11, 14 } },
+        { "9",         { 0, 2, 4, 7, 10 },       { 0, 4, 7, 10, 14 } },
+        { "m9",        { 0, 2, 3, 7, 10 },       { 0, 3, 7, 10, 14 } },
+        { "m9b5",      { 0, 2, 3, 6, 10 },       { 0, 3, 6, 10, 14 } },
+        { "7b9",       { 0, 1, 4, 7, 10 },       { 0, 4, 7, 10, 13 } },
+        { "7#9",       { 0, 3, 4, 7, 10 },       { 0, 4, 7, 10, 15 } },
+        { "7b13",      { 0, 4, 7, 8, 10 },       { 0, 4, 7, 10, 20 } },
+        { "6/9",       { 0, 2, 4, 7, 9 },        { 0, 4, 7, 9, 14 } },
+        { "m6/9",      { 0, 2, 3, 7, 9 },        { 0, 3, 7, 9, 14 } },
+        { "maj7#11",   { 0, 4, 6, 7, 11 },       { 0, 4, 7, 11, 18 } },
+        { "7#11",      { 0, 4, 6, 7, 10 },       { 0, 4, 7, 10, 18 } },
+        { "maj7#5",    { 0, 4, 8, 11 },          { 0, 4, 8, 11 } },
+        { "maj7b5",    { 0, 4, 6, 11 },          { 0, 4, 6, 11 } },
+        { "7#5",       { 0, 4, 8, 10 },          { 0, 4, 8, 10 } },
+        { "7b5",       { 0, 4, 6, 10 },          { 0, 4, 6, 10 } },
+        { "mMaj7",     { 0, 3, 7, 11 },          { 0, 3, 7, 11 } },
+        { "m7b5",      { 0, 3, 6, 10 },          { 0, 3, 6, 10 } },
+        { "dim7",      { 0, 3, 6, 9 },           { 0, 3, 6, 9 } },
+        { "maj7",      { 0, 4, 7, 11 },          { 0, 4, 7, 11 } },
+        { "7",         { 0, 4, 7, 10 },          { 0, 4, 7, 10 } },
+        { "m7",        { 0, 3, 7, 10 },          { 0, 3, 7, 10 } },
+        { "add9",      { 0, 2, 4, 7 },           { 0, 4, 7, 14 } },
+        { "madd9",     { 0, 2, 3, 7 },           { 0, 3, 7, 14 } },
+        { "6",         { 0, 4, 7, 9 },           { 0, 4, 7, 9 } },
+        { "m6",        { 0, 3, 7, 9 },           { 0, 3, 7, 9 } },
+        { "7sus4",     { 0, 5, 7, 10 },          { 0, 5, 7, 10 } },
+        { "maj",       { 0, 4, 7 },              { 0, 4, 7 } },
+        { "m",         { 0, 3, 7 },              { 0, 3, 7 } },
+        { "dim",       { 0, 3, 6 },              { 0, 3, 6 } },
+        { "aug",       { 0, 4, 8 },              { 0, 4, 8 } },
+        { "sus2",      { 0, 2, 7 },              { 0, 2, 7 } },
+        { "sus4",      { 0, 5, 7 },              { 0, 5, 7 } },
+        { "5",         { 0, 7 },                 { 0, 7 } }
+    };
+    return definitions;
+}
+
+std::vector<int> pitchClassFormula (const std::vector<int>& intervals)
+{
+    std::vector<int> result;
+    result.reserve (intervals.size());
+    for (const auto interval : intervals)
+        result.push_back (positiveMod12 (interval));
+    std::sort (result.begin(), result.end());
+    result.erase (std::unique (result.begin(), result.end()), result.end());
+    return result;
+}
+
+const ChordQualityDefinition* exactChordQuality (const std::vector<int>& intervals)
+{
+    const auto pitchClasses = pitchClassFormula (intervals);
+    for (const auto& definition : chordQualityDefinitions())
+        if (definition.pitchClasses == pitchClasses)
+            return &definition;
+    return nullptr;
+}
+
+void normaliseChordBankCard (SoliVoicerAudioProcessor::ChordBankCard& card)
+{
+    if (const auto* definition = exactChordQuality (card.intervals))
+    {
+        card.name = definition->symbol;
+        card.intervals = definition->formulaIntervals;
+    }
+    else
+    {
+        card.name = "custom";
+        card.intervals = pitchClassFormula (card.intervals);
+    }
+
+    // Captured absolute roots and inversions are intentionally discarded. A
+    // Chord Bank card is a quality formula, not a remembered named chord.
+    card.rootPitchClass = 0;
+    card.bassPitchClass = 0;
+}
+
+SoliVoicerAudioProcessor::ChordBankCard analyseChordBankCard (std::vector<int> notes)
+{
+    SoliVoicerAudioProcessor::ChordBankCard card;
+    if (notes.empty())
+        return card;
+    std::sort (notes.begin(), notes.end());
+    notes.erase (std::unique (notes.begin(), notes.end()), notes.end());
+    card.bassPitchClass = positiveMod12 (notes.front());
+    std::vector<int> pitchClasses;
+    for (const auto note : notes)
+        pitchClasses.push_back (positiveMod12 (note));
+    std::sort (pitchClasses.begin(), pitchClasses.end());
+    pitchClasses.erase (std::unique (pitchClasses.begin(), pitchClasses.end()), pitchClasses.end());
+
+    int bestRoot = pitchClasses.front();
+    const ChordQualityDefinition* bestQuality = nullptr;
+    int bestScore = -10000;
+    for (const auto root : pitchClasses)
+    {
+        std::vector<int> actual;
+        for (const auto pitch : pitchClasses)
+            actual.push_back (positiveMod12 (pitch - root));
+        std::sort (actual.begin(), actual.end());
+        for (const auto& quality : chordQualityDefinitions())
+        {
+            int matches = 0;
+            for (const auto interval : quality.pitchClasses)
+                if (std::find (actual.begin(), actual.end(), interval) != actual.end())
+                    ++matches;
+            const auto missing = static_cast<int> (quality.pitchClasses.size()) - matches;
+            const auto extra = static_cast<int> (actual.size()) - matches;
+            const auto exactBonus = missing == 0 && extra == 0 ? 200 : 0;
+            const auto bassBonus = root == card.bassPitchClass ? 5 : 0;
+            const auto score = exactBonus + matches * 12 - missing * 15 - extra * 8 + bassBonus;
+            if (score > bestScore)
+            {
+                bestScore = score;
+                bestRoot = root;
+                bestQuality = &quality;
+            }
+        }
+    }
+
+    if (bestQuality != nullptr)
+    {
+        card.name = bestQuality->symbol;
+        card.intervals = bestQuality->formulaIntervals;
+    }
+    else
+    {
+        card.name = "custom";
+        for (const auto pitch : pitchClasses)
+            card.intervals.push_back (positiveMod12 (pitch - bestRoot));
+        std::sort (card.intervals.begin(), card.intervals.end());
+    }
+    card.rootPitchClass = 0;
+    card.bassPitchClass = 0;
+    return card;
+}
+
 }
 
 SoliVoicerAudioProcessor::SoliVoicerAudioProcessor()
@@ -21,6 +189,10 @@ SoliVoicerAudioProcessor::SoliVoicerAudioProcessor()
       parameters (*this, nullptr, "PARAMETERS", createParameterLayout())
 {
     lastLeadNoteSample.fill (-1);
+    for (auto& mask : visualVoicedNoteMasks)
+        mask.store (0, std::memory_order_relaxed);
+    for (auto& mask : visualInputNoteMasks)
+        mask.store (0, std::memory_order_relaxed);
 }
 
 void SoliVoicerAudioProcessor::prepareToPlay (double, int)
@@ -31,6 +203,16 @@ void SoliVoicerAudioProcessor::prepareToPlay (double, int)
     performanceChannels = {};
     lastTransportPpq = -1.0;
     lastTransportPlaying = false;
+    {
+        const juce::SpinLock::ScopedLockType lock (chordBankLock);
+        chordBankHeld = {};
+        chordBankFinalizeAfterSample = -1;
+        chordBankCapture.clear();
+    }
+    for (auto& mask : visualVoicedNoteMasks)
+        mask.store (0, std::memory_order_relaxed);
+    for (auto& mask : visualInputNoteMasks)
+        mask.store (0, std::memory_order_relaxed);
 }
 
 bool SoliVoicerAudioProcessor::isBusesLayoutSupported (const BusesLayout&) const
@@ -46,6 +228,39 @@ int SoliVoicerAudioProcessor::activeIndex (int channel, int note) noexcept
 int SoliVoicerAudioProcessor::refIndex (int channel, int note) noexcept
 {
     return activeIndex (channel, note);
+}
+
+void SoliVoicerAudioProcessor::refreshVisualVoicing() noexcept
+{
+    juce::uint64 masks[2] { 0, 0 };
+    juce::uint64 inputMasks[2] { 0, 0 };
+    const auto include = [] (juce::uint64 (&destination)[2], int note)
+    {
+        if (note < 0 || note >= 128)
+            return;
+        destination[note / 64] |= static_cast<juce::uint64> (1) << (note % 64);
+    };
+
+    for (std::size_t index = 0; index < activeChords.size(); ++index)
+    {
+        const auto& active = activeChords[index];
+        if (! active.notes.empty())
+            include (inputMasks, static_cast<int> (index % 128));
+        for (const auto note : active.notes)
+            include (masks, note);
+    }
+    for (const auto& state : performanceChannels)
+        if (state.held)
+        {
+            include (inputMasks, state.inputNote);
+            for (const auto note : state.voicing)
+                include (masks, note);
+        }
+
+    visualVoicedNoteMasks[0].store (masks[0], std::memory_order_release);
+    visualVoicedNoteMasks[1].store (masks[1], std::memory_order_release);
+    visualInputNoteMasks[0].store (inputMasks[0], std::memory_order_release);
+    visualInputNoteMasks[1].store (inputMasks[1], std::memory_order_release);
 }
 
 Soli::Settings SoliVoicerAudioProcessor::readSettings() const
@@ -66,25 +281,273 @@ Soli::Settings SoliVoicerAudioProcessor::readSettings() const
     settings.strumSpeed = *parameters.getRawParameterValue (ParameterIDs::strumSpeed);
     settings.contextMode = static_cast<Soli::ContextMode> (static_cast<int> (*parameters.getRawParameterValue (ParameterIDs::contextMode)));
     settings.substitutionDepth = *parameters.getRawParameterValue (ParameterIDs::substitutionDepth);
+    settings.harmonicStability = *parameters.getRawParameterValue (ParameterIDs::harmonicStability);
+    settings.melodyImportance = *parameters.getRawParameterValue (ParameterIDs::melodyImportance);
     settings.minNote = static_cast<int> (*parameters.getRawParameterValue (ParameterIDs::minNote));
     settings.maxNote = static_cast<int> (*parameters.getRawParameterValue (ParameterIDs::maxNote));
     return settings;
 }
 
+void SoliVoicerAudioProcessor::setChordBankListening (bool shouldListen) noexcept
+{
+    const auto wasListening = chordBankListening.exchange (shouldListen, std::memory_order_acq_rel);
+    if (wasListening != shouldListen)
+        pendingNewPhrase.store (true, std::memory_order_release);
+
+    {
+        juce::String finalizedName;
+        {
+            const juce::SpinLock::ScopedLockType lock (chordBankLock);
+            if (shouldListen)
+            {
+                chordBankHeld = {};
+                chordBankFinalizeAfterSample = -1;
+                chordBankCapture.clear();
+            }
+            else
+            {
+                chordBankHeld = {};
+                finalizedName = finalizeChordBankCaptureLocked();
+            }
+        }
+
+        if (finalizedName.isNotEmpty())
+        {
+            const std::lock_guard<std::mutex> nameLock (nameMutex);
+            lastChordName = finalizedName;
+        }
+    }
+}
+
+std::vector<SoliVoicerAudioProcessor::ChordBankCard> SoliVoicerAudioProcessor::getChordBankCards() const
+{
+    const juce::SpinLock::ScopedLockType lock (chordBankLock);
+    return chordBank;
+}
+
+void SoliVoicerAudioProcessor::setChordBankCardProbability (int index, float probability)
+{
+    const juce::SpinLock::ScopedLockType lock (chordBankLock);
+    if (index >= 0 && index < static_cast<int> (chordBank.size()))
+        chordBank[static_cast<std::size_t> (index)].probability = juce::jlimit (0.0f, 1.0f, probability);
+}
+
+void SoliVoicerAudioProcessor::removeChordBankCard (int index)
+{
+    const juce::SpinLock::ScopedLockType lock (chordBankLock);
+    if (index >= 0 && index < static_cast<int> (chordBank.size()))
+        chordBank.erase (chordBank.begin() + index);
+}
+
+void SoliVoicerAudioProcessor::clearChordBank()
+{
+    const juce::SpinLock::ScopedLockType lock (chordBankLock);
+    chordBank.clear();
+    chordBankHeld = {};
+    chordBankFinalizeAfterSample = -1;
+    chordBankCapture.clear();
+}
+
+void SoliVoicerAudioProcessor::captureChordBankNoteOn (int channel, int note)
+{
+    const auto channelIndex = static_cast<std::size_t> (juce::jlimit (0, 15, channel - 1));
+    note = juce::jlimit (0, 127, note);
+    const juce::SpinLock::ScopedLockType lock (chordBankLock);
+    chordBankHeld[channelIndex][static_cast<std::size_t> (note)] = true;
+    chordBankFinalizeAfterSample = -1;
+    if (std::find (chordBankCapture.begin(), chordBankCapture.end(), note) == chordBankCapture.end())
+        chordBankCapture.push_back (note);
+}
+
+void SoliVoicerAudioProcessor::captureChordBankNoteOff (int channel, int note, juce::int64 absoluteSample)
+{
+    const auto channelIndex = static_cast<std::size_t> (juce::jlimit (0, 15, channel - 1));
+    note = juce::jlimit (0, 127, note);
+    const juce::SpinLock::ScopedLockType lock (chordBankLock);
+    chordBankHeld[channelIndex][static_cast<std::size_t> (note)] = false;
+    if (anyChordBankNoteHeldLocked())
+        return;
+
+    // A very short release debounce tolerates event jitter without collecting
+    // a run of separate melodic notes into a false chord.
+    const auto graceSamples = static_cast<juce::int64> (juce::jmax (1.0, getSampleRate() * 0.03));
+    chordBankFinalizeAfterSample = absoluteSample + graceSamples;
+}
+
+void SoliVoicerAudioProcessor::captureChordBankAllNotesOff (int channel, juce::int64 absoluteSample)
+{
+    const auto channelIndex = static_cast<std::size_t> (juce::jlimit (0, 15, channel - 1));
+    const juce::SpinLock::ScopedLockType lock (chordBankLock);
+    chordBankHeld[channelIndex].fill (false);
+    if (! anyChordBankNoteHeldLocked())
+        chordBankFinalizeAfterSample = absoluteSample;
+}
+
+bool SoliVoicerAudioProcessor::anyChordBankNoteHeldLocked() const noexcept
+{
+    for (const auto& channel : chordBankHeld)
+        if (std::any_of (channel.begin(), channel.end(), [] (bool held) { return held; }))
+            return true;
+    return false;
+}
+
+juce::String SoliVoicerAudioProcessor::finalizeChordBankCaptureLocked()
+{
+    juce::String finalizedName;
+    std::array<bool, 12> pitchClasses {};
+    for (const auto note : chordBankCapture)
+        pitchClasses[static_cast<std::size_t> (positiveMod12 (note))] = true;
+    const auto pitchClassCount = static_cast<int> (std::count (pitchClasses.begin(), pitchClasses.end(), true));
+    if (pitchClassCount >= 3)
+    {
+        auto card = analyseChordBankCard (chordBankCapture);
+        if (card.name.isNotEmpty())
+        {
+            finalizedName = card.name;
+            const auto duplicate = std::find_if (chordBank.begin(), chordBank.end(), [&card] (const auto& existing)
+            {
+                return existing.name == card.name && existing.intervals == card.intervals;
+            });
+            if (duplicate == chordBank.end())
+            {
+                if (chordBank.size() >= 24)
+                    chordBank.erase (chordBank.begin());
+                chordBank.push_back (std::move (card));
+            }
+        }
+    }
+    chordBankCapture.clear();
+    chordBankFinalizeAfterSample = -1;
+    return finalizedName;
+}
+
+void SoliVoicerAudioProcessor::finalizeExpiredChordBankCaptures (juce::int64 absoluteSample)
+{
+    juce::String finalizedName;
+    {
+        const juce::SpinLock::ScopedLockType lock (chordBankLock);
+        if (chordBankFinalizeAfterSample >= 0 && absoluteSample >= chordBankFinalizeAfterSample)
+        {
+            const auto name = finalizeChordBankCaptureLocked();
+            if (name.isNotEmpty())
+                finalizedName = name;
+        }
+    }
+
+    if (finalizedName.isNotEmpty())
+    {
+        const std::lock_guard<std::mutex> lock (nameMutex);
+        lastChordName = finalizedName;
+    }
+}
+
+Soli::GeneratedChord SoliVoicerAudioProcessor::generateChordBankVoicing (int inputNote, const Soli::Settings& settings)
+{
+    ChordBankCard card;
+    {
+        const juce::SpinLock::ScopedLockType lock (chordBankLock);
+        if (chordBank.empty())
+            return {};
+        std::array<double, 24> weights {};
+        auto hasPositiveWeight = false;
+        for (std::size_t index = 0; index < chordBank.size(); ++index)
+        {
+            const auto& candidate = chordBank[index];
+            const auto weight = static_cast<double> (juce::jlimit (0.0f, 1.0f, candidate.probability));
+            weights[index] = weight;
+            hasPositiveWeight = hasPositiveWeight || weight > 0.0;
+        }
+        if (! hasPositiveWeight)
+            std::fill (weights.begin(), weights.begin() + static_cast<std::ptrdiff_t> (chordBank.size()), 1.0);
+        std::discrete_distribution<std::size_t> chooseCard (
+            weights.begin(), weights.begin() + static_cast<std::ptrdiff_t> (chordBank.size()));
+        card = chordBank[chooseCard (performanceRandom)];
+    }
+
+    if (card.intervals.empty())
+        return {};
+
+    auto role = settings.role;
+    if (role == Soli::NoteRole::random)
+    {
+        std::uniform_int_distribution<int> chooseRole (0, 4);
+        role = static_cast<Soli::NoteRole> (chooseRole (performanceRandom));
+    }
+    else if (role == Soli::NoteRole::autoWeighted)
+    {
+        std::discrete_distribution<int> chooseRole { 58, 6, 4, 12, 20 };
+        role = static_cast<Soli::NoteRole> (chooseRole (performanceRandom));
+    }
+
+    auto anchorIndex = 0;
+    if (role == Soli::NoteRole::melodyTop)
+    {
+        anchorIndex = static_cast<int> (card.intervals.size()) - 1;
+    }
+    else if (role == Soli::NoteRole::guideTone)
+    {
+        // Prefer a seventh as the guide tone, then a third. This lets a played
+        // melodic line act like a conventional jazz guide-tone line.
+        for (int index = 0; index < static_cast<int> (card.intervals.size()); ++index)
+        {
+            const auto pitchClass = positiveMod12 (card.intervals[static_cast<std::size_t> (index)]);
+            if (pitchClass == 3 || pitchClass == 4)
+                anchorIndex = index;
+            if (pitchClass == 10 || pitchClass == 11)
+                anchorIndex = index;
+        }
+    }
+    else if (role == Soli::NoteRole::innerVoice)
+    {
+        anchorIndex = static_cast<int> (card.intervals.size()) / 2;
+        anchorIndex = juce::jlimit (1, static_cast<int> (card.intervals.size()) - 1, anchorIndex);
+    }
+
+    const auto anchorInterval = card.intervals[static_cast<std::size_t> (anchorIndex)];
+    const auto root = inputNote - anchorInterval;
+
+    Soli::GeneratedChord result;
+    result.name = card.name;
+    result.notes.reserve (card.intervals.size());
+    for (int index = 0; index < static_cast<int> (card.intervals.size()); ++index)
+    {
+        auto note = root + card.intervals[static_cast<std::size_t> (index)];
+        if (index == anchorIndex)
+        {
+            note = inputNote;
+        }
+        else
+        {
+            while (note < settings.minNote) note += 12;
+            while (note > settings.maxNote) note -= 12;
+
+            if (role == Soli::NoteRole::melodyTop)
+                while (note > inputNote) note -= 12;
+            else if (role == Soli::NoteRole::bass)
+                while (note < inputNote) note += 12;
+        }
+        result.notes.push_back (juce::jlimit (0, 127, note));
+    }
+    std::sort (result.notes.begin(), result.notes.end());
+    result.notes.erase (std::unique (result.notes.begin(), result.notes.end()), result.notes.end());
+
+    // The trigger must remain audible in exactly the role requested, even if
+    // a restrictive range causes another formula tone to fold by an octave.
+    if (std::find (result.notes.begin(), result.notes.end(), inputNote) == result.notes.end())
+        result.notes.push_back (juce::jlimit (0, 127, inputNote));
+    std::sort (result.notes.begin(), result.notes.end());
+    return result;
+}
+
 juce::StringArray SoliVoicerAudioProcessor::sourceModeNames()
 {
-    return { "Manual Harmony", "Follow Chordizer" };
+    return { "Scale / Harmony", "Chord Bank" };
 }
 
 juce::StringArray SoliVoicerAudioProcessor::outputModeNames()
 {
-    return { "Held Voicing", "Performance" };
-}
-
-juce::StringArray SoliVoicerAudioProcessor::skinNames()
-{
-    return { "Graphite Plex", "Citrus Volt", "Aqua Chrome", "Copper Tape", "Arctic Pixel",
-             "Violet CRT", "Flame Amp", "Forest EQ", "Rose Neon", "Mono Dot" };
+    // Both values intentionally render the same held-voicing behavior.
+    return { "Held Voicing", "Held Voicing (legacy)" };
 }
 
 juce::StringArray SoliVoicerAudioProcessor::performanceStyleNames()
@@ -145,6 +608,7 @@ void SoliVoicerAudioProcessor::releaseActiveChord (int channel, int inputNote, i
     for (const auto note : active.notes)
         sendGeneratedNoteOff (active.channel, note, samplePosition, blockSamples, output);
     active.notes.clear();
+    refreshVisualVoicing();
 }
 
 bool SoliVoicerAudioProcessor::releaseOtherActiveChordsOnChannel (int channel, int keepInputNote, int samplePosition, int blockSamples, juce::MidiBuffer& output)
@@ -167,6 +631,8 @@ bool SoliVoicerAudioProcessor::releaseOtherActiveChordsOnChannel (int channel, i
         releasedAny = true;
     }
 
+    if (releasedAny)
+        refreshVisualVoicing();
     return releasedAny;
 }
 
@@ -279,6 +745,7 @@ void SoliVoicerAudioProcessor::transitionLeadChordOnChannel (int channel,
     auto& active = activeChords[static_cast<size_t> (activeIndex (channel, inputNote))];
     active.channel = channel;
     active.notes = sortedNewNotes;
+    refreshVisualVoicing();
 
     for (const auto note : notesToKeep)
         generatedNoteRefs[static_cast<size_t> (refIndex (channel, note))] = 1;
@@ -348,6 +815,7 @@ void SoliVoicerAudioProcessor::replaceActiveChord (int channel,
 
     active.channel = channel;
     active.notes = newNotes;
+    refreshVisualVoicing();
 
     auto orderedNotes = notesToStart;
     auto strumMode = settings.strumMode;
@@ -428,25 +896,8 @@ Soli::GeneratedChord SoliVoicerAudioProcessor::generateChord (int inputNote,
                                                               const Soli::Settings& settings,
                                                               double ppq)
 {
-    const auto followsChordizer = static_cast<int> (*parameters.getRawParameterValue (ParameterIDs::sourceMode)) == 1;
-    if (! followsChordizer)
-        return engine.generate (inputNote, velocity, settings);
-
-    auto context = chordizerLink.contextAt (ppq, true);
-    if (context.connected && context.current.isNotEmpty())
-        lastChordizerContext = context;
-    else if (lastChordizerContext.current.isNotEmpty())
-        context = lastChordizerContext;
-
-    if (context.current.isEmpty())
-        return engine.generate (inputNote, velocity, settings);
-
-    auto generated = engine.generateForContext (inputNote,
-                                                context.current,
-                                                context.previous,
-                                                context.next,
-                                                settings);
-    return generated;
+    juce::ignoreUnused (ppq);
+    return engine.generate (inputNote, velocity, settings);
 }
 
 void SoliVoicerAudioProcessor::startPerformance (int channel,
@@ -470,6 +921,7 @@ void SoliVoicerAudioProcessor::startPerformance (int channel,
     state.intensityBias = intensityDistribution (performanceRandom);
     state.nextStepPpq = ppq;
     state.contextName = lastChordizerContext.current;
+    refreshVisualVoicing();
 }
 
 void SoliVoicerAudioProcessor::stopPerformance (int channel,
@@ -487,6 +939,7 @@ void SoliVoicerAudioProcessor::stopPerformance (int channel,
         return event.message.isForChannel (channel);
     }), pendingMidi.end());
     output.addEvent (juce::MidiMessage::allNotesOff (channel), juce::jmax (0, samplePosition));
+    refreshVisualVoicing();
 }
 
 std::vector<int> SoliVoicerAudioProcessor::performanceNotes (const PerformanceChannel& state,
@@ -822,6 +1275,7 @@ void SoliVoicerAudioProcessor::clearPerformance (juce::MidiBuffer* output, int s
         state = {};
     }
     pendingMidi.clear();
+    refreshVisualVoicing();
 }
 
 void SoliVoicerAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
@@ -831,10 +1285,27 @@ void SoliVoicerAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
     juce::MidiBuffer output;
     const auto blockSamples = buffer.getNumSamples();
     const auto blockStartSample = processedSamples;
+    if (pendingNewPhrase.exchange (false, std::memory_order_acq_rel))
+    {
+        for (int channel = 1; channel <= 16; ++channel)
+            output.addEvent (juce::MidiMessage::allNotesOff (channel), 0);
+        for (auto& active : activeChords)
+            active.notes.clear();
+        generatedNoteRefs.fill (0);
+        lastLeadNoteSample.fill (-1);
+        pendingMidi.clear();
+        performanceChannels = {};
+        engine.reset();
+        refreshVisualVoicing();
+        const std::lock_guard<std::mutex> lock (nameMutex);
+        lastChordName = "--";
+    }
     emitPendingMidi (blockSamples, output);
     const auto settings = readSettings();
     const auto transport = readTransport();
-    const auto performanceMode = static_cast<int> (*parameters.getRawParameterValue (ParameterIDs::outputMode)) == 1;
+    const auto chordBankMode = parameters.getRawParameterValue (ParameterIDs::sourceMode)->load() > 0.5f;
+    const auto chordBankIsListening = chordBankListening.load (std::memory_order_acquire);
+    constexpr auto performanceMode = false;
     const auto ppqPerSample = transport.valid && getSampleRate() > 0.0
                             ? transport.bpm / (60.0 * getSampleRate()) : 0.0;
     auto renderedUntilSample = 0;
@@ -866,8 +1337,10 @@ void SoliVoicerAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
     {
         const auto message = metadata.getMessage();
         const auto samplePosition = metadata.samplePosition;
-        if (performanceMode && samplePosition > renderedUntilSample)
-            renderPerformance (transport, renderedUntilSample, samplePosition, blockSamples, output);
+        const auto absoluteSample = blockStartSample + samplePosition;
+        if (chordBankMode && chordBankIsListening)
+            finalizeExpiredChordBankCaptures (absoluteSample);
+        juce::ignoreUnused (renderedUntilSample);
         renderedUntilSample = samplePosition;
 
         if (message.isNoteOn())
@@ -875,8 +1348,15 @@ void SoliVoicerAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
             const auto channel = message.getChannel();
             const auto inputNote = message.getNoteNumber();
             const auto velocity = message.getVelocity();
+
+            if (chordBankMode && chordBankIsListening)
+            {
+                captureChordBankNoteOn (channel, inputNote);
+                output.addEvent (message, samplePosition);
+                continue;
+            }
+
             const auto channelIndex = static_cast<size_t> (juce::jlimit (0, 15, channel - 1));
-            const auto absoluteSample = blockStartSample + samplePosition;
             const auto previousLeadSample = lastLeadNoteSample[channelIndex];
             const auto fastLead = previousLeadSample >= 0
                                && getSampleRate() > 0.0
@@ -884,53 +1364,52 @@ void SoliVoicerAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
             lastLeadNoteSample[channelIndex] = absoluteSample;
 
             const auto eventPpq = transport.valid ? transport.ppq + samplePosition * ppqPerSample : 0.0;
-            auto generated = generateChord (inputNote, velocity, settings, eventPpq);
-            const auto safeNotes = applyFastLeadSafety (generated.notes, inputNote, settings, fastLead);
-            const auto safeVelocity = scaleVelocityForVoicing (velocity, static_cast<int> (generated.notes.size()), settings, fastLead);
-            if (performanceMode)
-            {
-                stopPerformance (channel,
-                                 performanceChannels[channelIndex].inputNote,
-                                 samplePosition,
-                                 output);
-                startPerformance (channel, inputNote, safeVelocity, safeNotes, eventPpq);
-                if (! transport.playing)
-                    transitionLeadChordOnChannel (channel, inputNote, safeVelocity, safeNotes,
-                                                  samplePosition, blockSamples, output, settings);
-            }
-            else
-            {
-                transitionLeadChordOnChannel (channel,
-                                              inputNote,
-                                              safeVelocity,
-                                              safeNotes,
-                                              samplePosition,
-                                              blockSamples,
-                                              output,
-                                              settings);
-            }
+            auto eventSettings = settings;
+            eventSettings.fastInput = fastLead;
+            auto generated = chordBankMode ? generateChordBankVoicing (inputNote, eventSettings)
+                                           : generateChord (inputNote, velocity, eventSettings, eventPpq);
+            // Chord Bank reproduces the recorded chord quality directly. Style
+            // and Playability intentionally do not rewrite its notes; Role sets
+            // register placement and the existing Rake controls onset spread.
+            const auto safeNotes = chordBankMode ? generated.notes
+                                                 : applyFastLeadSafety (generated.notes, inputNote, eventSettings, fastLead);
+            const auto safeVelocity = chordBankMode ? velocity
+                                                    : scaleVelocityForVoicing (velocity, static_cast<int> (generated.notes.size()), eventSettings, fastLead);
+            transitionLeadChordOnChannel (channel,
+                                          inputNote,
+                                          safeVelocity,
+                                          safeNotes,
+                                          samplePosition,
+                                          blockSamples,
+                                          output,
+                                          eventSettings);
 
             {
                 const std::lock_guard<std::mutex> lock (nameMutex);
-                if (static_cast<int> (*parameters.getRawParameterValue (ParameterIDs::sourceMode)) == 1
-                    && lastChordizerContext.current.isNotEmpty())
-                    lastChordName = generated.name + "  |  " + lastChordizerContext.current;
-                else
-                    lastChordName = generated.name;
+                lastChordName = generated.name;
             }
         }
         else if (message.isNoteOff())
         {
-            if (performanceMode)
-                stopPerformance (message.getChannel(), message.getNoteNumber(), samplePosition, output);
-            releaseActiveChord (message.getChannel(), message.getNoteNumber(), samplePosition, blockSamples, output);
+            if (chordBankMode && chordBankIsListening)
+            {
+                captureChordBankNoteOff (message.getChannel(), message.getNoteNumber(), absoluteSample);
+                output.addEvent (message, samplePosition);
+            }
+            else
+            {
+                releaseActiveChord (message.getChannel(), message.getNoteNumber(), samplePosition, blockSamples, output);
+            }
         }
         else if (message.isAllNotesOff() || message.isAllSoundOff())
         {
+            if (chordBankMode && chordBankIsListening)
+                captureChordBankAllNotesOff (message.getChannel(), absoluteSample);
             clearPerformance();
             for (auto& active : activeChords)
                 active.notes.clear();
             generatedNoteRefs.fill (0);
+            refreshVisualVoicing();
             engine.reset();
             output.addEvent (message, samplePosition);
         }
@@ -940,8 +1419,8 @@ void SoliVoicerAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
         }
     }
 
-    if (performanceMode)
-        renderPerformance (transport, renderedUntilSample, blockSamples, blockSamples, output);
+    if (chordBankMode && chordBankIsListening)
+        finalizeExpiredChordBankCaptures (blockStartSample + blockSamples);
 
     midiMessages.swapWith (output);
     processedSamples += blockSamples;
@@ -959,7 +1438,23 @@ juce::AudioProcessorEditor* SoliVoicerAudioProcessor::createEditor()
 
 void SoliVoicerAudioProcessor::getStateInformation (juce::MemoryBlock& destData)
 {
-    if (auto xml = parameters.copyState().createXml())
+    auto state = parameters.copyState();
+    juce::StringArray encodedCards;
+    {
+        const juce::SpinLock::ScopedLockType lock (chordBankLock);
+        for (const auto& card : chordBank)
+        {
+            juce::StringArray intervals;
+            for (const auto interval : card.intervals)
+                intervals.add (juce::String (interval));
+            encodedCards.add (card.name + "|" + juce::String (card.rootPitchClass) + "|"
+                              + juce::String (card.bassPitchClass) + "|" + intervals.joinIntoString (",")
+                              + "|" + juce::String (card.probability, 4));
+        }
+    }
+    state.setProperty ("chordBankData", encodedCards.joinIntoString (";"), nullptr);
+    state.setProperty ("chordBankListening", chordBankListening.load (std::memory_order_acquire), nullptr);
+    if (auto xml = state.createXml())
         copyXmlToBinary (*xml, destData);
 }
 
@@ -967,7 +1462,36 @@ void SoliVoicerAudioProcessor::setStateInformation (const void* data, int sizeIn
 {
     if (auto xml = getXmlFromBinary (data, sizeInBytes))
         if (xml->hasTagName (parameters.state.getType()))
-            parameters.replaceState (juce::ValueTree::fromXml (*xml));
+        {
+            auto state = juce::ValueTree::fromXml (*xml);
+            parameters.replaceState (state);
+            std::vector<ChordBankCard> restored;
+            const auto rows = juce::StringArray::fromTokens (state.getProperty ("chordBankData").toString(), ";", "");
+            for (const auto& row : rows)
+            {
+                const auto fields = juce::StringArray::fromTokens (row, "|", "");
+                if (fields.size() < 4)
+                    continue;
+                ChordBankCard card;
+                card.name = fields[0];
+                card.rootPitchClass = fields[1].getIntValue();
+                card.bassPitchClass = fields[2].getIntValue();
+                const auto intervals = juce::StringArray::fromTokens (fields[3], ",", "");
+                for (const auto& interval : intervals)
+                    card.intervals.push_back (interval.getIntValue());
+                card.probability = fields.size() >= 5 ? juce::jlimit (0.0f, 1.0f, fields[4].getFloatValue()) : 1.0f;
+                if (! card.intervals.empty())
+                {
+                    normaliseChordBankCard (card);
+                    restored.push_back (std::move (card));
+                }
+            }
+            {
+                const juce::SpinLock::ScopedLockType lock (chordBankLock);
+                chordBank = std::move (restored);
+            }
+            chordBankListening.store (static_cast<bool> (state.getProperty ("chordBankListening", true)), std::memory_order_release);
+        }
 }
 
 juce::String SoliVoicerAudioProcessor::getLastChordName() const
@@ -981,6 +1505,18 @@ Soli::ChordizerSnapshot SoliVoicerAudioProcessor::getChordizerSnapshot() const
     return chordizerLink.snapshot (false);
 }
 
+std::array<juce::uint64, 2> SoliVoicerAudioProcessor::getVisualVoicedNoteMasks() const noexcept
+{
+    return { visualVoicedNoteMasks[0].load (std::memory_order_acquire),
+             visualVoicedNoteMasks[1].load (std::memory_order_acquire) };
+}
+
+std::array<juce::uint64, 2> SoliVoicerAudioProcessor::getVisualInputNoteMasks() const noexcept
+{
+    return { visualInputNoteMasks[0].load (std::memory_order_acquire),
+             visualInputNoteMasks[1].load (std::memory_order_acquire) };
+}
+
 void SoliVoicerAudioProcessor::panic()
 {
     for (auto& active : activeChords)
@@ -990,9 +1526,18 @@ void SoliVoicerAudioProcessor::panic()
     pendingMidi.clear();
     performanceChannels = {};
     engine.reset();
+    for (auto& mask : visualVoicedNoteMasks)
+        mask.store (0, std::memory_order_release);
+    for (auto& mask : visualInputNoteMasks)
+        mask.store (0, std::memory_order_release);
 
     const std::lock_guard<std::mutex> lock (nameMutex);
     lastChordName = "--";
+}
+
+void SoliVoicerAudioProcessor::startNewPhrase()
+{
+    pendingNewPhrase.store (true, std::memory_order_release);
 }
 
 juce::AudioProcessorValueTreeState::ParameterLayout SoliVoicerAudioProcessor::createParameterLayout()
@@ -1014,7 +1559,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout SoliVoicerAudioProcessor::cr
     params.push_back (std::make_unique<juce::AudioParameterInt> (juce::ParameterID { ParameterIDs::chordSize, 1 }, "Chord Size", 2, 24, 4));
     params.push_back (std::make_unique<juce::AudioParameterFloat> (juce::ParameterID { ParameterIDs::complexity, 1 }, "Complexity", juce::NormalisableRange<float> (0.0f, 1.0f, 0.01f), 0.45f));
     params.push_back (std::make_unique<juce::AudioParameterFloat> (juce::ParameterID { ParameterIDs::voiceLeading, 1 }, "Voice Leading", juce::NormalisableRange<float> (0.0f, 1.0f, 0.01f), 0.75f));
-    params.push_back (std::make_unique<juce::AudioParameterFloat> (juce::ParameterID { ParameterIDs::outside, 1 }, "Outside Harmony", juce::NormalisableRange<float> (0.0f, 1.0f, 0.01f), 0.10f));
+    params.push_back (std::make_unique<juce::AudioParameterFloat> (juce::ParameterID { ParameterIDs::outside, 1 }, "Outside Harmony", juce::NormalisableRange<float> (0.0f, 1.0f, 0.01f), 0.05f));
     params.push_back (std::make_unique<juce::AudioParameterFloat> (juce::ParameterID { ParameterIDs::variation, 1 }, "Variation", juce::NormalisableRange<float> (0.0f, 1.0f, 0.01f), 0.35f));
     params.push_back (std::make_unique<juce::AudioParameterFloat> (juce::ParameterID { ParameterIDs::repeatChance, 1 }, "Repeat Chance", juce::NormalisableRange<float> (0.0f, 1.0f, 0.01f), 0.15f));
     params.push_back (std::make_unique<juce::AudioParameterFloat> (juce::ParameterID { ParameterIDs::strumSpeed, 1 }, "Strum Speed", juce::NormalisableRange<float> (0.0f, 1.0f, 0.01f), 0.0f));
@@ -1022,9 +1567,10 @@ juce::AudioProcessorValueTreeState::ParameterLayout SoliVoicerAudioProcessor::cr
     params.push_back (std::make_unique<juce::AudioParameterInt> (juce::ParameterID { ParameterIDs::maxNote, 1 }, "Max Note", 1, 127, 96));
     addChoice (ParameterIDs::sourceMode, "Harmony Source", sourceModeNames(), 0);
     addChoice (ParameterIDs::outputMode, "Output Mode", outputModeNames(), 0);
-    addChoice (ParameterIDs::skin, "Skin", skinNames(), 0);
     addChoice (ParameterIDs::contextMode, "Chord Relationship", Soli::ChordEngine::contextModeNames(), 3);
     params.push_back (std::make_unique<juce::AudioParameterFloat> (juce::ParameterID { ParameterIDs::substitutionDepth, 1 }, "Substitution Depth", juce::NormalisableRange<float> (0.0f, 1.0f, 0.01f), 0.35f));
+    params.push_back (std::make_unique<juce::AudioParameterFloat> (juce::ParameterID { ParameterIDs::harmonicStability, 1 }, "Harmonic Stability", juce::NormalisableRange<float> (0.0f, 1.0f, 0.01f), 0.72f));
+    params.push_back (std::make_unique<juce::AudioParameterFloat> (juce::ParameterID { ParameterIDs::melodyImportance, 1 }, "Melody Importance", juce::NormalisableRange<float> (0.0f, 1.0f, 0.01f), 0.88f));
     addChoice (ParameterIDs::performanceStyle, "Performance Style", performanceStyleNames(), 0);
     addChoice (ParameterIDs::performanceSubStyle, "Performance Sub Style", { "Sub Style 1", "Sub Style 2", "Sub Style 3", "Sub Style 4", "Sub Style 5", "Sub Style 6" }, 0);
     params.push_back (std::make_unique<juce::AudioParameterFloat> (juce::ParameterID { ParameterIDs::performanceComplexity, 1 }, "Performance Sophistication", juce::NormalisableRange<float> (0.0f, 1.0f, 0.01f), 0.45f));

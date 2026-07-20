@@ -37,7 +37,8 @@ enum class ScaleType
 
 enum class Style
 {
-    closeLead = 0,
+    simpleScale = 0,
+    closeLead,
     bigBand,
     quartalColor,
     classical,
@@ -47,7 +48,23 @@ enum class Style
     chromaticMediant,
     baroqueCounterpoint,
     neoSoul,
-    progressiveRock
+    progressiveRock,
+    openFifths,
+    dropTwo,
+    ambientSpread,
+    latinShells,
+    openTriads,
+    powerStack,
+    dropThree,
+    spreadTenths,
+    clusterCloud,
+    pedalPoint,
+    gospelShout,
+    jazzShells,
+    orchestralLush,
+    guitarOpen,
+    hornSoli,
+    wholeToneDream
 };
 
 enum class StrumMode
@@ -64,7 +81,14 @@ enum class Playability
     guitar,
     hornSection,
     orchestra,
-    unrestricted
+    unrestricted,
+    saxSoli,
+    brassSection,
+    vocalSATB,
+    strings,
+    pianoHands,
+    lowReeds,
+    synthStack
 };
 
 enum class ContextMode
@@ -80,7 +104,7 @@ struct Settings
     int keyMask = 1;
     int scaleMask = 1;
     NoteRole role = NoteRole::melodyTop;
-    Style style = Style::closeLead;
+    Style style = Style::simpleScale;
     Playability playability = Playability::piano;
     StrumMode strumMode = StrumMode::together;
     int chordSize = 4;
@@ -92,6 +116,9 @@ struct Settings
     float strumSpeed = 0.0f;
     ContextMode contextMode = ContextMode::adaptive;
     float substitutionDepth = 0.35f;
+    float harmonicStability = 0.72f;
+    float melodyImportance = 0.88f;
+    bool fastInput = false;
     int minNote = 36;
     int maxNote = 96;
 };
@@ -139,6 +166,9 @@ private:
     };
 
     std::vector<Candidate> buildCandidates (int inputNote, const Settings& settings, NoteRole resolvedRole) const;
+    GeneratedChord generateSimpleScaleChord (int inputNote, const Settings& settings);
+    GeneratedChord generateLeadSoliChord (int inputNote, const Settings& settings, bool bigBand);
+    GeneratedChord finishGeneratedChord (GeneratedChord, int inputNote, const Settings&, bool melodyDriven, int scaleDegree, bool chromatic);
     std::vector<int> voiceCandidate (int inputNote, int root, const ChordType& type, const Settings& settings, NoteRole role) const;
     float scoreCandidate (const Candidate& candidate, int inputNote, const Settings& settings) const;
     NoteRole resolveRole (const Settings& settings);
@@ -152,6 +182,14 @@ private:
 
     std::vector<int> previousVoicing;
     GeneratedChord previousChord;
-    std::mt19937 rng { std::random_device{}() };
+    int previousScaleDegree = -1;
+    int previousInputNote = -1;
+    int phrasePosition = 0;
+    int phraseKey = -1;
+    int phraseScale = -1;
+    float registerCentre = 66.0f;
+    std::vector<int> recentInputNotes;
+    std::vector<int> recentScaleDegrees;
+    std::mt19937 rng { 0x5a17c0deu };
 };
 }
