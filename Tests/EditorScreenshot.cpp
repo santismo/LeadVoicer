@@ -8,11 +8,16 @@ int main (int argc, char* argv[])
 {
     juce::ScopedJuceInitialiser_GUI initialiseJuce;
     SoliVoicerAudioProcessor processor;
+    const auto mode = argc > 2 ? juce::String (argv[2]) : juce::String ("bank");
 
     if (auto* skin = processor.getValueTreeState().getParameter (ParameterIDs::skin))
         skin->setValueNotifyingHost (skin->convertTo0to1 (7.0f));
-    if (auto* source = processor.getValueTreeState().getParameter (ParameterIDs::sourceMode))
+    if (mode == "bank")
+        if (auto* source = processor.getValueTreeState().getParameter (ParameterIDs::sourceMode))
         source->setValueNotifyingHost (source->convertTo0to1 (1.0f));
+    if (mode == "advanced")
+        if (auto* style = processor.getValueTreeState().getParameter (ParameterIDs::style))
+            style->setValueNotifyingHost (style->convertTo0to1 (static_cast<float> (static_cast<int> (Soli::Style::neoSoul))));
 
     processor.setRateAndBufferSizeDetails (1000.0, 64);
     processor.prepareToPlay (1000.0, 64);
@@ -38,13 +43,24 @@ int main (int argc, char* argv[])
             processor.processBlock (audio, silence);
         }
     };
-    captureChord ({ 60, 64, 67, 71 });
-    captureChord ({ 62, 65, 69, 72 });
-    captureChord ({ 55, 59, 62, 65 });
-    processor.setChordBankCardProbability (0, 0.82f);
-    processor.setChordBankCardProbability (1, 0.48f);
-    processor.setChordBankCardProbability (2, 0.68f);
-    processor.setChordBankListening (false);
+    if (mode == "bank")
+    {
+        captureChord ({ 60, 64, 67, 71 });
+        captureChord ({ 62, 65, 69, 72 });
+        captureChord ({ 55, 59, 62, 65 });
+        processor.setChordBankCardProbability (0, 0.82f);
+        processor.setChordBankCardProbability (1, 0.48f);
+        processor.setChordBankCardProbability (2, 0.68f);
+        processor.setChordBankListening (false);
+    }
+    else
+    {
+        juce::AudioBuffer<float> audio (1, 64);
+        juce::MidiBuffer midi;
+        midi.addEvent (juce::MidiMessage::noteOn (1, 60, static_cast<juce::uint8> (100)), 0);
+        processor.processBlock (audio, midi);
+        processor.lockLastChord();
+    }
 
     std::unique_ptr<juce::AudioProcessorEditor> editor (processor.createEditor());
     editor->setSize (1120, 880);

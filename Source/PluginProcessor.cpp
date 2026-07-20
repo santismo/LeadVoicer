@@ -273,16 +273,23 @@ Soli::Settings SoliVoicerAudioProcessor::readSettings() const
     settings.playability = static_cast<Soli::Playability> (static_cast<int> (*parameters.getRawParameterValue (ParameterIDs::playability)));
     settings.strumMode = static_cast<Soli::StrumMode> (static_cast<int> (*parameters.getRawParameterValue (ParameterIDs::strumMode)));
     settings.chordSize = static_cast<int> (*parameters.getRawParameterValue (ParameterIDs::chordSize));
-    settings.complexity = *parameters.getRawParameterValue (ParameterIDs::complexity);
-    settings.voiceLeading = *parameters.getRawParameterValue (ParameterIDs::voiceLeading);
-    settings.outside = *parameters.getRawParameterValue (ParameterIDs::outside);
+    settings.complexity = parameters.getRawParameterValue (ParameterIDs::complexityEnabled)->load() > 0.5f
+                        ? parameters.getRawParameterValue (ParameterIDs::complexity)->load() : 0.0f;
+    settings.voiceLeading = parameters.getRawParameterValue (ParameterIDs::voiceLeadingEnabled)->load() > 0.5f
+                          ? parameters.getRawParameterValue (ParameterIDs::voiceLeading)->load() : 0.0f;
+    settings.outside = parameters.getRawParameterValue (ParameterIDs::outsideEnabled)->load() > 0.5f
+                     ? parameters.getRawParameterValue (ParameterIDs::outside)->load() : 0.0f;
     settings.variation = *parameters.getRawParameterValue (ParameterIDs::variation);
     settings.repeatChance = *parameters.getRawParameterValue (ParameterIDs::repeatChance);
     settings.strumSpeed = *parameters.getRawParameterValue (ParameterIDs::strumSpeed);
     settings.contextMode = static_cast<Soli::ContextMode> (static_cast<int> (*parameters.getRawParameterValue (ParameterIDs::contextMode)));
     settings.substitutionDepth = *parameters.getRawParameterValue (ParameterIDs::substitutionDepth);
-    settings.harmonicStability = *parameters.getRawParameterValue (ParameterIDs::harmonicStability);
+    settings.harmonicStability = parameters.getRawParameterValue (ParameterIDs::stabilityEnabled)->load() > 0.5f
+                               ? parameters.getRawParameterValue (ParameterIDs::harmonicStability)->load() : 0.0f;
     settings.melodyImportance = *parameters.getRawParameterValue (ParameterIDs::melodyImportance);
+    settings.modulation = parameters.getRawParameterValue (ParameterIDs::modulation)->load();
+    settings.phraseMemory = parameters.getRawParameterValue (ParameterIDs::phraseMemory)->load() > 0.5f;
+    settings.melodyLogicEnabled = parameters.getRawParameterValue (ParameterIDs::melodyEnabled)->load() > 0.5f;
     settings.minNote = static_cast<int> (*parameters.getRawParameterValue (ParameterIDs::minNote));
     settings.maxNote = static_cast<int> (*parameters.getRawParameterValue (ParameterIDs::maxNote));
     return settings;
@@ -346,6 +353,69 @@ void SoliVoicerAudioProcessor::clearChordBank()
     chordBankHeld = {};
     chordBankFinalizeAfterSample = -1;
     chordBankCapture.clear();
+}
+
+bool SoliVoicerAudioProcessor::canLockLastChord() const
+{
+    const juce::SpinLock::ScopedLockType lock (lockedChordLock);
+    return hasLastGeneratedChord && ! lastGeneratedChord.notes.empty();
+}
+
+void SoliVoicerAudioProcessor::lockLastChord()
+{
+    const juce::SpinLock::ScopedLockType lock (lockedChordLock);
+    if (! hasLastGeneratedChord || lastGeneratedChord.notes.empty())
+        return;
+    const auto existing = std::find_if (lockedChords.begin(), lockedChords.end(), [this] (const auto& chord)
+    {
+        return chord.inputNote == lastGeneratedChord.inputNote;
+    });
+    if (existing != lockedChords.end())
+        *existing = lastGeneratedChord;
+    else
+        lockedChords.push_back (lastGeneratedChord);
+}
+
+std::vector<SoliVoicerAudioProcessor::LockedChord> SoliVoicerAudioProcessor::getLockedChords() const
+{
+    const juce::SpinLock::ScopedLockType lock (lockedChordLock);
+    return lockedChords;
+}
+
+void SoliVoicerAudioProcessor::removeLockedChord (int inputNote)
+{
+    const juce::SpinLock::ScopedLockType lock (lockedChordLock);
+    lockedChords.erase (std::remove_if (lockedChords.begin(), lockedChords.end(), [inputNote] (const auto& chord)
+    {
+        return chord.inputNote == inputNote;
+    }), lockedChords.end());
+}
+
+void SoliVoicerAudioProcessor::clearLockedChords()
+{
+    const juce::SpinLock::ScopedLockType lock (lockedChordLock);
+    lockedChords.clear();
+}
+
+Soli::GeneratedChord SoliVoicerAudioProcessor::lockedChordForInput (int inputNote) const
+{
+    const juce::SpinLock::ScopedLockType lock (lockedChordLock);
+    const auto found = std::find_if (lockedChords.begin(), lockedChords.end(), [inputNote] (const auto& chord)
+    {
+        return chord.inputNote == inputNote;
+    });
+    if (found == lockedChords.end())
+        return {};
+    return { found->notes, found->name };
+}
+
+void SoliVoicerAudioProcessor::rememberLastGeneratedChord (int inputNote, const Soli::GeneratedChord& generated)
+{
+    if (generated.notes.empty())
+        return;
+    const juce::SpinLock::ScopedLockType lock (lockedChordLock);
+    lastGeneratedChord = { inputNote, generated.name, generated.notes };
+    hasLastGeneratedChord = true;
 }
 
 void SoliVoicerAudioProcessor::captureChordBankNoteOn (int channel, int note)
@@ -1297,11 +1367,14 @@ void SoliVoicerAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
         performanceChannels = {};
         engine.reset();
         refreshVisualVoicing();
-        const std::lock_guard<std::mutex> lock (nameMutex);
-        lastChordName = "--";
     }
     emitPendingMidi (blockSamples, output);
     const auto settings = readSettings();
+    if (settings.phraseMemory != lastPhraseMemoryEnabled)
+    {
+        engine.reset();
+        lastPhraseMemoryEnabled = settings.phraseMemory;
+    }
     const auto transport = readTransport();
     const auto chordBankMode = parameters.getRawParameterValue (ParameterIDs::sourceMode)->load() > 0.5f;
     const auto chordBankIsListening = chordBankListening.load (std::memory_order_acquire);
@@ -1366,13 +1439,17 @@ void SoliVoicerAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
             const auto eventPpq = transport.valid ? transport.ppq + samplePosition * ppqPerSample : 0.0;
             auto eventSettings = settings;
             eventSettings.fastInput = fastLead;
-            auto generated = chordBankMode ? generateChordBankVoicing (inputNote, eventSettings)
-                                           : generateChord (inputNote, velocity, eventSettings, eventPpq);
+            auto generated = lockedChordForInput (inputNote);
+            const auto usedInputLock = ! generated.notes.empty();
+            if (! usedInputLock)
+                generated = chordBankMode ? generateChordBankVoicing (inputNote, eventSettings)
+                                          : generateChord (inputNote, velocity, eventSettings, eventPpq);
+            rememberLastGeneratedChord (inputNote, generated);
             // Chord Bank reproduces the recorded chord quality directly. Style
             // and Playability intentionally do not rewrite its notes; Role sets
             // register placement and the existing Rake controls onset spread.
-            const auto safeNotes = chordBankMode ? generated.notes
-                                                 : applyFastLeadSafety (generated.notes, inputNote, eventSettings, fastLead);
+            const auto safeNotes = chordBankMode || usedInputLock ? generated.notes
+                                                                  : applyFastLeadSafety (generated.notes, inputNote, eventSettings, fastLead);
             const auto safeVelocity = chordBankMode ? velocity
                                                     : scaleVelocityForVoicing (velocity, static_cast<int> (generated.notes.size()), eventSettings, fastLead);
             transitionLeadChordOnChannel (channel,
@@ -1454,6 +1531,18 @@ void SoliVoicerAudioProcessor::getStateInformation (juce::MemoryBlock& destData)
     }
     state.setProperty ("chordBankData", encodedCards.joinIntoString (";"), nullptr);
     state.setProperty ("chordBankListening", chordBankListening.load (std::memory_order_acquire), nullptr);
+    juce::StringArray encodedLocks;
+    {
+        const juce::SpinLock::ScopedLockType lock (lockedChordLock);
+        for (const auto& chord : lockedChords)
+        {
+            juce::StringArray notes;
+            for (const auto note : chord.notes)
+                notes.add (juce::String (note));
+            encodedLocks.add (juce::String (chord.inputNote) + "|" + chord.name + "|" + notes.joinIntoString (","));
+        }
+    }
+    state.setProperty ("lockedChordData", encodedLocks.joinIntoString (";"), nullptr);
     if (auto xml = state.createXml())
         copyXmlToBinary (*xml, destData);
 }
@@ -1491,6 +1580,26 @@ void SoliVoicerAudioProcessor::setStateInformation (const void* data, int sizeIn
                 chordBank = std::move (restored);
             }
             chordBankListening.store (static_cast<bool> (state.getProperty ("chordBankListening", true)), std::memory_order_release);
+
+            std::vector<LockedChord> restoredLocks;
+            const auto lockRows = juce::StringArray::fromTokens (state.getProperty ("lockedChordData").toString(), ";", "");
+            for (const auto& row : lockRows)
+            {
+                const auto fields = juce::StringArray::fromTokens (row, "|", "");
+                if (fields.size() < 3)
+                    continue;
+                LockedChord chord;
+                chord.inputNote = juce::jlimit (0, 127, fields[0].getIntValue());
+                chord.name = fields[1];
+                for (const auto& note : juce::StringArray::fromTokens (fields[2], ",", ""))
+                    chord.notes.push_back (juce::jlimit (0, 127, note.getIntValue()));
+                if (! chord.notes.empty())
+                    restoredLocks.push_back (std::move (chord));
+            }
+            {
+                const juce::SpinLock::ScopedLockType lock (lockedChordLock);
+                lockedChords = std::move (restoredLocks);
+            }
         }
 }
 
@@ -1531,8 +1640,9 @@ void SoliVoicerAudioProcessor::panic()
     for (auto& mask : visualInputNoteMasks)
         mask.store (0, std::memory_order_release);
 
-    const std::lock_guard<std::mutex> lock (nameMutex);
-    lastChordName = "--";
+    // Keep the observed chord name latched until another chord replaces it.
+    // Panic and New Phrase silence/reset performance state without erasing the
+    // musician's last useful harmonic reference.
 }
 
 void SoliVoicerAudioProcessor::startNewPhrase()
@@ -1571,6 +1681,13 @@ juce::AudioProcessorValueTreeState::ParameterLayout SoliVoicerAudioProcessor::cr
     params.push_back (std::make_unique<juce::AudioParameterFloat> (juce::ParameterID { ParameterIDs::substitutionDepth, 1 }, "Substitution Depth", juce::NormalisableRange<float> (0.0f, 1.0f, 0.01f), 0.35f));
     params.push_back (std::make_unique<juce::AudioParameterFloat> (juce::ParameterID { ParameterIDs::harmonicStability, 1 }, "Harmonic Stability", juce::NormalisableRange<float> (0.0f, 1.0f, 0.01f), 0.72f));
     params.push_back (std::make_unique<juce::AudioParameterFloat> (juce::ParameterID { ParameterIDs::melodyImportance, 1 }, "Melody Importance", juce::NormalisableRange<float> (0.0f, 1.0f, 0.01f), 0.88f));
+    params.push_back (std::make_unique<juce::AudioParameterFloat> (juce::ParameterID { ParameterIDs::modulation, 1 }, "Modulation", juce::NormalisableRange<float> (0.0f, 1.0f, 0.01f), 0.0f));
+    params.push_back (std::make_unique<juce::AudioParameterBool> (juce::ParameterID { ParameterIDs::phraseMemory, 1 }, "Phrase Memory", true));
+    params.push_back (std::make_unique<juce::AudioParameterBool> (juce::ParameterID { ParameterIDs::complexityEnabled, 1 }, "Use Color Logic", true));
+    params.push_back (std::make_unique<juce::AudioParameterBool> (juce::ParameterID { ParameterIDs::voiceLeadingEnabled, 1 }, "Use Lead Logic", true));
+    params.push_back (std::make_unique<juce::AudioParameterBool> (juce::ParameterID { ParameterIDs::outsideEnabled, 1 }, "Use Outside Logic", true));
+    params.push_back (std::make_unique<juce::AudioParameterBool> (juce::ParameterID { ParameterIDs::stabilityEnabled, 1 }, "Use Stability Logic", true));
+    params.push_back (std::make_unique<juce::AudioParameterBool> (juce::ParameterID { ParameterIDs::melodyEnabled, 1 }, "Use Melody Logic", true));
     addChoice (ParameterIDs::performanceStyle, "Performance Style", performanceStyleNames(), 0);
     addChoice (ParameterIDs::performanceSubStyle, "Performance Sub Style", { "Sub Style 1", "Sub Style 2", "Sub Style 3", "Sub Style 4", "Sub Style 5", "Sub Style 6" }, 0);
     params.push_back (std::make_unique<juce::AudioParameterFloat> (juce::ParameterID { ParameterIDs::performanceComplexity, 1 }, "Performance Sophistication", juce::NormalisableRange<float> (0.0f, 1.0f, 0.01f), 0.45f));

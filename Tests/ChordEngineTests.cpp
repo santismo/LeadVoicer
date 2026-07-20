@@ -78,9 +78,27 @@ int main()
         return fail ("Root-mode C in C Ionian did not produce Cmaj7.");
 
     const auto chromaticTrigger = engine.generate (61, 100, settings);
-    if (chromaticTrigger.name != "Fmaj7" || chromaticTrigger.notes.size() < 3
-        || containsPitchClass (chromaticTrigger.notes, 1))
-        return fail ("A chromatic Simple-mode trigger passed through or failed to advance I to IV.");
+    if (chromaticTrigger.name != "C#dim7" || chromaticTrigger.notes.size() < 4
+        || ! containsPitchClass (chromaticTrigger.notes, 1))
+        return fail ("A chromatic Simple-mode trigger did not become a diminished passing chord on its played root.");
+
+    const auto dMinor = engine.generate (62, 100, settings);
+    if (dMinor.name != "Dm7")
+        return fail ("Simple mode did not resolve Cmaj7 - Dbdim7 - Dm7 by performed root.");
+
+    engine.reset();
+    settings.phraseMemory = false;
+    settings.modulation = 1.0f;
+    const auto modulatedPassing = engine.generate (61, 100, settings);
+    const std::array<juce::String, 4> modulationQualities { "C#m7b5", "C#m7", "C#maj7", "C#7" };
+    if (std::find (modulationQualities.begin(), modulationQualities.end(), modulatedPassing.name)
+            == modulationQualities.end()
+        || modulatedPassing.notes.size() < 4)
+        return fail ("Maximum Modulation did not turn a chromatic Simple-mode note into a context-fitting basic seventh color.");
+
+    engine.reset();
+    settings.phraseMemory = true;
+    settings.modulation = 0.0f;
 
     const auto bDiminished = engine.generate (71, 100, settings);
     if (bDiminished.name != "Bdim7" || ! containsPitchClass (bDiminished.notes, 11)
@@ -89,7 +107,31 @@ int main()
         return fail ("Root-mode B in C Ionian did not produce Bdim7.");
 
     engine.reset();
+    settings.style = Soli::Style::modernOutside;
+    settings.role = Soli::NoteRole::root;
+    settings.phraseMemory = false;
+    settings.complexity = 1.0f;
+    settings.outside = 1.0f;
+    settings.variation = 1.0f;
+    settings.harmonicStability = 0.0f;
+    auto foundOutsideHarmony = false;
+    for (int input = 60; input < 72 && ! foundOutsideHarmony; ++input)
+    {
+        const auto borrowed = engine.generate (input, 100, settings);
+        foundOutsideHarmony = std::any_of (borrowed.notes.begin(), borrowed.notes.end(), [&] (int note)
+        {
+            return std::find (cIonian.begin(), cIonian.end(), (note % 12 + 12) % 12) == cIonian.end();
+        });
+    }
+    if (! foundOutsideHarmony)
+        return fail ("Maximum Outside could not borrow harmony with only C Ionian selected.");
+
+    engine.reset();
     settings.role = Soli::NoteRole::melodyTop;
+    settings.phraseMemory = true;
+    settings.outside = 1.0f;
+    settings.variation = 0.0f;
+    settings.harmonicStability = 0.72f;
     settings.style = Soli::Style::closeLead;
     const auto closeC = engine.generate (72, 100, settings);
     const auto closeD = engine.generate (74, 100, settings);
@@ -101,6 +143,17 @@ int main()
     const auto miller = engine.generate (72, 100, settings);
     if (! contains (miller.notes, 72) || ! contains (miller.notes, 60))
         return fail ("Big Band did not create its doubled-lead soli voicing.");
+
+    engine.reset();
+    settings.style = Soli::Style::closeLead;
+    settings.repeatChance = 1.0f;
+    const auto assignedC = engine.generate (72, 100, settings);
+    const auto assignedD = engine.generate (74, 100, settings);
+    const auto repeatedC = engine.generate (72, 100, settings);
+    if (assignedC.notes != repeatedC.notes || assignedC.name != repeatedC.name)
+        return fail ("Repeat at maximum did not preserve the exact chord assigned to an input note.");
+    if (assignedD.notes == assignedC.notes)
+        return fail ("Repeat incorrectly copied one input note's chord to a different input note.");
 
     engine.reset();
     settings.style = Soli::Style::simpleScale;

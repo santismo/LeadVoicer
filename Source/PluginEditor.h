@@ -50,6 +50,10 @@ private:
     void layoutChordBankCards();
     void selectChordBankCard (int index);
     void deleteSelectedChordBankCard();
+    void refreshLockedChordCards();
+    void layoutLockedChordCards();
+    void selectLockedChord (int inputNote);
+    void deleteSelectedLockedChord();
     void updatePerformanceSubStyleChoices();
     void applySkin (int skinIndex);
     void randomizeAllSettings();
@@ -67,6 +71,10 @@ private:
     Soli::ChordizerSnapshot chordizerSnapshot;
     juce::Rectangle<int> timelineBounds;
     juce::Rectangle<int> voicingGroupBounds;
+    juce::Rectangle<int> voiceShapeGroupBounds;
+    juce::Rectangle<int> rangeGestureGroupBounds;
+    juce::Rectangle<int> phraseLogicGroupBounds;
+    juce::Rectangle<int> inputLocksGroupBounds;
     juce::Rectangle<int> performanceGroupBounds;
     double timelineScrollPpq = 0.0;
 
@@ -88,6 +96,19 @@ private:
     juce::Label chordBankCardsLabel;
     std::vector<std::unique_ptr<juce::TextButton>> chordBankCardButtons;
     std::vector<std::unique_ptr<juce::Slider>> chordBankProbabilityDials;
+    juce::ToggleButton phraseMemoryButton { "Phrase Memory" };
+    juce::ToggleButton complexityEnabledButton;
+    juce::ToggleButton voiceLeadingEnabledButton;
+    juce::ToggleButton outsideEnabledButton;
+    juce::ToggleButton stabilityEnabledButton;
+    juce::ToggleButton melodyEnabledButton;
+    juce::TextButton lockLastChordButton { "Lock Last Chord" };
+    juce::TextButton unlockSelectedButton { "Unlock Selected" };
+    juce::TextButton unlockAllButton { "Unlock All" };
+    juce::Component lockedChordContent;
+    juce::Viewport lockedChordViewport;
+    juce::Label lockedChordEmptyLabel;
+    std::vector<std::unique_ptr<juce::TextButton>> lockedChordButtons;
     juce::ComboBox sourceModeBox;
     juce::ComboBox outputModeBox;
     juce::ComboBox contextModeBox;
@@ -126,6 +147,7 @@ private:
     juce::Slider substitutionSlider;
     juce::Slider harmonicStabilitySlider;
     juce::Slider melodyImportanceSlider;
+    juce::Slider modulationSlider;
     juce::Slider performanceComplexitySlider;
     juce::Slider densitySlider;
     juce::Slider syncopationSlider;
@@ -145,6 +167,7 @@ private:
     juce::Label substitutionLabel;
     juce::Label harmonicStabilityLabel;
     juce::Label melodyImportanceLabel;
+    juce::Label modulationLabel;
     juce::Label performanceComplexityLabel;
     juce::Label densityLabel;
     juce::Label syncopationLabel;
@@ -173,6 +196,7 @@ private:
     std::unique_ptr<SliderAttachment> substitutionAttachment;
     std::unique_ptr<SliderAttachment> harmonicStabilityAttachment;
     std::unique_ptr<SliderAttachment> melodyImportanceAttachment;
+    std::unique_ptr<SliderAttachment> modulationAttachment;
     std::unique_ptr<SliderAttachment> performanceComplexityAttachment;
     std::unique_ptr<SliderAttachment> densityAttachment;
     std::unique_ptr<SliderAttachment> syncopationAttachment;
@@ -180,13 +204,22 @@ private:
     std::unique_ptr<SliderAttachment> humanizeAttachment;
     std::unique_ptr<SliderAttachment> gateAttachment;
     std::unique_ptr<ButtonAttachment> doubleTimeAttachment;
+    std::unique_ptr<ButtonAttachment> phraseMemoryAttachment;
+    std::unique_ptr<ButtonAttachment> complexityEnabledAttachment;
+    std::unique_ptr<ButtonAttachment> voiceLeadingEnabledAttachment;
+    std::unique_ptr<ButtonAttachment> outsideEnabledAttachment;
+    std::unique_ptr<ButtonAttachment> stabilityEnabledAttachment;
+    std::unique_ptr<ButtonAttachment> melodyEnabledAttachment;
 
     bool syncingMasks = false;
     bool updatingSubStyleChoices = false;
     int lastPerformanceStyle = -1;
     bool lastChordBankMode = false;
+    bool lastSimpleMode = true;
     int selectedChordBankCard = -1;
     int lastChordBankCardCount = 0;
+    int selectedLockedInputNote = -1;
+    int lastLockedChordCount = 0;
     juce::File lastMidiExportFile;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (SoliVoicerAudioProcessorEditor)

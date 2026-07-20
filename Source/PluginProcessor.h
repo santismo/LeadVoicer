@@ -33,6 +33,13 @@ namespace ParameterIDs
     static constexpr auto substitutionDepth = "substitutionDepth";
     static constexpr auto harmonicStability = "harmonicStability";
     static constexpr auto melodyImportance = "melodyImportance";
+    static constexpr auto modulation = "modulation";
+    static constexpr auto phraseMemory = "phraseMemory";
+    static constexpr auto complexityEnabled = "complexityEnabled";
+    static constexpr auto voiceLeadingEnabled = "voiceLeadingEnabled";
+    static constexpr auto outsideEnabled = "outsideEnabled";
+    static constexpr auto stabilityEnabled = "stabilityEnabled";
+    static constexpr auto melodyEnabled = "melodyEnabled";
     static constexpr auto performanceStyle = "performanceStyle";
     static constexpr auto performanceSubStyle = "performanceSubStyle";
     static constexpr auto performanceComplexity = "performanceComplexity";
@@ -58,6 +65,13 @@ public:
         // Canonical formula intervals; compound extensions retain 9/11/13 roles.
         std::vector<int> intervals;
         float probability = 1.0f;
+    };
+
+    struct LockedChord
+    {
+        int inputNote = 60;
+        juce::String name;
+        std::vector<int> notes;
     };
 
     SoliVoicerAudioProcessor();
@@ -99,6 +113,11 @@ public:
     void setChordBankCardProbability (int index, float probability);
     void removeChordBankCard (int index);
     void clearChordBank();
+    bool canLockLastChord() const;
+    void lockLastChord();
+    std::vector<LockedChord> getLockedChords() const;
+    void removeLockedChord (int inputNote);
+    void clearLockedChords();
 
     static juce::StringArray sourceModeNames();
     static juce::StringArray outputModeNames();
@@ -182,6 +201,8 @@ private:
     bool anyChordBankNoteHeldLocked() const noexcept;
     juce::String finalizeChordBankCaptureLocked();
     Soli::GeneratedChord generateChordBankVoicing (int inputNote, const Soli::Settings& settings);
+    Soli::GeneratedChord lockedChordForInput (int inputNote) const;
+    void rememberLastGeneratedChord (int inputNote, const Soli::GeneratedChord& generated);
 
     juce::AudioProcessorValueTreeState parameters;
     Soli::ChordEngine engine;
@@ -197,6 +218,10 @@ private:
     std::array<std::array<bool, 128>, 16> chordBankHeld {};
     std::vector<int> chordBankCapture;
     juce::int64 chordBankFinalizeAfterSample = -1;
+    mutable juce::SpinLock lockedChordLock;
+    std::vector<LockedChord> lockedChords;
+    LockedChord lastGeneratedChord;
+    bool hasLastGeneratedChord = false;
     std::array<juce::int64, 16> lastLeadNoteSample {};
     juce::int64 processedSamples = 0;
     std::vector<PendingMidi> pendingMidi;
@@ -204,6 +229,7 @@ private:
     Soli::ChordizerContext lastChordizerContext;
     double lastTransportPpq = -1.0;
     bool lastTransportPlaying = false;
+    bool lastPhraseMemoryEnabled = true;
     std::mt19937 performanceRandom { std::random_device{}() };
     mutable std::mutex nameMutex;
     juce::String lastChordName = "--";
