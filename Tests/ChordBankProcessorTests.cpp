@@ -182,6 +182,11 @@ void testRootIndependentQualityAndRoleAnchors()
     expect (noteOns (rootTrigger) == std::vector<int> ({ 60, 63, 67, 70, 74 }),
             "Root role applies the learned m9 formula to the incoming C");
     expect (processor.getLastChordName() == "m9", "Perform readout remains a quality, not a named root chord");
+    processor.panic();
+    expect (processor.getLastChordName() == "m9", "Panic leaves the last observed chord readout latched");
+    processor.startNewPhrase();
+    processSilence (processor, 1);
+    expect (processor.getLastChordName() == "m9", "New Phrase leaves the last observed chord readout latched");
 
     selectRole (processor, Soli::NoteRole::melodyTop);
     juce::MidiBuffer melodyTrigger;
@@ -259,6 +264,48 @@ void testProbabilityPersistenceAndDeletion()
     cards = restored.getChordBankCards();
     expect (cards.size() == 1 && cards.front().name == "m7", "The selected card can be deleted independently");
 }
+
+void testExactInputLocksAndPersistence()
+{
+    SoliVoicerAudioProcessor processor;
+    processor.setRateAndBufferSizeDetails (1000.0, 64);
+    processor.prepareToPlay (1000.0, 64);
+
+    juce::MidiBuffer firstTrigger;
+    firstTrigger.addEvent (juce::MidiMessage::noteOn (1, 60, static_cast<juce::uint8> (100)), 0);
+    process (processor, firstTrigger);
+    const auto originalNotes = noteOns (firstTrigger);
+    expect (originalNotes.size() >= 3, "A generated harmony is available to lock");
+    expect (processor.canLockLastChord(), "The most recently generated harmony can be locked");
+    processor.lockLastChord();
+
+    const auto locks = processor.getLockedChords();
+    expect (locks.size() == 1 && locks.front().inputNote == 60,
+            "Lock Last Chord binds the exact input MIDI note and register");
+
+    juce::MidiBuffer release;
+    release.addEvent (juce::MidiMessage::noteOff (1, 60), 0);
+    process (processor, release);
+    if (auto* style = processor.getValueTreeState().getParameter (ParameterIDs::style))
+        style->setValueNotifyingHost (style->convertTo0to1 (static_cast<float> (static_cast<int> (Soli::Style::modernOutside))));
+    if (auto* role = processor.getValueTreeState().getParameter (ParameterIDs::role))
+        role->setValueNotifyingHost (role->convertTo0to1 (static_cast<float> (static_cast<int> (Soli::NoteRole::bass))));
+
+    juce::MidiBuffer lockedTrigger;
+    lockedTrigger.addEvent (juce::MidiMessage::noteOn (1, 60, static_cast<juce::uint8> (100)), 0);
+    process (processor, lockedTrigger);
+    expect (noteOns (lockedTrigger) == originalNotes,
+            "A lock recalls the exact stored chord and register after the generation controls change");
+
+    juce::MemoryBlock state;
+    processor.getStateInformation (state);
+    SoliVoicerAudioProcessor restored;
+    restored.setStateInformation (state.getData(), static_cast<int> (state.getSize()));
+    expect (restored.getLockedChords().size() == 1 && restored.getLockedChords().front().notes == originalNotes,
+            "Input locks survive project state save and restore");
+    restored.removeLockedChord (60);
+    expect (restored.getLockedChords().empty(), "A selected exact-note lock can be removed independently");
+}
 }
 
 int main()
@@ -269,6 +316,7 @@ int main()
     testSeparateSingleNotesAreIgnored();
     testRootIndependentQualityAndRoleAnchors();
     testProbabilityPersistenceAndDeletion();
+    testExactInputLocksAndPersistence();
     if (failures == 0)
     {
         std::cout << "Chord Bank processor tests passed\n";

@@ -118,6 +118,9 @@ struct Settings
     float substitutionDepth = 0.35f;
     float harmonicStability = 0.72f;
     float melodyImportance = 0.88f;
+    float modulation = 0.0f;
+    bool phraseMemory = true;
+    bool melodyLogicEnabled = true;
     bool fastInput = false;
     int minNote = 36;
     int maxNote = 96;
@@ -176,7 +179,6 @@ private:
     ScaleType choosePrimaryScale (const Settings& settings);
     int chooseWeightedIndex (const std::vector<Candidate>& candidates, const Settings& settings);
     int nearestChordToneIndex (const std::vector<int>& intervals, int pitchClassFromRoot) const;
-    bool pitchInAnyScale (int pitchClass, int root, const Settings& settings) const;
     bool chordMostlyInScale (int root, const ChordType& type, const Settings& settings) const;
     juce::String chordName (int root, const ChordType& type) const;
 
@@ -190,6 +192,9 @@ private:
     float registerCentre = 66.0f;
     std::vector<int> recentInputNotes;
     std::vector<int> recentScaleDegrees;
+    std::array<GeneratedChord, 128> perInputChords;
+    std::array<bool, 128> hasPerInputChord {};
+    juce::uint32 freeChoiceCounter = 0;
     std::mt19937 rng { 0x5a17c0deu };
 };
 }

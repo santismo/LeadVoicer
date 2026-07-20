@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.22)
 
-project(VoicizerMidiFx VERSION 2.0.0 LANGUAGES C CXX)
+project(VoicizerMidiFx VERSION 2.0.1 LANGUAGES C CXX)
 
 set(JUCE_DIR "/Users/santiagotrejo/Desktop/JUCE" CACHE PATH "Path to a JUCE checkout or extracted JUCE folder")
 option(VOICIZER_COPY_PLUGIN_AFTER_BUILD "Copy the built Audio Unit to the user plug-in folder" ON)
