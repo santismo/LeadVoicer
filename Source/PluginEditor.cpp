@@ -389,6 +389,7 @@ SoliVoicerAudioProcessorEditor::SoliVoicerAudioProcessorEditor (SoliVoicerAudioP
 
     configureLabel (keyLabel, "Keys");
     configureLabel (scaleLabel, "Scales");
+    scaleLabel.setTooltip ("Selected scales form one harmonic palette. Selecting multiple scales under one key enables modal interchange without requiring Outside or Modulation.");
     addAndMakeVisible (randomKeyScaleButton);
     randomKeyScaleButton.onClick = [this] { randomizeKeyScaleSettings(); };
     randomKeyScaleButton.setTooltip ("Randomize the enabled keys and scales.");
@@ -402,6 +403,7 @@ SoliVoicerAudioProcessorEditor::SoliVoicerAudioProcessorEditor (SoliVoicerAudioP
             commitMask (ParameterIDs::keyMask, keyToggles, 12);
         };
         configureMaskToggle (scaleToggles[static_cast<std::size_t> (i)], scales[i]);
+        scaleToggles[static_cast<std::size_t> (i)].setTooltip ("Include " + scales[i] + " in the normal harmony palette. Multiple selected scales can interchange during a phrase.");
         scaleToggles[static_cast<std::size_t> (i)].onClick = [this]
         {
             commitMask (ParameterIDs::scaleMask, scaleToggles, 12);
@@ -475,8 +477,8 @@ SoliVoicerAudioProcessorEditor::SoliVoicerAudioProcessorEditor (SoliVoicerAudioP
     addSlider (outsideSlider, outsideLabel, "Outside", "Allows notes and chord choices outside the selected key and scale. Zero keeps harmony inside.");
     addSlider (repeatSlider, repeatLabel, "Repeat", "Zero asks for fresh alternatives when available. At 100%, each exact input note and register recalls its assigned chord until New Phrase.");
     addSlider (strumSpeedSlider, strumSpeedLabel, "Rake", "Controls the onset spread for raked held chords.");
-    addSlider (minNoteSlider, minNoteLabel, "Low", "Lowest generated MIDI note.");
-    addSlider (maxNoteSlider, maxNoteLabel, "High", "Highest generated MIDI note.");
+    addSlider (minNoteSlider, minNoteLabel, "Low", "Lowest generated MIDI note. Piano and Piano Hands can extend down to A0 (MIDI 21).");
+    addSlider (maxNoteSlider, maxNoteLabel, "High", "Highest generated MIDI note. Piano and Piano Hands can extend up to C8 (MIDI 108).");
     addSlider (substitutionSlider, substitutionLabel, "Substitution Depth", "Controls how far compatible replacements may move from the Chordizer chord.");
     addSlider (harmonicStabilitySlider, harmonicStabilityLabel, "Stability", "Higher values favor functional continuity, familiar cadences, and repeatable harmony.");
     addSlider (melodyImportanceSlider, melodyImportanceLabel, "Melody", "Controls how strongly lead styles preserve the played note as the top melodic voice.");

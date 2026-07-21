@@ -669,7 +669,7 @@ GeneratedChord ChordEngine::generate (int inputNote, int, const Settings& settin
 GeneratedChord ChordEngine::generateSimpleScaleChord (int inputNote, const Settings& settings)
 {
     const auto key = choosePrimaryKey (settings, inputNote);
-    const auto scale = choosePrimaryScale (settings);
+    const auto scale = choosePrimaryScale (settings, key, inputNote);
     const auto& scaleNotes = scaleIntervals (scale);
     const auto inputPitchClass = mod12 (inputNote);
     const auto scaleDegree = [&]
@@ -844,7 +844,7 @@ GeneratedChord ChordEngine::generateSimpleScaleChord (int inputNote, const Setti
 GeneratedChord ChordEngine::generateLeadSoliChord (int inputNote, const Settings& settings, bool bigBand)
 {
     const auto key = choosePrimaryKey (settings, inputNote);
-    const auto scale = choosePrimaryScale (settings);
+    const auto scale = choosePrimaryScale (settings, key, inputNote);
     const auto& scaleNotes = scaleIntervals (scale);
     const auto inputPitchClass = mod12 (inputNote);
     const auto inputIsInScale = std::find (scaleNotes.begin(), scaleNotes.end(),
@@ -1030,7 +1030,7 @@ GeneratedChord ChordEngine::finishGeneratedChord (GeneratedChord result,
 
     switch (settings.playability)
     {
-        case Playability::piano: applyPreset (36, 96, 10, 64.0f); break;
+        case Playability::piano: applyPreset (21, 108, 10, 64.0f); break;
         case Playability::guitar: applyPreset (40, 88, 6, 62.0f); break;
         case Playability::hornSection: applyPreset (46, 84, 8, 65.0f); break;
         case Playability::orchestra: applyPreset (24, 108, 24, 64.0f); break;
@@ -1038,7 +1038,7 @@ GeneratedChord ChordEngine::finishGeneratedChord (GeneratedChord result,
         case Playability::brassSection: applyPreset (40, 86, 6, 62.0f); break;
         case Playability::vocalSATB: applyPreset (40, 81, 4, 61.0f); break;
         case Playability::strings: applyPreset (36, 100, 8, 66.0f); break;
-        case Playability::pianoHands: applyPreset (36, 96, 8, 64.0f); break;
+        case Playability::pianoHands: applyPreset (21, 108, 8, 64.0f); break;
         case Playability::lowReeds: applyPreset (28, 67, 5, 48.0f); break;
         case Playability::synthStack: applyPreset (24, 108, 12, 66.0f); break;
         case Playability::unrestricted: break;
@@ -1321,20 +1321,37 @@ int ChordEngine::choosePrimaryKey (const Settings& settings, int inputNote)
     return bestKey;
 }
 
-ScaleType ChordEngine::choosePrimaryScale (const Settings& settings)
+ScaleType ChordEngine::choosePrimaryScale (const Settings& settings, int key, int inputNote)
 {
     const auto scaleMask = clampMask (settings.scaleMask, scaleCount);
-    if (settings.phraseMemory && phraseScale >= 0 && maskContains (scaleMask, phraseScale))
-        return static_cast<ScaleType> (phraseScale);
-
     std::vector<double> weights;
     std::vector<int> indexes;
     weights.reserve (scaleCount);
     indexes.reserve (scaleCount);
 
+    // Multiple selected scales are one intentional modal palette, rather than
+    // alternatives from which a single scale is pinned for the whole phrase.
+    // If the performed note belongs to only some selected modes, restrict the
+    // choice to those modes so it is never mistaken for an outside note.
+    const auto relativeInput = mod12 (inputNote - key);
+    auto anySelectedScaleContainsInput = false;
     for (int i = 0; i < scaleCount; ++i)
     {
         if (! maskContains (scaleMask, i))
+            continue;
+        const auto& intervals = scaleIntervals (static_cast<ScaleType> (i));
+        anySelectedScaleContainsInput = anySelectedScaleContainsInput
+            || std::find (intervals.begin(), intervals.end(), relativeInput) != intervals.end();
+    }
+
+    for (int i = 0; i < scaleCount; ++i)
+    {
+        if (! maskContains (scaleMask, i))
+            continue;
+
+        const auto& intervals = scaleIntervals (static_cast<ScaleType> (i));
+        const auto containsInput = std::find (intervals.begin(), intervals.end(), relativeInput) != intervals.end();
+        if (anySelectedScaleContainsInput && ! containsInput)
             continue;
 
         auto weight = 1.0;
@@ -1352,6 +1369,18 @@ ScaleType ChordEngine::choosePrimaryScale (const Settings& settings)
             weight += (i == 1 || i == 3 || i == 8) ? 2.0 : 0.0;
         if (settings.style == Style::latinShells)
             weight += (i == 0 || i == 4 || i == 5) ? 1.5 : 0.0;
+
+        // Phrase Memory gives the last mode a modest continuity preference,
+        // but no longer locks it. Every fourth generated chord gently invites
+        // another selected mode, producing musical modal interchange while
+        // leaving Outside and Modulation at zero.
+        if (settings.phraseMemory && phraseScale >= 0)
+        {
+            if (i == phraseScale)
+                weight *= phrasePosition > 0 && phrasePosition % 4 == 3 ? 0.2 : 1.35;
+            else if (phrasePosition > 0 && phrasePosition % 4 == 3)
+                weight *= 1.8;
+        }
 
         indexes.push_back (i);
         weights.push_back (weight);

@@ -67,6 +67,64 @@ int main()
     if (! simple.name.contains ("7"))
         return fail ("Simple Scale Chords did not prefer a basic seventh chord.");
 
+    // E Ionian + E Dorian is a selected modal palette, not an Outside or
+    // Modulation effect. Notes unique to either mode must retain their proper
+    // diatonic chord even when Repeat is at either extreme.
+    engine.reset();
+    settings.style = Soli::Style::simpleScale;
+    settings.role = Soli::NoteRole::root;
+    settings.keyMask = 1 << 4; // E
+    settings.scaleMask = (1 << 0) | (1 << 1); // Ionian + Dorian
+    settings.outside = 0.0f;
+    settings.modulation = 0.0f;
+    settings.phraseMemory = true;
+    settings.repeatChance = 0.0f;
+    const auto dorianG = engine.generate (67, 100, settings);
+    const auto ionianGSharp = engine.generate (68, 100, settings);
+    if (dorianG.name != "Gmaj7" || ionianGSharp.name != "Abm7")
+    {
+        std::cerr << "Modal outputs: " << dorianG.name << ", " << ionianGSharp.name << '\n';
+        return fail ("Selected E Ionian and E Dorian did not interchange at zero Outside and Modulation.");
+    }
+
+    engine.reset();
+    std::set<juce::String> sharedRootQualities;
+    for (int attempt = 0; attempt < 16; ++attempt)
+        sharedRootQualities.insert (engine.generate (64, 100, settings).name);
+    if (sharedRootQualities.count ("Emaj7") == 0 || sharedRootQualities.count ("Em7") == 0)
+        return fail ("A root shared by E Ionian and E Dorian remained pinned to one selected mode.");
+
+    engine.reset();
+    settings.repeatChance = 1.0f;
+    const auto fixedDorianG = engine.generate (67, 100, settings);
+    const auto fixedIonianGSharp = engine.generate (68, 100, settings);
+    if (fixedDorianG.name != "Gmaj7" || fixedIonianGSharp.name != "Abm7")
+        return fail ("Maximum Repeat disabled the selected modal-interchange palette.");
+    if (engine.generate (67, 100, settings).name != fixedDorianG.name
+        || engine.generate (68, 100, settings).name != fixedIonianGSharp.name)
+        return fail ("Maximum Repeat stopped recalling an exact trigger after modal interchange.");
+
+    settings.keyMask = 1;   // C
+    settings.scaleMask = 1; // Ionian
+    settings.repeatChance = 0.0f;
+
+    engine.reset();
+    settings.style = Soli::Style::closeLead;
+    settings.role = Soli::NoteRole::melodyTop;
+    settings.playability = Soli::Playability::piano;
+    settings.minNote = 21;  // A0
+    settings.maxNote = 108; // C8
+    const auto pianoLow = engine.generate (21, 100, settings);
+    engine.reset();
+    const auto pianoHigh = engine.generate (108, 100, settings);
+    if (! contains (pianoLow.notes, 21) || ! contains (pianoHigh.notes, 108))
+        return fail ("Piano playability did not reach the full A0-to-C8 range.");
+
+    settings.style = Soli::Style::simpleScale;
+    settings.playability = Soli::Playability::piano;
+    settings.minNote = 36;
+    settings.maxNote = 96;
+
     engine.reset();
     settings.role = Soli::NoteRole::root;
     settings.chordSize = 4;
