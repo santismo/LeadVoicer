@@ -175,7 +175,7 @@ private:
     float scoreCandidate (const Candidate& candidate, int inputNote, const Settings& settings) const;
     NoteRole resolveRole (const Settings& settings);
     int choosePrimaryKey (const Settings& settings, int inputNote);
-    ScaleType choosePrimaryScale (const Settings& settings);
+    ScaleType choosePrimaryScale (const Settings& settings, int key, int inputNote);
     int chooseWeightedIndex (const std::vector<Candidate>& candidates, const Settings& settings);
     float repeatAvoidancePenalty (int inputNote, const juce::String& candidateName,
                                   const Settings& settings) const;
