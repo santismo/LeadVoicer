@@ -33,6 +33,14 @@ void selectRole (SoliVoicerAudioProcessor& processor, Soli::NoteRole role)
         parameter->setValueNotifyingHost (parameter->convertTo0to1 (static_cast<float> (static_cast<int> (role))));
 }
 
+void useImmediateChordOutput (SoliVoicerAudioProcessor& processor)
+{
+    if (auto* mode = processor.getValueTreeState().getParameter (ParameterIDs::strumMode))
+        mode->setValueNotifyingHost (mode->convertTo0to1 (static_cast<float> (static_cast<int> (Soli::StrumMode::together))));
+    if (auto* speed = processor.getValueTreeState().getParameter (ParameterIDs::strumSpeed))
+        speed->setValueNotifyingHost (speed->convertTo0to1 (0.0f));
+}
+
 void process (SoliVoicerAudioProcessor& processor, juce::MidiBuffer& midi, int samples = 64)
 {
     juce::AudioBuffer<float> audio (1, samples);
@@ -46,6 +54,78 @@ void processSilence (SoliVoicerAudioProcessor& processor, int blocks)
         juce::MidiBuffer midi;
         process (processor, midi);
     }
+}
+
+void expectParameterValue (SoliVoicerAudioProcessor& processor, const char* id, float expected)
+{
+    const auto* value = processor.getValueTreeState().getRawParameterValue (id);
+    const auto existsMessage = std::string ("Default preset parameter exists: ") + id;
+    expect (value != nullptr, existsMessage.c_str());
+    if (value != nullptr)
+    {
+        const auto matchesMessage = std::string ("Default preset value matches happy bday: ") + id;
+        expect (std::abs (value->load() - expected) < 0.001f, matchesMessage.c_str());
+    }
+}
+
+void testHappyBdayDefaultPreset()
+{
+    const std::array<std::pair<const char*, float>, 37> expected
+    {{
+        { ParameterIDs::chordSize, 4.0f },
+        { ParameterIDs::complexity, 0.79f },
+        { ParameterIDs::contextMode, 2.0f },
+        { ParameterIDs::gate, 0.39f },
+        { ParameterIDs::humanize, 0.30f },
+        { ParameterIDs::keyMask, 16.0f },
+        { ParameterIDs::maxNote, 127.0f },
+        { ParameterIDs::minNote, 33.0f },
+        { ParameterIDs::outputMode, 0.0f },
+        { ParameterIDs::outside, 0.0f },
+        { ParameterIDs::performanceComplexity, 0.90f },
+        { ParameterIDs::performanceStyle, 0.0f },
+        { ParameterIDs::playability, 4.0f },
+        { ParameterIDs::repeatChance, 0.0f },
+        { ParameterIDs::rhythmDensity, 0.35f },
+        { ParameterIDs::role, 0.0f },
+        { ParameterIDs::scaleMask, 1.0f },
+        { ParameterIDs::sourceMode, 0.0f },
+        { ParameterIDs::strumMode, 3.0f },
+        { ParameterIDs::strumSpeed, 0.19f },
+        { ParameterIDs::style, 2.0f },
+        { ParameterIDs::substitutionDepth, 0.53f },
+        { ParameterIDs::swing, 0.71f },
+        { ParameterIDs::syncopation, 0.73f },
+        { ParameterIDs::variation, 0.98f },
+        { ParameterIDs::voiceLeading, 0.93f },
+        { ParameterIDs::doubleTime, 1.0f },
+        { ParameterIDs::performanceSubStyle, 5.0f },
+        { ParameterIDs::complexityEnabled, 0.0f },
+        { ParameterIDs::harmonicStability, 0.72f },
+        { ParameterIDs::melodyEnabled, 0.0f },
+        { ParameterIDs::melodyImportance, 0.88f },
+        { ParameterIDs::modulation, 0.0f },
+        { ParameterIDs::outsideEnabled, 0.0f },
+        { ParameterIDs::phraseMemory, 0.0f },
+        { ParameterIDs::stabilityEnabled, 0.0f },
+        { ParameterIDs::voiceLeadingEnabled, 0.0f }
+    }};
+
+    SoliVoicerAudioProcessor processor;
+    expect (processor.getProgramName (0) == "happy bday", "The factory program is named happy bday");
+    for (const auto& [id, value] : expected)
+        expectParameterValue (processor, id, value);
+    expect (processor.isChordBankListening(), "happy bday defaults Chord Bank to Listen");
+    expect (processor.getChordBankCards().empty(), "happy bday defaults to an empty Chord Bank");
+    expect (processor.getLockedChords().empty(), "happy bday defaults to no locked chords");
+
+    if (auto* keyMask = processor.getValueTreeState().getParameter (ParameterIDs::keyMask))
+        keyMask->setValueNotifyingHost (keyMask->convertTo0to1 (1.0f));
+    processor.setChordBankListening (false);
+    processor.resetToDefaultPreset();
+    for (const auto& [id, value] : expected)
+        expectParameterValue (processor, id, value);
+    expect (processor.isChordBankListening(), "Reset restores happy bday Chord Bank Listen state");
 }
 
 void testAudibleRakedCapture()
@@ -178,6 +258,7 @@ void testRootIndependentQualityAndRoleAnchors()
     processor.setRateAndBufferSizeDetails (1000.0, 64);
     processor.prepareToPlay (1000.0, 64);
     selectChordBankMode (processor);
+    useImmediateChordOutput (processor);
 
     addCapturedChord (processor, { 52, 55, 59, 62, 66 }); // Em9
     auto cards = processor.getChordBankCards();
@@ -289,6 +370,7 @@ void testExactInputLocksAndPersistence()
     SoliVoicerAudioProcessor processor;
     processor.setRateAndBufferSizeDetails (1000.0, 64);
     processor.prepareToPlay (1000.0, 64);
+    useImmediateChordOutput (processor);
 
     juce::MidiBuffer firstTrigger;
     firstTrigger.addEvent (juce::MidiMessage::noteOn (1, 60, static_cast<juce::uint8> (100)), 0);
@@ -330,6 +412,7 @@ void testExactInputLocksAndPersistence()
 int main()
 {
     juce::ScopedJuceInitialiser_GUI juce;
+    testHappyBdayDefaultPreset();
     testAudibleRakedCapture();
     testLastHeldNoteControlsFinalization();
     testSeparateSingleNotesAreIgnored();

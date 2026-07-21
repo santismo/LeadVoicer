@@ -94,7 +94,7 @@ public:
     int getNumPrograms() override { return 1; }
     int getCurrentProgram() override { return 0; }
     void setCurrentProgram (int) override {}
-    const juce::String getProgramName (int) override { return {}; }
+    const juce::String getProgramName (int) override { return "happy bday"; }
     void changeProgramName (int, const juce::String&) override {}
 
     void getStateInformation (juce::MemoryBlock& destData) override;
@@ -107,6 +107,7 @@ public:
     std::array<juce::uint64, 2> getVisualInputNoteMasks() const noexcept;
     void panic();
     void startNewPhrase();
+    void resetToDefaultPreset();
     void setChordBankListening (bool shouldListen) noexcept;
     bool isChordBankListening() const noexcept { return chordBankListening.load (std::memory_order_acquire); }
     std::vector<ChordBankCard> getChordBankCards() const;

@@ -15,6 +15,45 @@ juce::StringArray withIndexOneIds (const juce::StringArray& names)
     return ids;
 }
 
+// Canonical fresh-instance and Reset-button values captured from the user's
+// "happy bday" Logic Audio Unit preset on 2026-07-21.
+namespace HappyBdayDefaults
+{
+constexpr int keyMask = 16;
+constexpr int scaleMask = 1;
+constexpr int role = 0;
+constexpr int style = 2;
+constexpr int playability = 4;
+constexpr int strumMode = 3;
+constexpr int sourceMode = 0;
+constexpr int outputMode = 0;
+constexpr int chordSize = 4;
+constexpr float complexity = 0.79f;
+constexpr float voiceLeading = 0.93f;
+constexpr float outside = 0.0f;
+constexpr float variation = 0.98f;
+constexpr float repeatChance = 0.0f;
+constexpr float strumSpeed = 0.19f;
+constexpr int minNote = 33;
+constexpr int maxNote = 127;
+constexpr int contextMode = 2;
+constexpr float substitutionDepth = 0.53f;
+constexpr float harmonicStability = 0.72f;
+constexpr float melodyImportance = 0.88f;
+constexpr float modulation = 0.0f;
+constexpr bool phraseMemory = false;
+constexpr bool compatibilitySwitches = false;
+constexpr int performanceStyle = 0;
+constexpr int performanceSubStyle = 5;
+constexpr float performanceComplexity = 0.90f;
+constexpr float rhythmDensity = 0.35f;
+constexpr float syncopation = 0.73f;
+constexpr float swing = 0.71f;
+constexpr float humanize = 0.30f;
+constexpr float gate = 0.39f;
+constexpr bool doubleTime = true;
+}
+
 int positiveMod12 (int value)
 {
     value %= 12;
@@ -1645,6 +1684,63 @@ void SoliVoicerAudioProcessor::startNewPhrase()
     pendingNewPhrase.store (true, std::memory_order_release);
 }
 
+void SoliVoicerAudioProcessor::resetToDefaultPreset()
+{
+    const auto setParameter = [this] (const char* id, float value)
+    {
+        if (auto* parameter = parameters.getParameter (id))
+            parameter->setValueNotifyingHost (parameter->convertTo0to1 (value));
+    };
+
+    setParameter (ParameterIDs::keyMask, static_cast<float> (HappyBdayDefaults::keyMask));
+    setParameter (ParameterIDs::scaleMask, static_cast<float> (HappyBdayDefaults::scaleMask));
+    setParameter (ParameterIDs::role, static_cast<float> (HappyBdayDefaults::role));
+    setParameter (ParameterIDs::style, static_cast<float> (HappyBdayDefaults::style));
+    setParameter (ParameterIDs::playability, static_cast<float> (HappyBdayDefaults::playability));
+    setParameter (ParameterIDs::strumMode, static_cast<float> (HappyBdayDefaults::strumMode));
+    setParameter (ParameterIDs::sourceMode, static_cast<float> (HappyBdayDefaults::sourceMode));
+    setParameter (ParameterIDs::outputMode, static_cast<float> (HappyBdayDefaults::outputMode));
+    setParameter (ParameterIDs::chordSize, static_cast<float> (HappyBdayDefaults::chordSize));
+    setParameter (ParameterIDs::complexity, HappyBdayDefaults::complexity);
+    setParameter (ParameterIDs::voiceLeading, HappyBdayDefaults::voiceLeading);
+    setParameter (ParameterIDs::outside, HappyBdayDefaults::outside);
+    setParameter (ParameterIDs::variation, HappyBdayDefaults::variation);
+    setParameter (ParameterIDs::repeatChance, HappyBdayDefaults::repeatChance);
+    setParameter (ParameterIDs::strumSpeed, HappyBdayDefaults::strumSpeed);
+    setParameter (ParameterIDs::minNote, static_cast<float> (HappyBdayDefaults::minNote));
+    setParameter (ParameterIDs::maxNote, static_cast<float> (HappyBdayDefaults::maxNote));
+    setParameter (ParameterIDs::contextMode, static_cast<float> (HappyBdayDefaults::contextMode));
+    setParameter (ParameterIDs::substitutionDepth, HappyBdayDefaults::substitutionDepth);
+    setParameter (ParameterIDs::harmonicStability, HappyBdayDefaults::harmonicStability);
+    setParameter (ParameterIDs::melodyImportance, HappyBdayDefaults::melodyImportance);
+    setParameter (ParameterIDs::modulation, HappyBdayDefaults::modulation);
+    setParameter (ParameterIDs::phraseMemory, HappyBdayDefaults::phraseMemory ? 1.0f : 0.0f);
+    setParameter (ParameterIDs::complexityEnabled, HappyBdayDefaults::compatibilitySwitches ? 1.0f : 0.0f);
+    setParameter (ParameterIDs::voiceLeadingEnabled, HappyBdayDefaults::compatibilitySwitches ? 1.0f : 0.0f);
+    setParameter (ParameterIDs::outsideEnabled, HappyBdayDefaults::compatibilitySwitches ? 1.0f : 0.0f);
+    setParameter (ParameterIDs::stabilityEnabled, HappyBdayDefaults::compatibilitySwitches ? 1.0f : 0.0f);
+    setParameter (ParameterIDs::melodyEnabled, HappyBdayDefaults::compatibilitySwitches ? 1.0f : 0.0f);
+    setParameter (ParameterIDs::performanceStyle, static_cast<float> (HappyBdayDefaults::performanceStyle));
+    setParameter (ParameterIDs::performanceSubStyle, static_cast<float> (HappyBdayDefaults::performanceSubStyle));
+    setParameter (ParameterIDs::performanceComplexity, HappyBdayDefaults::performanceComplexity);
+    setParameter (ParameterIDs::rhythmDensity, HappyBdayDefaults::rhythmDensity);
+    setParameter (ParameterIDs::syncopation, HappyBdayDefaults::syncopation);
+    setParameter (ParameterIDs::swing, HappyBdayDefaults::swing);
+    setParameter (ParameterIDs::humanize, HappyBdayDefaults::humanize);
+    setParameter (ParameterIDs::gate, HappyBdayDefaults::gate);
+    setParameter (ParameterIDs::doubleTime, HappyBdayDefaults::doubleTime ? 1.0f : 0.0f);
+
+    clearChordBank();
+    {
+        const juce::SpinLock::ScopedLockType lock (lockedChordLock);
+        lockedChords.clear();
+        lastGeneratedChord = {};
+        hasLastGeneratedChord = false;
+    }
+    setChordBankListening (true);
+    panic();
+}
+
 juce::AudioProcessorValueTreeState::ParameterLayout SoliVoicerAudioProcessor::createParameterLayout()
 {
     std::vector<std::unique_ptr<juce::RangedAudioParameter>> params;
@@ -1654,49 +1750,49 @@ juce::AudioProcessorValueTreeState::ParameterLayout SoliVoicerAudioProcessor::cr
         params.push_back (std::make_unique<juce::AudioParameterChoice> (juce::ParameterID { id, 1 }, name, withIndexOneIds (choices), defaultIndex));
     };
 
-    addChoice (ParameterIDs::role, "Input Role", Soli::ChordEngine::roleNames(), 0);
-    addChoice (ParameterIDs::style, "Style", Soli::ChordEngine::styleNames(), 0);
-    addChoice (ParameterIDs::playability, "Playability", Soli::ChordEngine::playabilityNames(), 0);
-    addChoice (ParameterIDs::strumMode, "Strum Mode", Soli::ChordEngine::strumModeNames(), 0);
+    addChoice (ParameterIDs::role, "Input Role", Soli::ChordEngine::roleNames(), HappyBdayDefaults::role);
+    addChoice (ParameterIDs::style, "Style", Soli::ChordEngine::styleNames(), HappyBdayDefaults::style);
+    addChoice (ParameterIDs::playability, "Playability", Soli::ChordEngine::playabilityNames(), HappyBdayDefaults::playability);
+    addChoice (ParameterIDs::strumMode, "Strum Mode", Soli::ChordEngine::strumModeNames(), HappyBdayDefaults::strumMode);
 
-    params.push_back (std::make_unique<juce::AudioParameterInt> (juce::ParameterID { ParameterIDs::keyMask, 1 }, "Keys", 1, (1 << 12) - 1, 1));
-    params.push_back (std::make_unique<juce::AudioParameterInt> (juce::ParameterID { ParameterIDs::scaleMask, 1 }, "Scales", 1, (1 << Soli::ChordEngine::scaleNames().size()) - 1, 1));
-    params.push_back (std::make_unique<juce::AudioParameterInt> (juce::ParameterID { ParameterIDs::chordSize, 1 }, "Chord Size", 2, 24, 4));
-    params.push_back (std::make_unique<juce::AudioParameterFloat> (juce::ParameterID { ParameterIDs::complexity, 1 }, "Complexity", juce::NormalisableRange<float> (0.0f, 1.0f, 0.01f), 0.45f));
-    params.push_back (std::make_unique<juce::AudioParameterFloat> (juce::ParameterID { ParameterIDs::voiceLeading, 1 }, "Voice Leading", juce::NormalisableRange<float> (0.0f, 1.0f, 0.01f), 0.75f));
-    params.push_back (std::make_unique<juce::AudioParameterFloat> (juce::ParameterID { ParameterIDs::outside, 1 }, "Outside Harmony", juce::NormalisableRange<float> (0.0f, 1.0f, 0.01f), 0.05f));
+    params.push_back (std::make_unique<juce::AudioParameterInt> (juce::ParameterID { ParameterIDs::keyMask, 1 }, "Keys", 1, (1 << 12) - 1, HappyBdayDefaults::keyMask));
+    params.push_back (std::make_unique<juce::AudioParameterInt> (juce::ParameterID { ParameterIDs::scaleMask, 1 }, "Scales", 1, (1 << Soli::ChordEngine::scaleNames().size()) - 1, HappyBdayDefaults::scaleMask));
+    params.push_back (std::make_unique<juce::AudioParameterInt> (juce::ParameterID { ParameterIDs::chordSize, 1 }, "Chord Size", 2, 24, HappyBdayDefaults::chordSize));
+    params.push_back (std::make_unique<juce::AudioParameterFloat> (juce::ParameterID { ParameterIDs::complexity, 1 }, "Complexity", juce::NormalisableRange<float> (0.0f, 1.0f, 0.01f), HappyBdayDefaults::complexity));
+    params.push_back (std::make_unique<juce::AudioParameterFloat> (juce::ParameterID { ParameterIDs::voiceLeading, 1 }, "Voice Leading", juce::NormalisableRange<float> (0.0f, 1.0f, 0.01f), HappyBdayDefaults::voiceLeading));
+    params.push_back (std::make_unique<juce::AudioParameterFloat> (juce::ParameterID { ParameterIDs::outside, 1 }, "Outside Harmony", juce::NormalisableRange<float> (0.0f, 1.0f, 0.01f), HappyBdayDefaults::outside));
     // Variation remains dormant so existing Logic sessions and automation maps
     // deserialize without changing the AU parameter tree. Repeat is active again
     // with zero meaning fresh choices and one meaning exact per-note recall.
-    params.push_back (std::make_unique<juce::AudioParameterFloat> (juce::ParameterID { ParameterIDs::variation, 1 }, "Legacy Variation (Unused)", juce::NormalisableRange<float> (0.0f, 1.0f, 0.01f), 0.35f));
-    params.push_back (std::make_unique<juce::AudioParameterFloat> (juce::ParameterID { ParameterIDs::repeatChance, 1 }, "Repeat", juce::NormalisableRange<float> (0.0f, 1.0f, 0.01f), 0.0f));
-    params.push_back (std::make_unique<juce::AudioParameterFloat> (juce::ParameterID { ParameterIDs::strumSpeed, 1 }, "Strum Speed", juce::NormalisableRange<float> (0.0f, 1.0f, 0.01f), 0.0f));
-    params.push_back (std::make_unique<juce::AudioParameterInt> (juce::ParameterID { ParameterIDs::minNote, 1 }, "Min Note", 0, 126, 36));
-    params.push_back (std::make_unique<juce::AudioParameterInt> (juce::ParameterID { ParameterIDs::maxNote, 1 }, "Max Note", 1, 127, 96));
-    addChoice (ParameterIDs::sourceMode, "Harmony Source", sourceModeNames(), 0);
-    addChoice (ParameterIDs::outputMode, "Output Mode", outputModeNames(), 0);
-    addChoice (ParameterIDs::contextMode, "Chord Relationship", Soli::ChordEngine::contextModeNames(), 3);
-    params.push_back (std::make_unique<juce::AudioParameterFloat> (juce::ParameterID { ParameterIDs::substitutionDepth, 1 }, "Substitution Depth", juce::NormalisableRange<float> (0.0f, 1.0f, 0.01f), 0.35f));
-    params.push_back (std::make_unique<juce::AudioParameterFloat> (juce::ParameterID { ParameterIDs::harmonicStability, 1 }, "Harmonic Stability", juce::NormalisableRange<float> (0.0f, 1.0f, 0.01f), 0.72f));
-    params.push_back (std::make_unique<juce::AudioParameterFloat> (juce::ParameterID { ParameterIDs::melodyImportance, 1 }, "Melody Importance", juce::NormalisableRange<float> (0.0f, 1.0f, 0.01f), 0.88f));
-    params.push_back (std::make_unique<juce::AudioParameterFloat> (juce::ParameterID { ParameterIDs::modulation, 1 }, "Modulation", juce::NormalisableRange<float> (0.0f, 1.0f, 0.01f), 0.0f));
-    params.push_back (std::make_unique<juce::AudioParameterBool> (juce::ParameterID { ParameterIDs::phraseMemory, 1 }, "Phrase Memory", true));
+    params.push_back (std::make_unique<juce::AudioParameterFloat> (juce::ParameterID { ParameterIDs::variation, 1 }, "Legacy Variation (Unused)", juce::NormalisableRange<float> (0.0f, 1.0f, 0.01f), HappyBdayDefaults::variation));
+    params.push_back (std::make_unique<juce::AudioParameterFloat> (juce::ParameterID { ParameterIDs::repeatChance, 1 }, "Repeat", juce::NormalisableRange<float> (0.0f, 1.0f, 0.01f), HappyBdayDefaults::repeatChance));
+    params.push_back (std::make_unique<juce::AudioParameterFloat> (juce::ParameterID { ParameterIDs::strumSpeed, 1 }, "Strum Speed", juce::NormalisableRange<float> (0.0f, 1.0f, 0.01f), HappyBdayDefaults::strumSpeed));
+    params.push_back (std::make_unique<juce::AudioParameterInt> (juce::ParameterID { ParameterIDs::minNote, 1 }, "Min Note", 0, 126, HappyBdayDefaults::minNote));
+    params.push_back (std::make_unique<juce::AudioParameterInt> (juce::ParameterID { ParameterIDs::maxNote, 1 }, "Max Note", 1, 127, HappyBdayDefaults::maxNote));
+    addChoice (ParameterIDs::sourceMode, "Harmony Source", sourceModeNames(), HappyBdayDefaults::sourceMode);
+    addChoice (ParameterIDs::outputMode, "Output Mode", outputModeNames(), HappyBdayDefaults::outputMode);
+    addChoice (ParameterIDs::contextMode, "Chord Relationship", Soli::ChordEngine::contextModeNames(), HappyBdayDefaults::contextMode);
+    params.push_back (std::make_unique<juce::AudioParameterFloat> (juce::ParameterID { ParameterIDs::substitutionDepth, 1 }, "Substitution Depth", juce::NormalisableRange<float> (0.0f, 1.0f, 0.01f), HappyBdayDefaults::substitutionDepth));
+    params.push_back (std::make_unique<juce::AudioParameterFloat> (juce::ParameterID { ParameterIDs::harmonicStability, 1 }, "Harmonic Stability", juce::NormalisableRange<float> (0.0f, 1.0f, 0.01f), HappyBdayDefaults::harmonicStability));
+    params.push_back (std::make_unique<juce::AudioParameterFloat> (juce::ParameterID { ParameterIDs::melodyImportance, 1 }, "Melody Importance", juce::NormalisableRange<float> (0.0f, 1.0f, 0.01f), HappyBdayDefaults::melodyImportance));
+    params.push_back (std::make_unique<juce::AudioParameterFloat> (juce::ParameterID { ParameterIDs::modulation, 1 }, "Modulation", juce::NormalisableRange<float> (0.0f, 1.0f, 0.01f), HappyBdayDefaults::modulation));
+    params.push_back (std::make_unique<juce::AudioParameterBool> (juce::ParameterID { ParameterIDs::phraseMemory, 1 }, "Phrase Memory", HappyBdayDefaults::phraseMemory));
     // Dormant compatibility switches preserve the parameter layout of saved
     // projects. Their associated sliders now bypass naturally at zero.
-    params.push_back (std::make_unique<juce::AudioParameterBool> (juce::ParameterID { ParameterIDs::complexityEnabled, 1 }, "Legacy Color Bypass (Unused)", true));
-    params.push_back (std::make_unique<juce::AudioParameterBool> (juce::ParameterID { ParameterIDs::voiceLeadingEnabled, 1 }, "Legacy Lead Bypass (Unused)", true));
-    params.push_back (std::make_unique<juce::AudioParameterBool> (juce::ParameterID { ParameterIDs::outsideEnabled, 1 }, "Legacy Outside Bypass (Unused)", true));
-    params.push_back (std::make_unique<juce::AudioParameterBool> (juce::ParameterID { ParameterIDs::stabilityEnabled, 1 }, "Legacy Stability Bypass (Unused)", true));
-    params.push_back (std::make_unique<juce::AudioParameterBool> (juce::ParameterID { ParameterIDs::melodyEnabled, 1 }, "Legacy Melody Bypass (Unused)", true));
-    addChoice (ParameterIDs::performanceStyle, "Performance Style", performanceStyleNames(), 0);
-    addChoice (ParameterIDs::performanceSubStyle, "Performance Sub Style", { "Sub Style 1", "Sub Style 2", "Sub Style 3", "Sub Style 4", "Sub Style 5", "Sub Style 6" }, 0);
-    params.push_back (std::make_unique<juce::AudioParameterFloat> (juce::ParameterID { ParameterIDs::performanceComplexity, 1 }, "Performance Sophistication", juce::NormalisableRange<float> (0.0f, 1.0f, 0.01f), 0.45f));
-    params.push_back (std::make_unique<juce::AudioParameterFloat> (juce::ParameterID { ParameterIDs::rhythmDensity, 1 }, "Rhythm Density", juce::NormalisableRange<float> (0.0f, 1.0f, 0.01f), 0.48f));
-    params.push_back (std::make_unique<juce::AudioParameterFloat> (juce::ParameterID { ParameterIDs::syncopation, 1 }, "Syncopation", juce::NormalisableRange<float> (0.0f, 1.0f, 0.01f), 0.2f));
-    params.push_back (std::make_unique<juce::AudioParameterFloat> (juce::ParameterID { ParameterIDs::swing, 1 }, "Swing", juce::NormalisableRange<float> (0.0f, 1.0f, 0.01f), 0.0f));
-    params.push_back (std::make_unique<juce::AudioParameterFloat> (juce::ParameterID { ParameterIDs::humanize, 1 }, "Humanize", juce::NormalisableRange<float> (0.0f, 1.0f, 0.01f), 0.12f));
-    params.push_back (std::make_unique<juce::AudioParameterFloat> (juce::ParameterID { ParameterIDs::gate, 1 }, "Gate", juce::NormalisableRange<float> (0.0f, 1.0f, 0.01f), 0.72f));
-    params.push_back (std::make_unique<juce::AudioParameterBool> (juce::ParameterID { ParameterIDs::doubleTime, 1 }, "Double Time", false));
+    params.push_back (std::make_unique<juce::AudioParameterBool> (juce::ParameterID { ParameterIDs::complexityEnabled, 1 }, "Legacy Color Bypass (Unused)", HappyBdayDefaults::compatibilitySwitches));
+    params.push_back (std::make_unique<juce::AudioParameterBool> (juce::ParameterID { ParameterIDs::voiceLeadingEnabled, 1 }, "Legacy Lead Bypass (Unused)", HappyBdayDefaults::compatibilitySwitches));
+    params.push_back (std::make_unique<juce::AudioParameterBool> (juce::ParameterID { ParameterIDs::outsideEnabled, 1 }, "Legacy Outside Bypass (Unused)", HappyBdayDefaults::compatibilitySwitches));
+    params.push_back (std::make_unique<juce::AudioParameterBool> (juce::ParameterID { ParameterIDs::stabilityEnabled, 1 }, "Legacy Stability Bypass (Unused)", HappyBdayDefaults::compatibilitySwitches));
+    params.push_back (std::make_unique<juce::AudioParameterBool> (juce::ParameterID { ParameterIDs::melodyEnabled, 1 }, "Legacy Melody Bypass (Unused)", HappyBdayDefaults::compatibilitySwitches));
+    addChoice (ParameterIDs::performanceStyle, "Performance Style", performanceStyleNames(), HappyBdayDefaults::performanceStyle);
+    addChoice (ParameterIDs::performanceSubStyle, "Performance Sub Style", { "Sub Style 1", "Sub Style 2", "Sub Style 3", "Sub Style 4", "Sub Style 5", "Sub Style 6" }, HappyBdayDefaults::performanceSubStyle);
+    params.push_back (std::make_unique<juce::AudioParameterFloat> (juce::ParameterID { ParameterIDs::performanceComplexity, 1 }, "Performance Sophistication", juce::NormalisableRange<float> (0.0f, 1.0f, 0.01f), HappyBdayDefaults::performanceComplexity));
+    params.push_back (std::make_unique<juce::AudioParameterFloat> (juce::ParameterID { ParameterIDs::rhythmDensity, 1 }, "Rhythm Density", juce::NormalisableRange<float> (0.0f, 1.0f, 0.01f), HappyBdayDefaults::rhythmDensity));
+    params.push_back (std::make_unique<juce::AudioParameterFloat> (juce::ParameterID { ParameterIDs::syncopation, 1 }, "Syncopation", juce::NormalisableRange<float> (0.0f, 1.0f, 0.01f), HappyBdayDefaults::syncopation));
+    params.push_back (std::make_unique<juce::AudioParameterFloat> (juce::ParameterID { ParameterIDs::swing, 1 }, "Swing", juce::NormalisableRange<float> (0.0f, 1.0f, 0.01f), HappyBdayDefaults::swing));
+    params.push_back (std::make_unique<juce::AudioParameterFloat> (juce::ParameterID { ParameterIDs::humanize, 1 }, "Humanize", juce::NormalisableRange<float> (0.0f, 1.0f, 0.01f), HappyBdayDefaults::humanize));
+    params.push_back (std::make_unique<juce::AudioParameterFloat> (juce::ParameterID { ParameterIDs::gate, 1 }, "Gate", juce::NormalisableRange<float> (0.0f, 1.0f, 0.01f), HappyBdayDefaults::gate));
+    params.push_back (std::make_unique<juce::AudioParameterBool> (juce::ParameterID { ParameterIDs::doubleTime, 1 }, "Double Time", HappyBdayDefaults::doubleTime));
 
     return { params.begin(), params.end() };
 }
