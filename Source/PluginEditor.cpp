@@ -1370,40 +1370,9 @@ void SoliVoicerAudioProcessorEditor::randomizePerformanceSettings()
 
 void SoliVoicerAudioProcessorEditor::resetDefaults()
 {
-    setParameterValue (ParameterIDs::keyMask, 1.0f);
-    setParameterValue (ParameterIDs::scaleMask, 1.0f);
-    setParameterValue (ParameterIDs::role, 0.0f);
-    setParameterValue (ParameterIDs::style, 0.0f);
-    setParameterValue (ParameterIDs::playability, 0.0f);
-    setParameterValue (ParameterIDs::strumMode, 0.0f);
-    setParameterValue (ParameterIDs::sourceMode, 0.0f);
-    setParameterValue (ParameterIDs::outputMode, 0.0f);
-    setParameterValue (ParameterIDs::chordSize, 4.0f);
-    setParameterValue (ParameterIDs::complexity, 0.45f);
-    setParameterValue (ParameterIDs::voiceLeading, 0.75f);
-    setParameterValue (ParameterIDs::outside, 0.05f);
-    setParameterValue (ParameterIDs::repeatChance, 0.0f);
-    setParameterValue (ParameterIDs::strumSpeed, 0.0f);
-    setParameterValue (ParameterIDs::minNote, 36.0f);
-    setParameterValue (ParameterIDs::maxNote, 96.0f);
-    setParameterValue (ParameterIDs::contextMode, 3.0f);
-    setParameterValue (ParameterIDs::substitutionDepth, 0.35f);
-    setParameterValue (ParameterIDs::harmonicStability, 0.72f);
-    setParameterValue (ParameterIDs::melodyImportance, 0.88f);
-    setParameterValue (ParameterIDs::modulation, 0.0f);
-    setParameterValue (ParameterIDs::phraseMemory, 1.0f);
-    setParameterValue (ParameterIDs::performanceStyle, 0.0f);
-    setParameterValue (ParameterIDs::performanceSubStyle, 0.0f);
-    setParameterValue (ParameterIDs::performanceComplexity, 0.45f);
-    setParameterValue (ParameterIDs::rhythmDensity, 0.48f);
-    setParameterValue (ParameterIDs::syncopation, 0.20f);
-    setParameterValue (ParameterIDs::swing, 0.0f);
-    setParameterValue (ParameterIDs::humanize, 0.12f);
-    setParameterValue (ParameterIDs::gate, 0.72f);
-    setParameterValue (ParameterIDs::doubleTime, 0.0f);
+    processorRef.resetToDefaultPreset();
     performanceStyleBox.setSelectedItemIndex (0, juce::dontSendNotification);
     lastPerformanceStyle = -1;
     updatePerformanceSubStyleChoices();
-    processorRef.panic();
     updateMaskToggles();
 }
